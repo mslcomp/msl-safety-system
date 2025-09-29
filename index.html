@@ -448,7 +448,7 @@
         <div style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 15px; width: 90%; max-width: 500px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3>✍️ 전자서명</h3>
-                <span onclick="document.getElementById('employeeModal').style.display='none'" style="font-size: 24px; cursor: pointer; color: #666;">&times;</span>
+                <button onclick="closeSignatureModal()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
             </div>
             
             <div id="documentToSign"></div>
@@ -666,10 +666,17 @@
       // 서명 모달 닫기
 function closeSignatureModal() {
     const modal = document.getElementById('signatureModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
     currentDocumentId = null;
+    
+    // 입력 필드 초기화
+    document.getElementById('signerName').value = '';
+    document.getElementById('signerDept').value = '';
+    if (ctx && canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    return false;
 }
 
 // 모달 외부 클릭시 닫기
@@ -1222,6 +1229,21 @@ window.addEventListener('click', function(event) {
             
             console.log('샘플 데이터가 로드되었습니다.');
         }
+
+// 모달 외부 클릭 시 닫기
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('signatureModal');
+    if (e.target === modal) {
+        closeSignatureModal();
+    }
+});
+
+// ESC 키로 닫기
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSignatureModal();
+    }
+});        
     </script>
 </body>
 </html>
