@@ -816,15 +816,129 @@
                     <div class="document-card">
                         <div class="document-title">${doc.title}</div>
                         <p><strong>배포일:</strong> ${new Date(doc.createdAt).toLocaleDateString()}</p>
+                        <p><strong>구분:</strong> ${getDocumentTypeName(doc.type)}</p>
                         <p><strong>서명현황:</strong> ${docSigs.length}/${targetEmps.length}명 (${rate}%)</p>
                         <div style="background: #e9ecef; height: 20px; border-radius: 10px; margin: 10px 0;">
                             <div style="background: linear-gradient(135deg, #28a745, #20c997); height: 100%; width: ${rate}%; border-radius: 10px;"></div>
                         </div>
                         <button class="btn btn-success" onclick="generateDocumentQR('${doc.id}')" style="width: auto;">QR코드</button>
                         <button class="btn btn-primary" onclick="viewSignatures('${doc.id}')" style="width: auto;">서명현황</button>
+                        <button class="btn" onclick="editDocument('${doc.id}')" style="width: auto; background: #ffc107; color: white;">수정</button>
+                        <button class="btn" onclick="deleteDocument('${doc.id}')" style="width: auto; background: #6c757d; color: white;">삭제</button>
                     </div>
                 `;
             }).join('');
+        }
+        
+        function getDocumentTypeName(type) {
+            const types = {
+                'accident_case': '사고사례',
+                'safety_guide': '안전지침',
+                'emergency': '비상대응',
+                'regulation': '법규변경'
+            };
+            return types[type] || type;
+        }
+        
+        function editDocument(documentId) {
+            const doc = documents.find(d => d.id === documentId);
+            if (!doc) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; overflow-y: auto;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 0; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; border-radius: 15px 15px 0 0;">
+                        <h3 style="margin: 0;">문서 수정</h3>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <form id="editDocumentForm">
+                            <div class="form-group">
+                                <label class="form-label">자료 제목</label>
+                                <input type="text" class="form-input" id="editTitle" value="${doc.title}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">자료 구분</label>
+                                <select class="form-select" id="editType" required>
+                                    <option value="accident_case" ${doc.type === 'accident_case' ? 'selected' : ''}>사고사례</option>
+                                    <option value="safety_guide" ${doc.type === 'safety_guide' ? 'selected' : ''}>안전지침</option>
+                                    <option value="emergency" ${doc.type === 'emergency' ? 'selected' : ''}>비상대응</option>
+                                    <option value="regulation" ${doc.type === 'regulation' ? 'selected' : ''}>법규변경</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">대상 부서</label>
+                                <select class="form-select" id="editTargetDepts" multiple>
+                                    <option value="all" ${doc.targetDepartments.includes('all') ? 'selected' : ''}>전체부서</option>
+                                    <option value="manufacturing" ${doc.targetDepartments.includes('manufacturing') ? 'selected' : ''}>제조팀</option>
+                                    <option value="construction" ${doc.targetDepartments.includes('construction') ? 'selected' : ''}>건설팀</option>
+                                    <option value="logistics" ${doc.targetDepartments.includes('logistics') ? 'selected' : ''}>물류팀</option>
+                                    <option value="maintenance" ${doc.targetDepartments.includes('maintenance') ? 'selected' : ''}>설비팀</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">자료 내용</label>
+                                <textarea class="form-textarea" id="editContent" rows="6" required>${doc.content}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">수정 완료</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('editDocumentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const updatedDoc = {
+                    ...doc,
+                    title: document.getElementById('editTitle').value,
+                    type: document.getElementById('editType').value,
+                    targetDepartments: Array.from(document.getElementById('editTargetDepts').selectedOptions).map(o => o.value),
+                    content: document.getElementById('editContent').value,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                const docIndex = documents.findIndex(d => d.id === documentId);
+                documents[docIndex] = updatedDoc;
+                localStorage.setItem('safety_documents', JSON.stringify(documents));
+                
+                modal.remove();
+                loadDistributedDocuments();
+                alert('문서가 수정되었습니다.');
+            });
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) modal.remove();
+            });
+        }
+        
+        function deleteDocument(documentId) {
+            const doc = documents.find(d => d.id === documentId);
+            if (!doc) return;
+            
+            const docSigs = signatures.filter(s => s.documentId === documentId);
+            let confirmMsg = `"${doc.title}" 문서를 삭제하시겠습니까?`;
+            
+            if (docSigs.length > 0) {
+                confirmMsg += `\n\n⚠️ 이 문서에는 ${docSigs.length}개의 서명이 있습니다.\n서명 데이터도 함께 삭제됩니다.`;
+            }
+            
+            if (!confirm(confirmMsg)) return;
+            
+            // 문서 삭제
+            documents = documents.filter(d => d.id !== documentId);
+            localStorage.setItem('safety_documents', JSON.stringify(documents));
+            
+            // 관련 서명 삭제
+            signatures = signatures.filter(s => s.documentId !== documentId);
+            localStorage.setItem('safety_signatures', JSON.stringify(signatures));
+            
+            loadDistributedDocuments();
+            alert('문서가 삭제되었습니다.');
         }
         
         function loadPendingDocuments() {
