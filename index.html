@@ -663,11 +663,22 @@
             }, 100);
         }
         
-        // 서명 모달 닫기
-        function closeSignatureModal() {
-            document.getElementById('signatureModal').style.display = 'none';
-            currentDocumentId = null;
-        }
+      // 서명 모달 닫기
+function closeSignatureModal() {
+    const modal = document.getElementById('signatureModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentDocumentId = null;
+}
+
+// 모달 외부 클릭시 닫기
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('signatureModal');
+    if (event.target === modal) {
+        closeSignatureModal();
+    }
+});
         
         // 서명 캔버스 초기화
         function initializeSignatureCanvas() {
