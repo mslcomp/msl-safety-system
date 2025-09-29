@@ -543,9 +543,45 @@
         let ctx = null;
         let isDrawing = false;
         let isAdmin = false;
+        let checklistItems = [];
         
         // 관리자 비밀번호 (실제 사용시 서버에서 관리해야 함)
         const ADMIN_PASSWORD = 'msl2024';
+        
+        function addChecklistItem() {
+            const itemText = prompt('점검 항목을 입력하세요:\n(예: 안전보호구 착용 완료)');
+            if (!itemText || !itemText.trim()) return;
+            
+            const item = {
+                id: Date.now().toString(),
+                text: itemText.trim()
+            };
+            
+            checklistItems.push(item);
+            renderChecklistItems();
+        }
+        
+        function removeChecklistItem(itemId) {
+            checklistItems = checklistItems.filter(item => item.id !== itemId);
+            renderChecklistItems();
+        }
+        
+        function renderChecklistItems() {
+            const container = document.getElementById('checklistItems');
+            if (!container) return;
+            
+            if (checklistItems.length === 0) {
+                container.innerHTML = '<p style="color: #999; font-size: 13px;">추가된 체크항목이 없습니다.</p>';
+                return;
+            }
+            
+            container.innerHTML = checklistItems.map(item => `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
+                    <span style="flex: 1;">✓ ${item.text}</span>
+                    <button type="button" onclick="removeChecklistItem('${item.id}')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">삭제</button>
+                </div>
+            `).join('');
+        }
         
         // 탭 전환 기능
         document.querySelectorAll('.nav-tab').forEach(tab => {
@@ -642,12 +678,15 @@
                 type: document.getElementById('documentType').value,
                 content: document.getElementById('documentContent').value,
                 targetDepartments: targetDepts,
+                checklist: [...checklistItems],
                 createdAt: new Date().toISOString(),
                 status: 'distributed'
             };
             documents.push(doc);
             localStorage.setItem('safety_documents', JSON.stringify(documents));
             e.target.reset();
+            checklistItems = [];
+            renderChecklistItems();
             alert('안전자료가 성공적으로 배포되었습니다!');
             loadDistributedDocuments();
         }
@@ -655,11 +694,29 @@
         function openSignatureModal(documentId) {
             currentDocumentId = documentId;
             const doc = documents.find(d => d.id === documentId);
+            
+            let checklistHtml = '';
+            if (doc.checklist && doc.checklist.length > 0) {
+                checklistHtml = `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                        <strong style="display: block; margin-bottom: 10px;">✅ 작업 전 확인사항</strong>
+                        ${doc.checklist.map(item => `
+                            <label style="display: flex; align-items: center; gap: 10px; padding: 8px; background: white; border-radius: 5px; margin-bottom: 5px; cursor: pointer;">
+                                <input type="checkbox" class="checklist-item" data-item-id="${item.id}" style="width: 18px; height: 18px; cursor: pointer;">
+                                <span style="flex: 1;">${item.text}</span>
+                            </label>
+                        `).join('')}
+                        <p style="font-size: 12px; color: #856404; margin-top: 10px; margin-bottom: 0;">※ 모든 항목을 체크해야 서명이 가능합니다.</p>
+                    </div>
+                `;
+            }
+            
             document.getElementById('documentToSign').innerHTML = `
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <h4>${doc.title}</h4>
                     <p>위 안전자료를 숙지하였음을 확인합니다.</p>
                 </div>
+                ${checklistHtml}
             `;
             const modal = document.getElementById('signatureModal');
             modal.classList.add('show');
@@ -758,6 +815,18 @@
                 return;
             }
             
+            // 체크리스트 확인
+            const doc = documents.find(d => d.id === currentDocumentId);
+            if (doc.checklist && doc.checklist.length > 0) {
+                const checkboxes = document.querySelectorAll('.checklist-item');
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                
+                if (!allChecked) {
+                    alert('모든 작업 전 확인사항을 체크해주세요.');
+                    return;
+                }
+            }
+            
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             let hasSignature = false;
             for (let i = 0; i < imageData.data.length; i += 4) {
@@ -783,12 +852,23 @@
                 );
             }
             
+            // 체크리스트 체크 상태 저장
+            let checklistStatus = null;
+            if (doc.checklist && doc.checklist.length > 0) {
+                checklistStatus = doc.checklist.map(item => ({
+                    id: item.id,
+                    text: item.text,
+                    checked: true
+                }));
+            }
+            
             const signature = {
                 id: Date.now().toString(),
                 documentId: currentDocumentId,
                 signerName: signerName,
                 signerDept: signerDept,
                 signatureImage: canvas.toDataURL('image/png'),
+                checklistStatus: checklistStatus,
                 signedAt: new Date().toISOString()
             };
             
@@ -1190,6 +1270,14 @@
                                 <div style="font-size: 12px; color: #666;">
                                     서명일시: ${new Date(sig.signedAt).toLocaleString('ko-KR')}
                                 </div>
+                                ${sig.checklistStatus && sig.checklistStatus.length > 0 ? `
+                                    <div style="margin-top: 10px; padding: 10px; background: #e7f5ff; border-radius: 8px; border-left: 3px solid #339af0;">
+                                        <strong style="font-size: 13px; color: #1971c2;">✅ 작업 전 확인사항 체크 완료</strong>
+                                        <ul style="margin: 5px 0 0 0; padding-left: 20px; font-size: 12px;">
+                                            ${sig.checklistStatus.map(item => `<li>${item.text}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
                                 <div style="margin-top: 10px; padding: 10px; background: white; border: 1px solid #dee2e6; border-radius: 8px;">
                                     <img src="${sig.signatureImage}" style="max-width: 100%; height: auto;">
                                 </div>
