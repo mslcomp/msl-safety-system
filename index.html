@@ -377,9 +377,9 @@
         </div>
         
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('distribute')">자료배포</button>
-            <button class="nav-tab" onclick="showTab('sign')">서명확인</button>
-            <button class="nav-tab" onclick="showTab('manage')">관리</button>
+            <button class="nav-tab active" data-tab="distribute">자료배포</button>
+            <button class="nav-tab" data-tab="sign">서명확인</button>
+            <button class="nav-tab" data-tab="manage">관리</button>
         </div>
         
         <div id="distribute" class="tab-content active">
@@ -491,12 +491,30 @@
         let ctx = null;
         let isDrawing = false;
         
+        // 탭 전환 기능 수정
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                showTab(tabName);
+            });
+        });
+        
         function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            // 모든 탭 콘텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
             
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 선택된 탭 활성화
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            // 탭별 데이터 로드
             if (tabName === 'distribute') loadDistributedDocuments();
             if (tabName === 'sign') loadPendingDocuments();
             if (tabName === 'manage') loadManageData();
@@ -958,4 +976,3 @@
     </script>
 </body>
 </html>
-            
