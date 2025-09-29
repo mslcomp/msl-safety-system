@@ -33,6 +33,7 @@
             color: white;
             padding: 20px;
             text-align: center;
+            position: relative;
         }
         
         .header h1 {
@@ -43,6 +44,17 @@
         .header p {
             opacity: 0.9;
             font-size: 14px;
+        }
+        
+        .admin-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
         }
         
         .nav-tabs {
@@ -71,6 +83,12 @@
             background: white;
             border-bottom-color: #dc3545;
             color: #dc3545;
+        }
+        
+        .nav-tab.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
         }
         
         .tab-content {
@@ -363,6 +381,21 @@
             transform: rotate(90deg);
         }
         
+        .login-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .access-denied {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
         @media (max-width: 768px) {
             .signature-pad { height: 150px; }
             .modal-content { width: 95%; margin: 10px; }
@@ -374,65 +407,25 @@
         <div class="header">
             <h1>MSL 안전자료 배포 시스템</h1>
             <p>㈜엠에스엘콤프레서 안전교육 전자서명 플랫폼</p>
+            <div class="admin-badge" id="adminBadge" onclick="toggleAdmin()">
+                <span id="adminStatus">작업자 모드</span>
+            </div>
         </div>
         
         <div class="nav-tabs">
-            <button class="nav-tab active" data-tab="distribute">자료배포</button>
-            <button class="nav-tab" data-tab="sign">서명확인</button>
-            <button class="nav-tab" data-tab="manage">관리</button>
+            <button class="nav-tab disabled" data-tab="distribute" id="tabDistribute">자료배포</button>
+            <button class="nav-tab active" data-tab="sign" id="tabSign">서명확인</button>
+            <button class="nav-tab disabled" data-tab="manage" id="tabManage">관리</button>
         </div>
         
-        <div id="distribute" class="tab-content active">
-            <div class="card">
-                <h3>새 안전자료 배포</h3>
-                <form id="distributionForm">
-                    <div class="form-group">
-                        <label class="form-label">자료 제목</label>
-                        <input type="text" class="form-input" id="documentTitle" placeholder="예: 지게차 포크에서 작업 중 추락 예방대책" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">자료 구분</label>
-                        <select class="form-select" id="documentType" required>
-                            <option value="">선택하세요</option>
-                            <option value="accident_case">사고사례</option>
-                            <option value="safety_guide">안전지침</option>
-                            <option value="emergency">비상대응</option>
-                            <option value="regulation">법규변경</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">대상 부서</label>
-                        <select class="form-select" id="targetDepts" multiple>
-                            <option value="all">전체부서</option>
-                            <option value="manufacturing">제조팀</option>
-                            <option value="construction">건설팀</option>
-                            <option value="logistics">물류팀</option>
-                            <option value="maintenance">설비팀</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">자료 내용</label>
-                        <textarea class="form-textarea" id="documentContent" rows="6" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">첨부 파일</label>
-                        <div class="file-upload" onclick="document.getElementById('documentFile').click()">
-                            <input type="file" id="documentFile" accept=".pdf,.jpg,.png" multiple>
-                            <p>파일을 선택하거나 드래그하여 업로드</p>
-                        </div>
-                        <div id="uploadedFiles"></div>
-                    </div>
-                    <button type="submit" class="btn btn-danger">자료 배포 및 서명 요청</button>
-                </form>
-            </div>
-            
-            <div class="card">
-                <h3>배포된 자료 목록</h3>
-                <div id="distributedDocuments"></div>
+        <div id="distribute" class="tab-content">
+            <div class="access-denied">
+                <h3>관리자 권한이 필요합니다</h3>
+                <p>이 메뉴는 관리자만 접근할 수 있습니다.</p>
             </div>
         </div>
         
-        <div id="sign" class="tab-content">
+        <div id="sign" class="tab-content active">
             <div class="card">
                 <h3>서명 대기 문서</h3>
                 <div id="pendingDocuments"></div>
@@ -440,18 +433,77 @@
         </div>
         
         <div id="manage" class="tab-content">
-            <div class="card">
-                <h3>서명 현황 통계</h3>
-                <div id="signatureStats"></div>
-                <button class="btn btn-primary" onclick="exportSignatureReport()">서명현황 보고서 다운로드</button>
-                <button class="btn btn-success" onclick="sendReminder()">미서명자 알림 발송</button>
+            <div class="access-denied">
+                <h3>관리자 권한이 필요합니다</h3>
+                <p>이 메뉴는 관리자만 접근할 수 있습니다.</p>
             </div>
-            
-            <div class="card">
-                <h3>직원 관리</h3>
-                <button class="btn btn-primary" onclick="addEmployee()">직원 추가</button>
-                <div id="employeeManagement"></div>
-            </div>
+        </div>
+    </div>
+    
+    <!-- 관리자 배포 탭 내용 (숨김) -->
+    <div id="adminDistributeContent" style="display:none;">
+        <div class="card">
+            <h3>새 안전자료 배포</h3>
+            <form id="distributionForm">
+                <div class="form-group">
+                    <label class="form-label">자료 제목</label>
+                    <input type="text" class="form-input" id="documentTitle" placeholder="예: 지게차 포크에서 작업 중 추락 예방대책" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">자료 구분</label>
+                    <select class="form-select" id="documentType" required>
+                        <option value="">선택하세요</option>
+                        <option value="accident_case">사고사례</option>
+                        <option value="safety_guide">안전지침</option>
+                        <option value="emergency">비상대응</option>
+                        <option value="regulation">법규변경</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">대상 부서</label>
+                    <select class="form-select" id="targetDepts" multiple>
+                        <option value="all">전체부서</option>
+                        <option value="manufacturing">제조팀</option>
+                        <option value="construction">건설팀</option>
+                        <option value="logistics">물류팀</option>
+                        <option value="maintenance">설비팀</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">자료 내용</label>
+                    <textarea class="form-textarea" id="documentContent" rows="6" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">첨부 파일</label>
+                    <div class="file-upload" onclick="document.getElementById('documentFile').click()">
+                        <input type="file" id="documentFile" accept=".pdf,.jpg,.png" multiple>
+                        <p>파일을 선택하거나 드래그하여 업로드</p>
+                    </div>
+                    <div id="uploadedFiles"></div>
+                </div>
+                <button type="submit" class="btn btn-danger">자료 배포 및 서명 요청</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h3>배포된 자료 목록</h3>
+            <div id="distributedDocuments"></div>
+        </div>
+    </div>
+    
+    <!-- 관리자 관리 탭 내용 (숨김) -->
+    <div id="adminManageContent" style="display:none;">
+        <div class="card">
+            <h3>서명 현황 통계</h3>
+            <div id="signatureStats"></div>
+            <button class="btn btn-primary" onclick="exportSignatureReport()">서명현황 보고서 다운로드</button>
+            <button class="btn btn-success" onclick="sendReminder()">미서명자 알림 발송</button>
+        </div>
+        
+        <div class="card">
+            <h3>직원 관리</h3>
+            <button class="btn btn-primary" onclick="addEmployee()">직원 추가</button>
+            <div id="employeeManagement"></div>
         </div>
     </div>
     
@@ -490,34 +542,114 @@
         let canvas = null;
         let ctx = null;
         let isDrawing = false;
+        let isAdmin = false;
         
-        // 탭 전환 기능 수정
+        // 관리자 비밀번호 (실제 사용시 서버에서 관리해야 함)
+        const ADMIN_PASSWORD = 'msl2024';
+        
+        // 탭 전환 기능
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) {
+                    alert('관리자 권한이 필요합니다.');
+                    return;
+                }
                 const tabName = this.getAttribute('data-tab');
                 showTab(tabName);
             });
         });
         
         function showTab(tabName) {
-            // 모든 탭 콘텐츠 숨기기
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // 모든 탭 버튼 비활성화
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // 선택된 탭 활성화
             document.getElementById(tabName).classList.add('active');
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
             
-            // 탭별 데이터 로드
             if (tabName === 'distribute') loadDistributedDocuments();
             if (tabName === 'sign') loadPendingDocuments();
             if (tabName === 'manage') loadManageData();
+        }
+        
+        function toggleAdmin() {
+            if (isAdmin) {
+                // 로그아웃
+                if (confirm('관리자 모드를 종료하시겠습니까?')) {
+                    isAdmin = false;
+                    updateAdminUI();
+                }
+            } else {
+                // 로그인
+                const password = prompt('관리자 비밀번호를 입력하세요:');
+                if (password === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    updateAdminUI();
+                    alert('관리자 모드로 전환되었습니다.');
+                } else if (password !== null) {
+                    alert('비밀번호가 올바르지 않습니다.');
+                }
+            }
+        }
+        
+        function updateAdminUI() {
+            const adminStatus = document.getElementById('adminStatus');
+            const tabDistribute = document.getElementById('tabDistribute');
+            const tabManage = document.getElementById('tabManage');
+            const distributeTab = document.getElementById('distribute');
+            const manageTab = document.getElementById('manage');
+            
+            if (isAdmin) {
+                adminStatus.textContent = '관리자 모드 (클릭하여 종료)';
+                tabDistribute.classList.remove('disabled');
+                tabManage.classList.remove('disabled');
+                
+                // 관리자 탭 내용 교체
+                distributeTab.innerHTML = document.getElementById('adminDistributeContent').innerHTML;
+                manageTab.innerHTML = document.getElementById('adminManageContent').innerHTML;
+                
+                // 폼 이벤트 리스너 재등록
+                const form = document.getElementById('distributionForm');
+                if (form) {
+                    form.addEventListener('submit', handleDistributionSubmit);
+                }
+                
+                loadDistributedDocuments();
+            } else {
+                adminStatus.textContent = '작업자 모드 (클릭하여 관리자 로그인)';
+                tabDistribute.classList.add('disabled');
+                tabManage.classList.add('disabled');
+                
+                // 접근 거부 메시지로 교체
+                distributeTab.innerHTML = '<div class="access-denied"><h3>관리자 권한이 필요합니다</h3><p>이 메뉴는 관리자만 접근할 수 있습니다.</p></div>';
+                manageTab.innerHTML = '<div class="access-denied"><h3>관리자 권한이 필요합니다</h3><p>이 메뉴는 관리자만 접근할 수 있습니다.</p></div>';
+                
+                // 서명확인 탭으로 이동
+                showTab('sign');
+            }
+        }
+        
+        function handleDistributionSubmit(e) {
+            e.preventDefault();
+            const targetDepts = Array.from(document.getElementById('targetDepts').selectedOptions).map(o => o.value);
+            const doc = {
+                id: Date.now().toString(),
+                title: document.getElementById('documentTitle').value,
+                type: document.getElementById('documentType').value,
+                content: document.getElementById('documentContent').value,
+                targetDepartments: targetDepts,
+                createdAt: new Date().toISOString(),
+                status: 'distributed'
+            };
+            documents.push(doc);
+            localStorage.setItem('safety_documents', JSON.stringify(documents));
+            e.target.reset();
+            alert('안전자료가 성공적으로 배포되었습니다!');
+            loadDistributedDocuments();
         }
         
         function openSignatureModal(documentId) {
@@ -665,30 +797,13 @@
             closeSignatureModal();
             alert(signerName + '님의 서명이 완료되었습니다!');
             loadPendingDocuments();
-            loadDistributedDocuments();
+            if (isAdmin) loadDistributedDocuments();
         }
-        
-        document.getElementById('distributionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const targetDepts = Array.from(document.getElementById('targetDepts').selectedOptions).map(o => o.value);
-            const doc = {
-                id: Date.now().toString(),
-                title: document.getElementById('documentTitle').value,
-                type: document.getElementById('documentType').value,
-                content: document.getElementById('documentContent').value,
-                targetDepartments: targetDepts,
-                createdAt: new Date().toISOString(),
-                status: 'distributed'
-            };
-            documents.push(doc);
-            localStorage.setItem('safety_documents', JSON.stringify(documents));
-            this.reset();
-            alert('안전자료가 성공적으로 배포되었습니다!');
-            loadDistributedDocuments();
-        });
         
         function loadDistributedDocuments() {
             const container = document.getElementById('distributedDocuments');
+            if (!container) return;
+            
             if (documents.length === 0) {
                 container.innerHTML = '<p>배포된 안전자료가 없습니다.</p>';
                 return;
@@ -752,6 +867,8 @@
         
         function loadSignatureStats() {
             const container = document.getElementById('signatureStats');
+            if (!container) return;
+            
             if (documents.length === 0) {
                 container.innerHTML = '<p>통계를 표시할 문서가 없습니다.</p>';
                 return;
@@ -774,6 +891,8 @@
         
         function loadEmployeeManagement() {
             const container = document.getElementById('employeeManagement');
+            if (!container) return;
+            
             if (employees.length === 0) {
                 container.innerHTML = '<p>등록된 직원이 없습니다.</p>';
                 return;
@@ -964,7 +1083,7 @@
         
         // 페이지 로드 시 초기화
         window.addEventListener('load', function() {
-            loadDistributedDocuments();
+            loadPendingDocuments();
             
             // URL 파라미터 확인
             const urlParams = new URLSearchParams(window.location.search);
