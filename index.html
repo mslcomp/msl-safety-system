@@ -1026,6 +1026,21 @@ window.addEventListener('click', function(event) {
             `;
             
             document.body.appendChild(modal);
+
+ modal.querySelector('.close-btn').addEventListener('click', function() {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    });
+    
+    // 모달 외부 클릭 시 닫기
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+            document.body.style.overflow = 'auto';
+        }
+    });
+}
+            
         }
         
         // 서명현황 보고서 내보내기
