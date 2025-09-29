@@ -1015,11 +1015,121 @@
                 const empSigs = signatures.filter(s => s.signerName === emp.name);
                 return `
                     <div class="employee-item">
-                        <div><strong>${emp.name}</strong> (${emp.department})<br><small>서명 완료: ${empSigs.length}건</small></div>
-                        <button class="btn btn-primary" onclick="viewEmployeeSignatures('${emp.id}')" style="width: auto; padding: 8px 12px;">이력보기</button>
+                        <div>
+                            <strong>${emp.name}</strong> (${emp.department})
+                            <br><small>서명 완료: ${empSigs.length}건</small>
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn btn-primary" onclick="viewEmployeeSignatures('${emp.id}')" style="width: auto; padding: 8px 12px; margin: 0;">이력</button>
+                            <button class="btn" onclick="editEmployee('${emp.id}')" style="width: auto; padding: 8px 12px; background: #ffc107; color: white; margin: 0;">수정</button>
+                            <button class="btn" onclick="deleteEmployee('${emp.id}')" style="width: auto; padding: 8px 12px; background: #6c757d; color: white; margin: 0;">삭제</button>
+                        </div>
                     </div>
                 `;
             }).join('');
+        }
+        
+        function editEmployee(employeeId) {
+            const emp = employees.find(e => e.id === employeeId);
+            if (!emp) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 0; border-radius: 15px; width: 90%; max-width: 400px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; border-radius: 15px 15px 0 0;">
+                        <h3 style="margin: 0;">직원 정보 수정</h3>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <form id="editEmployeeForm">
+                            <div class="form-group">
+                                <label class="form-label">이름</label>
+                                <input type="text" class="form-input" id="editEmpName" value="${emp.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">부서</label>
+                                <select class="form-select" id="editEmpDept" required>
+                                    <option value="manufacturing" ${emp.department === 'manufacturing' ? 'selected' : ''}>제조팀</option>
+                                    <option value="construction" ${emp.department === 'construction' ? 'selected' : ''}>건설팀</option>
+                                    <option value="logistics" ${emp.department === 'logistics' ? 'selected' : ''}>물류팀</option>
+                                    <option value="maintenance" ${emp.department === 'maintenance' ? 'selected' : ''}>설비팀</option>
+                                </select>
+                                <small style="color: #666; display: block; margin-top: 5px;">* 부서를 직접 입력하려면 아래 입력란 사용</small>
+                                <input type="text" class="form-input" id="editEmpDeptCustom" placeholder="또는 부서명 직접 입력" value="${!['manufacturing','construction','logistics','maintenance'].includes(emp.department) ? emp.department : ''}" style="margin-top: 5px;">
+                            </div>
+                            <button type="submit" class="btn btn-primary">수정 완료</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('editEmployeeForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newName = document.getElementById('editEmpName').value.trim();
+                const customDept = document.getElementById('editEmpDeptCustom').value.trim();
+                const newDept = customDept || document.getElementById('editEmpDept').value;
+                
+                if (!newName || !newDept) {
+                    alert('이름과 부서를 입력해주세요.');
+                    return;
+                }
+                
+                const oldName = emp.name;
+                
+                // 직원 정보 업데이트
+                const empIndex = employees.findIndex(e => e.id === employeeId);
+                employees[empIndex] = {
+                    ...emp,
+                    name: newName,
+                    department: newDept
+                };
+                localStorage.setItem('safety_employees', JSON.stringify(employees));
+                
+                // 이름이 변경된 경우 서명 데이터도 업데이트
+                if (oldName !== newName) {
+                    signatures.forEach(sig => {
+                        if (sig.signerName === oldName) {
+                            sig.signerName = newName;
+                            sig.signerDept = newDept;
+                        }
+                    });
+                    localStorage.setItem('safety_signatures', JSON.stringify(signatures));
+                }
+                
+                modal.remove();
+                loadEmployeeManagement();
+                alert('직원 정보가 수정되었습니다.');
+            });
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) modal.remove();
+            });
+        }
+        
+        function deleteEmployee(employeeId) {
+            const emp = employees.find(e => e.id === employeeId);
+            if (!emp) return;
+            
+            const empSigs = signatures.filter(s => s.signerName === emp.name);
+            let confirmMsg = `"${emp.name}" 직원을 삭제하시겠습니까?`;
+            
+            if (empSigs.length > 0) {
+                confirmMsg += `\n\n⚠️ 이 직원은 ${empSigs.length}건의 서명을 완료했습니다.\n서명 데이터는 유지되지만 직원 목록에서는 삭제됩니다.`;
+            }
+            
+            if (!confirm(confirmMsg)) return;
+            
+            // 직원 삭제 (서명 데이터는 유지)
+            employees = employees.filter(e => e.id !== employeeId);
+            localStorage.setItem('safety_employees', JSON.stringify(employees));
+            
+            loadEmployeeManagement();
+            alert('직원이 삭제되었습니다.');
         }
         
         function getTargetEmployees(depts) {
@@ -1172,7 +1282,7 @@
                 const unsigned = targetEmps.filter(e => !signedNames.includes(e.name));
                 if (unsigned.length > 0) {
                     unsignedList.push({
-                        doc: doc.title,
+                        doc: doc,
                         employees: unsigned
                     });
                 }
@@ -1183,16 +1293,115 @@
                 return;
             }
             
-            let message = '미서명자 목록:\n\n';
+            // 카톡 공유용 메시지 생성
+            showReminderModal(unsignedList);
+        }
+        
+        function showReminderModal(unsignedList) {
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; overflow-y: auto;';
+            
+            let messageText = '📋 [MSL 안전교육 서명 요청]\n\n';
+            messageText += '아래 직원분들은 아직 서명하지 않으셨습니다.\n';
+            messageText += '링크를 클릭하여 서명해 주시기 바랍니다.\n\n';
+            messageText += '═══════════════════\n\n';
+            
             unsignedList.forEach(item => {
-                message += `[${item.doc}]\n`;
+                messageText += `📄 ${item.doc.title}\n`;
+                messageText += `🔗 서명 링크: ${window.location.origin + window.location.pathname}?doc=${item.doc.id}\n\n`;
+                messageText += `⚠️ 미서명자 (${item.employees.length}명):\n`;
                 item.employees.forEach(emp => {
-                    message += `- ${emp.name} (${emp.department})\n`;
+                    messageText += `  • ${emp.name} (${emp.department})\n`;
                 });
-                message += '\n';
+                messageText += '\n';
             });
             
-            alert(message + '\n알림 발송 기능은 이메일/SMS 연동 시 사용 가능합니다.');
+            messageText += '═══════════════════\n';
+            messageText += '※ 모바일에서 링크를 클릭하면 바로 서명 가능합니다.\n';
+            messageText += '※ 서명 후 자동으로 완료 처리됩니다.';
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 0; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; border-radius: 15px 15px 0 0;">
+                        <h3 style="margin: 0;">미서명자 알림 발송</h3>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p style="margin-bottom: 15px; color: #666;">아래 메시지를 복사하여 카카오톡 단체방에 공유하세요.</p>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #e9ecef;">
+                            <pre style="white-space: pre-wrap; font-family: 'Malgun Gothic', sans-serif; font-size: 13px; line-height: 1.6; margin: 0; max-height: 400px; overflow-y: auto;">${messageText}</pre>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button onclick="copyReminderMessage(\`${messageText.replace(/`/g, '\\`')}\`)" class="btn btn-success" style="flex: 1; min-width: 150px;">
+                                📋 메시지 복사하기
+                            </button>
+                            <button onclick="downloadReminderList()" class="btn btn-primary" style="flex: 1; min-width: 150px;">
+                                📥 엑셀로 다운로드
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <strong>💡 사용 방법</strong>
+                            <ol style="margin: 10px 0 0 0; padding-left: 20px; font-size: 13px;">
+                                <li>위 "메시지 복사하기" 버튼 클릭</li>
+                                <li>카카오톡 단체방 열기</li>
+                                <li>메시지 입력창에 붙여넣기 (Ctrl+V)</li>
+                                <li>전송하면 미서명자들이 링크로 바로 서명 가능</li>
+                            </ol>
+                        </div>
+                        
+                        <div id="unsignedListData" style="display:none;">${JSON.stringify(unsignedList)}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) modal.remove();
+            });
+        }
+        
+        function copyReminderMessage(message) {
+            navigator.clipboard.writeText(message).then(() => {
+                alert('✅ 메시지가 클립보드에 복사되었습니다!\n\n카카오톡을 열어서 붙여넣기(Ctrl+V) 하세요.');
+            }).catch(() => {
+                // 클립보드 API 실패 시 대체 방법
+                const textarea = document.createElement('textarea');
+                textarea.value = message;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ 메시지가 복사되었습니다!\n\n카카오톡을 열어서 붙여넣기(Ctrl+V) 하세요.');
+            });
+        }
+        
+        function downloadReminderList() {
+            const unsignedListData = document.getElementById('unsignedListData');
+            if (!unsignedListData) return;
+            
+            const unsignedList = JSON.parse(unsignedListData.textContent);
+            
+            let csv = '\ufeff문서명,직원명,부서,서명링크\n';
+            
+            unsignedList.forEach(item => {
+                const link = window.location.origin + window.location.pathname + '?doc=' + item.doc.id;
+                item.employees.forEach(emp => {
+                    csv += `"${item.doc.title}","${emp.name}","${emp.department}","${link}"\n`;
+                });
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '미서명자_목록_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            alert('✅ 미서명자 목록이 다운로드되었습니다!');
         }
         
         // 페이지 로드 시 초기화
