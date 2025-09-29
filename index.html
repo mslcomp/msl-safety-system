@@ -50,11 +50,24 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(255,255,255,0.2);
-            padding: 5px 15px;
+            background: rgba(255,255,255,0.3);
+            padding: 8px 20px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 13px;
             cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.5);
+            font-weight: bold;
+        }
+        
+        .admin-badge:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .admin-badge:active {
+            transform: scale(0.95);
         }
         
         .nav-tabs {
@@ -407,7 +420,7 @@
         <div class="header">
             <h1>MSL 안전자료 배포 시스템</h1>
             <p>㈜엠에스엘콤프레서 안전교육 전자서명 플랫폼</p>
-            <div class="admin-badge" id="adminBadge" onclick="toggleAdmin()">
+            <div class="admin-badge" id="adminBadge">
                 <span id="adminStatus">작업자 모드</span>
             </div>
         </div>
@@ -547,6 +560,78 @@
         // 관리자 비밀번호 (실제 사용시 서버에서 관리해야 함)
         const ADMIN_PASSWORD = 'msl2024';
         
+        // 파일 업로드 표시 함수
+        function displayUploadedFiles() {
+            const fileInput = document.getElementById('documentFile');
+            const filesContainer = document.getElementById('uploadedFiles');
+            
+            if (!fileInput || !filesContainer) return;
+            
+            const files = fileInput.files;
+            if (files.length === 0) {
+                filesContainer.innerHTML = '';
+                return;
+            }
+            
+            let html = '<div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">';
+            html += '<strong>선택된 파일:</strong><br>';
+            for (let i = 0; i < files.length; i++) {
+                html += `<div style="margin: 5px 0;">📄 ${files[i].name} (${(files[i].size / 1024).toFixed(1)} KB)</div>`;
+            }
+            html += '</div>';
+            filesContainer.innerHTML = html;
+        }
+        
+        // 폼 제출 처리 함수 (인라인 방식)
+        function handleDistributionSubmitDirect(e) {
+            e.preventDefault();
+            
+            console.log('폼 제출 시작');
+            
+            const titleEl = document.getElementById('documentTitle');
+            const typeEl = document.getElementById('documentType');
+            const contentEl = document.getElementById('documentContent');
+            const deptsEl = document.getElementById('targetDepts');
+            const checklistEl = document.getElementById('checklistItems');
+            
+            if (!titleEl || !typeEl || !contentEl || !deptsEl) {
+                alert('폼 요소를 찾을 수 없습니다. 페이지를 새로고침 해주세요.');
+                return false;
+            }
+            
+            const targetDepts = Array.from(deptsEl.selectedOptions).map(o => o.value);
+            if (targetDepts.length === 0) {
+                alert('대상 부서를 선택해주세요.');
+                return false;
+            }
+            
+            const checklistText = checklistEl ? checklistEl.value.trim() : '';
+            const checklistItems = checklistText ? checklistText.split('\n').filter(item => item.trim()) : [];
+            
+            const doc = {
+                id: Date.now().toString(),
+                title: titleEl.value,
+                type: typeEl.value,
+                content: contentEl.value,
+                targetDepartments: targetDepts,
+                checklistItems: checklistItems,
+                createdAt: new Date().toISOString(),
+                status: 'distributed'
+            };
+            
+            documents.push(doc);
+            localStorage.setItem('safety_documents', JSON.stringify(documents));
+            
+            // 폼 초기화
+            e.target.reset();
+            document.getElementById('uploadedFiles').innerHTML = '';
+            
+            alert('안전자료가 성공적으로 배포되었습니다!');
+            loadDistributedDocuments();
+            
+            return false;
+        }
+        
         // 탭 전환 기능
         document.querySelectorAll('.nav-tab').forEach(tab => {
             tab.addEventListener('click', function() {
@@ -577,21 +662,28 @@
         }
         
         function toggleAdmin() {
+            console.log('toggleAdmin 함수 호출됨');
+            
             if (isAdmin) {
                 // 로그아웃
                 if (confirm('관리자 모드를 종료하시겠습니까?')) {
                     isAdmin = false;
                     updateAdminUI();
+                    console.log('관리자 모드 종료');
                 }
             } else {
                 // 로그인
                 const password = prompt('관리자 비밀번호를 입력하세요:');
+                console.log('비밀번호 입력 시도');
+                
                 if (password === ADMIN_PASSWORD) {
                     isAdmin = true;
                     updateAdminUI();
                     alert('관리자 모드로 전환되었습니다.');
+                    console.log('관리자 모드 활성화');
                 } else if (password !== null) {
                     alert('비밀번호가 올바르지 않습니다.');
+                    console.log('비밀번호 오류');
                 }
             }
         }
@@ -612,17 +704,7 @@
                 distributeTab.innerHTML = document.getElementById('adminDistributeContent').innerHTML;
                 manageTab.innerHTML = document.getElementById('adminManageContent').innerHTML;
                 
-                // 폼 이벤트 리스너 재등록 - 중요!
-                setTimeout(() => {
-                    const form = document.getElementById('distributionForm');
-                    if (form) {
-                        // 기존 이벤트 리스너 제거 후 새로 등록
-                        const newForm = form.cloneNode(true);
-                        form.parentNode.replaceChild(newForm, form);
-                        newForm.addEventListener('submit', handleDistributionSubmit);
-                    }
-                }, 100);
-                
+                // 데이터 로드
                 loadDistributedDocuments();
             } else {
                 adminStatus.textContent = '작업자 모드 (클릭하여 관리자 로그인)';
@@ -638,28 +720,7 @@
             }
         }
         
-        function handleDistributionSubmit(e) {
-            e.preventDefault();
-            const targetDepts = Array.from(document.getElementById('targetDepts').selectedOptions).map(o => o.value);
-            const checklistText = document.getElementById('checklistItems').value.trim();
-            const checklistItems = checklistText ? checklistText.split('\n').filter(item => item.trim()) : [];
-            
-            const doc = {
-                id: Date.now().toString(),
-                title: document.getElementById('documentTitle').value,
-                type: document.getElementById('documentType').value,
-                content: document.getElementById('documentContent').value,
-                targetDepartments: targetDepts,
-                checklistItems: checklistItems,
-                createdAt: new Date().toISOString(),
-                status: 'distributed'
-            };
-            documents.push(doc);
-            localStorage.setItem('safety_documents', JSON.stringify(documents));
-            e.target.reset();
-            alert('안전자료가 성공적으로 배포되었습니다!');
-            loadDistributedDocuments();
-        }
+        // 이전 handleDistributionSubmit 함수 제거 (이제 인라인 함수 사용)
         
         function openSignatureModal(documentId) {
             currentDocumentId = documentId;
@@ -1490,6 +1551,13 @@
         // 페이지 로드 시 초기화
         window.addEventListener('load', function() {
             loadPendingDocuments();
+            
+            // 관리자 배지 클릭 이벤트 등록
+            const adminBadge = document.getElementById('adminBadge');
+            if (adminBadge) {
+                adminBadge.addEventListener('click', toggleAdmin);
+                console.log('관리자 배지 이벤트 등록 완료');
+            }
             
             // URL 파라미터 확인
             const urlParams = new URLSearchParams(window.location.search);
