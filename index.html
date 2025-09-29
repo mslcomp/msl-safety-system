@@ -612,11 +612,16 @@
                 distributeTab.innerHTML = document.getElementById('adminDistributeContent').innerHTML;
                 manageTab.innerHTML = document.getElementById('adminManageContent').innerHTML;
                 
-                // 폼 이벤트 리스너 재등록
-                const form = document.getElementById('distributionForm');
-                if (form) {
-                    form.addEventListener('submit', handleDistributionSubmit);
-                }
+                // 폼 이벤트 리스너 재등록 - 중요!
+                setTimeout(() => {
+                    const form = document.getElementById('distributionForm');
+                    if (form) {
+                        // 기존 이벤트 리스너 제거 후 새로 등록
+                        const newForm = form.cloneNode(true);
+                        form.parentNode.replaceChild(newForm, form);
+                        newForm.addEventListener('submit', handleDistributionSubmit);
+                    }
+                }, 100);
                 
                 loadDistributedDocuments();
             } else {
@@ -896,6 +901,8 @@
             const doc = documents.find(d => d.id === documentId);
             if (!doc) return;
             
+            const checklistText = doc.checklistItems ? doc.checklistItems.join('\n') : '';
+            
             const modal = document.createElement('div');
             modal.className = 'modal show';
             modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; overflow-y: auto;';
@@ -934,6 +941,10 @@
                                 <label class="form-label">자료 내용</label>
                                 <textarea class="form-textarea" id="editContent" rows="6" required>${doc.content}</textarea>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">체크리스트 항목 (선택사항)</label>
+                                <textarea class="form-textarea" id="editChecklistItems" rows="4" placeholder="한 줄에 하나씩 입력">${checklistText}</textarea>
+                            </div>
                             <button type="submit" class="btn btn-primary">수정 완료</button>
                         </form>
                     </div>
@@ -945,12 +956,16 @@
             document.getElementById('editDocumentForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
+                const checklistText = document.getElementById('editChecklistItems').value.trim();
+                const checklistItems = checklistText ? checklistText.split('\n').filter(item => item.trim()) : [];
+                
                 const updatedDoc = {
                     ...doc,
                     title: document.getElementById('editTitle').value,
                     type: document.getElementById('editType').value,
                     targetDepartments: Array.from(document.getElementById('editTargetDepts').selectedOptions).map(o => o.value),
                     content: document.getElementById('editContent').value,
+                    checklistItems: checklistItems,
                     updatedAt: new Date().toISOString()
                 };
                 
@@ -1231,7 +1246,22 @@
                         <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
                     </div>
                     <div style="padding: 20px;">
-                        ${docSigs.length === 0 ? '<p>아직 서명한 사람이 없습니다.</p>' : docSigs.map(sig => `
+                        ${docSigs.length === 0 ? '<p>아직 서명한 사람이 없습니다.</p>' : docSigs.map(sig => {
+                            let checklistHtml = '';
+                            if (sig.checklistResults && sig.checklistResults.length > 0) {
+                                checklistHtml = `
+                                    <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                        <strong style="font-size: 12px; color: #666;">체크리스트 결과:</strong>
+                                        ${sig.checklistResults.map(item => `
+                                            <div style="font-size: 12px; margin: 5px 0;">
+                                                ${item.checked ? '✅' : '⬜'} ${item.item}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                `;
+                            }
+                            
+                            return `
                             <div class="signature-history">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <div>
@@ -1242,11 +1272,12 @@
                                 <div style="font-size: 12px; color: #666;">
                                     서명일시: ${new Date(sig.signedAt).toLocaleString('ko-KR')}
                                 </div>
+                                ${checklistHtml}
                                 <div style="margin-top: 10px; padding: 10px; background: white; border: 1px solid #dee2e6; border-radius: 8px;">
                                     <img src="${sig.signatureImage}" style="max-width: 100%; height: auto;">
                                 </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>
             `;
