@@ -1326,7 +1326,7 @@
         function generateDocumentQR(documentId) {
             const doc = documents.find(d => d.id === documentId);
             if (!doc) return;
-            const qrUrl = window.location.origin + window.location.pathname + '?doc=' + documentId;
+            const qrUrl = 'https://mslcomp.github.io/msl-safety-system/?doc=' + documentId;
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;';
@@ -1534,7 +1534,7 @@
         }
         
         function showReminderModal(unsignedList) {
-            const modal = document.createElement('div');
+            const baseUrl = 'https://mslcomp.github.io/msl-safety-system/';
             modal.className = 'modal show';
             modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; overflow-y: auto;';
             
