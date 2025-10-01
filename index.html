@@ -444,6 +444,7 @@
             const tabDistribute = document.getElementById('tabDistribute');
             const tabManage = document.getElementById('tabManage');
             const distributeTab = document.getElementById('distribute');
+            const manageTab = document.getElementById('manage');
             
             if (isAdmin) {
                 adminStatus.textContent = '관리자 모드';
@@ -489,15 +490,46 @@
                             <button type="submit" class="btn btn-danger">자료 배포</button>
                         </form>
                     </div>
-                    <div class="card">
-                        <h3>배포된 자료 목록</h3>
-                        <div id="distributedDocuments"></div>
-                    </div>
-                `;
-                
+
+
+
+
+    <div class="card">
+        <h3>서명 현황 관리</h3>
+        <button type="button" class="btn btn-success" onclick="exportAllSignatures()">📥 전체 서명현황 보고서 다운로드 (CSV)</button>
+    </div>
+    
+    <div class="card">
+        <h3>배포된 자료 목록</h3>
+        <div id="distributedDocuments"></div>
+    </div>
+`;
                 document.getElementById('distributionForm').addEventListener('submit', handleDistributionSubmit);
                 loadDistributedDocuments();
                 
+
+manageTab.innerHTML = `
+    <div class="card">
+        <h3>서명 현황 통계</h3>
+        <div id="signatureStats"></div>
+        <button class="btn btn-primary" onclick="exportAllSignatures()">서명현황 보고서 다운로드</button>
+        <button class="btn btn-success" onclick="sendReminder()">미서명자 알림 발송</button>
+    </div>
+    
+    <div class="card">
+        <h3>직원 관리</h3>
+        <button class="btn btn-primary" onclick="addEmployee()">직원 추가</button>
+        <div id="employeeManagement"></div>
+    </div>
+        `;
+        
+        loadManageData();
+
+                
+
+
+
+
             } else {
                 adminStatus.textContent = '작업자 모드';
                 tabDistribute.classList.add('disabled');
@@ -561,15 +593,17 @@
                 const docSigs = signatures.filter(s => s.documentId === doc.id);
                 
                 return `
-                    <div class="document-card">
-                        <div class="document-title">${doc.title}</div>
-                        <p><strong>배포일:</strong> ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString() : '방금'}</p>
-                        <p><strong>구분:</strong> ${getDocumentTypeName(doc.type)}</p>
-                        <p><strong>서명현황:</strong> ${docSigs.length}명</p>
-                        <button class="btn btn-primary" onclick="copyDocumentLink('${doc.id}')" style="width: auto;">링크 복사</button>
-                        <button class="btn btn-success" onclick="viewSignatures('${doc.id}')" style="width: auto;">서명현황</button>
-                        <button class="btn" onclick="deleteDocument('${doc.id}')" style="width: auto; background: #6c757d; color: white;">삭제</button>
-                    </div>
+                      <div class="document-card">
+                          <div class="document-title">${doc.title}</div>
+                          <p><strong>배포일:</strong> ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString() : '방금'}</p>
+                          <p><strong>구분:</strong> ${getDocumentTypeName(doc.type)}</p>
+                          <p><strong>서명현황:</strong> ${docSigs.length}명</p>
+                         <button class="btn btn-primary" onclick="copyDocumentLink('${doc.id}')" style="width: auto;">링크 복사</button>
+                         <button class="btn btn-success" onclick="viewSignatures('${doc.id}')" style="width: auto;">서명현황</button>
+                         <button class="btn" onclick="downloadDocumentReport('${doc.id}')" style="width: auto; background: #17a2b8; color: white;">보고서</button>
+                         <button class="btn" onclick="editDocument('${doc.id}')" style="width: auto; background: #ffc107; color: white;">수정</button>
+                         <button class="btn" onclick="deleteDocument('${doc.id}')" style="width: auto; background: #6c757d; color: white;">삭제</button>
+                     </div>
                 `;
             }).join('');
         }
@@ -603,6 +637,199 @@
                 alert('삭제 중 오류가 발생했습니다: ' + error.message);
             }
         }
+
+
+
+async function downloadDocumentReport(docId) {
+    await loadDocumentsFromFirebase();
+    await loadSignaturesFromFirebase();
+    
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) {
+        alert('문서를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const docSigs = signatures.filter(s => s.documentId === docId);
+    
+    let csv = '\ufeff';
+    csv += `=== ${doc.title} 서명현황 보고서 ===\n`;
+    csv += `보고서 생성일시: ${new Date().toLocaleString('ko-KR')}\n\n`;
+    
+    // 문서 정보
+    csv += '[문서 정보]\n';
+    csv += `문서명: ${doc.title}\n`;
+    csv += `배포일: ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}\n`;
+    csv += `자료구분: ${getDocumentTypeName(doc.type)}\n`;
+    csv += `대상부서: ${doc.targetDepartments.map(d => {
+        const deptNames = {
+            'all': '전체부서',
+            'manufacturing': '제조팀',
+            'construction': '건설팀',
+            'logistics': '물류팀',
+            'maintenance': '설비팀'
+        };
+        return deptNames[d] || d;
+    }).join(', ')}\n`;
+    csv += `서명인원: ${docSigs.length}명\n\n`;
+    
+    // 문서 내용
+    csv += '[자료 내용]\n';
+    csv += `${doc.content}\n\n`;
+    csv += '='.repeat(80) + '\n\n';
+    
+    // 체크리스트
+    if (doc.checklistItems && doc.checklistItems.length > 0) {
+        csv += '[체크리스트 항목]\n';
+        doc.checklistItems.forEach((item, idx) => {
+            csv += `${idx + 1}. ${item}\n`;
+        });
+        csv += '\n' + '='.repeat(80) + '\n\n';
+    }
+    
+    // 서명 현황
+    csv += '[서명 현황]\n';
+    if (docSigs.length === 0) {
+        csv += '(서명자 없음)\n';
+    } else {
+        csv += `No,서명자,부서,서명일시`;
+        
+        if (doc.checklistItems && doc.checklistItems.length > 0) {
+            doc.checklistItems.forEach((item, idx) => {
+                csv += `,"${item}"`;
+            });
+        }
+        csv += '\n';
+        
+        docSigs.forEach((sig, idx) => {
+            csv += `${idx + 1},"${sig.signerName}","${sig.signerDept}","${sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR') : '방금'}"`;
+            
+            if (sig.checklistResults && sig.checklistResults.length > 0) {
+                sig.checklistResults.forEach(result => {
+                    csv += `,"${result.checked ? '✓' : '✗'}"`;
+                });
+            }
+            csv += '\n';
+        });
+    }
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const fileName = `${doc.title.replace(/[/\\?%*:|"<>]/g, '_')}_서명현황_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = fileName;
+    link.click();
+    
+    alert('개별 문서 보고서가 다운로드되었습니다.');
+}
+
+
+
+async function editDocument(docId) {
+  
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) {
+        alert('문서를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const checklistText = doc.checklistItems && doc.checklistItems.length > 0 
+        ? doc.checklistItems.join('\n') 
+        : '';
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; border-radius: 15px 15px 0 0;">
+                <h3 style="margin: 0;">문서 수정</h3>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <form id="editDocumentForm">
+                    <div class="form-group">
+                        <label class="form-label">자료 제목</label>
+                        <input type="text" class="form-input" id="editTitle" value="${doc.title}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">자료 구분</label>
+                        <select class="form-select" id="editType" required>
+                            <option value="accident_case" ${doc.type === 'accident_case' ? 'selected' : ''}>사고사례</option>
+                            <option value="safety_guide" ${doc.type === 'safety_guide' ? 'selected' : ''}>안전지침</option>
+                            <option value="emergency" ${doc.type === 'emergency' ? 'selected' : ''}>비상대응</option>
+                            <option value="regulation" ${doc.type === 'regulation' ? 'selected' : ''}>법규변경</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">대상 부서</label>
+                        <select class="form-select" id="editTargetDepts" multiple>
+                            <option value="all" ${doc.targetDepartments.includes('all') ? 'selected' : ''}>전체부서</option>
+                            <option value="manufacturing" ${doc.targetDepartments.includes('manufacturing') ? 'selected' : ''}>제조팀</option>
+                            <option value="construction" ${doc.targetDepartments.includes('construction') ? 'selected' : ''}>건설팀</option>
+                            <option value="logistics" ${doc.targetDepartments.includes('logistics') ? 'selected' : ''}>물류팀</option>
+                            <option value="maintenance" ${doc.targetDepartments.includes('maintenance') ? 'selected' : ''}>설비팀</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">자료 내용</label>
+                        <textarea class="form-textarea" id="editContent" rows="6" required>${doc.content}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">체크리스트 항목 (선택사항)</label>
+                        <textarea class="form-textarea" id="editChecklistItems" rows="4" placeholder="한 줄에 하나씩 입력">${checklistText}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">수정 완료</button>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    document.getElementById('editDocumentForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('editTitle').value.trim();
+        const type = document.getElementById('editType').value;
+        const content = document.getElementById('editContent').value.trim();
+        const targetDepts = Array.from(document.getElementById('editTargetDepts').selectedOptions).map(o => o.value);
+        const checklistText = document.getElementById('editChecklistItems').value.trim();
+        const checklistItems = checklistText ? checklistText.split('\n').filter(item => item.trim()) : [];
+        
+        if (!title || !type || !content || targetDepts.length === 0) {
+            alert('모든 필수 항목을 입력해주세요.');
+            return;
+        }
+        
+        try {
+            await db.collection('documents').doc(docId).update({
+                title: title,
+                type: type,
+                content: content,
+                targetDepartments: targetDepts,
+                checklistItems: checklistItems,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            modal.remove();
+            alert('문서가 수정되었습니다.');
+            await loadDocumentsFromFirebase();
+            loadDistributedDocuments();
+            
+        } catch (error) {
+            alert('수정 중 오류가 발생했습니다: ' + error.message);
+        }
+    });
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+
+
         
         async function loadPendingDocuments() {
             const container = document.getElementById('pendingDocuments');
@@ -644,39 +871,123 @@
             `).join('');
         }
         
-        function openSignatureModal(documentId) {
-            currentDocumentId = documentId;
-            const doc = documents.find(d => d.id === documentId);
-            
-            let checklistHtml = '';
-            if (doc.checklistItems && doc.checklistItems.length > 0) {
-                checklistHtml = `
-                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0;">
-                        <p><strong>체크리스트</strong></p>
-                        ${doc.checklistItems.map((item, index) => `
-                            <div style="margin: 10px 0;">
-                                <label style="display: flex; align-items: center;">
-                                    <input type="checkbox" id="checklist_${index}" style="margin-right: 10px;">
-                                    <span>${item}</span>
-                                </label>
-                            </div>
-                        `).join('')}
+       function openSignatureModal(documentId) {
+    currentDocumentId = documentId;
+    const doc = documents.find(d => d.id === documentId);
+    
+    let checklistHtml = '';
+    if (doc.checklistItems && doc.checklistItems.length > 0) {
+        checklistHtml = `
+            <div style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); padding: 25px; border-radius: 12px; margin: 20px 0; border: 3px solid #ffc107; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
+                <div style="display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #ffa000;">
+                    <div style="background: linear-gradient(135deg, #ff6f00 0%, #ffa000 100%); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(255, 111, 0, 0.4);">
+                        <span style="font-size: 22px;">✓</span>
                     </div>
-                `;
-            }
-            
-            document.getElementById('documentToSign').innerHTML = `
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h4 style="margin-bottom: 10px; color: #dc3545;">${doc.title}</h4>
-                    <div style="white-space: pre-line;">${doc.content}</div>
+                    <div>
+                        <p style="font-weight: bold; margin: 0; color: #e65100; font-size: 18px;">일일 TBM 체크리스트</p>
+                        <p style="margin: 5px 0 0 0; color: #f57c00; font-size: 13px;">모든 항목을 확인하고 체크해주세요</p>
+                    </div>
                 </div>
-                ${checklistHtml}
-            `;
-            
-            const modal = document.getElementById('signatureModal');
-            modal.classList.add('show');
-            setTimeout(() => initializeSignatureCanvas(), 100);
+                ${doc.checklistItems.map((item, index) => `
+                    <div style="margin: 12px 0; padding: 15px; background: white; border-radius: 10px; border: 2px solid #ffe082; transition: all 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.08); cursor: pointer;" onmouseover="this.style.borderColor='#ffa000'; this.style.boxShadow='0 4px 12px rgba(255,160,0,0.2)'" onmouseout="this.style.borderColor='#ffe082'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.08)'">
+                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 15px;">
+                            <input type="checkbox" id="checklist_${index}" style="width: 24px; height: 24px; margin-right: 15px; cursor: pointer; flex-shrink: 0; accent-color: #ff6f00; border: 2px solid #ddd; border-radius: 5px;" onchange="this.parentElement.parentElement.style.background = this.checked ? '#fff3e0' : 'white'">
+                            <span style="flex: 1; line-height: 1.6; color: #424242; font-weight: 500;">${item}</span>
+                        </label>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    document.getElementById('documentToSign').innerHTML = `
+        <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px; border: 3px solid #1976d2; box-shadow: 0 4px 15px rgba(25, 118, 210, 0.2);">
+            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                <div style="background: linear-gradient(135deg, #1976d2 0%, #2196f3 100%); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);">
+                    <span style="color: white; font-size: 18px; font-weight: bold;">📋</span>
+                </div>
+                <h4 style="margin: 0; color: #0d47a1; font-size: 20px; font-weight: 700;">${doc.title}</h4>
+            </div>
+   
+<div style="margin-top: 15px; padding: 25px; background: #fafafa; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); line-height: 2; color: #212121; white-space: pre-line; border-left: 5px solid #1976d2; font-size: 16px;">
+    ${doc.content.split('\n\n').map(section => {
+        const lines = section.split('\n');
+        const firstLine = lines[0].trim();
+        
+        // 섹션 제목 감지 (사고, 발생, 예방 등의 키워드)
+        if (firstLine.includes('사고') || firstLine.includes('개요')) {
+            return `<div style="margin-bottom: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px; padding: 12px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #ff9800;">
+                    <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+                    <strong style="color: #e65100; font-size: 18px;">${firstLine}</strong>
+                </div>
+                <div style="padding-left: 15px; color: #424242; line-height: 1.8;">
+                    ${lines.slice(1).join('<br>')}
+                </div>
+            </div>`;
         }
+        
+        if (firstLine.includes('발생') || firstLine.includes('원인')) {
+            return `<div style="margin-bottom: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px; padding: 12px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <span style="font-size: 24px; margin-right: 10px;">🔍</span>
+                    <strong style="color: #1565c0; font-size: 18px;">${firstLine}</strong>
+                </div>
+                <div style="padding-left: 15px;">
+                    ${lines.slice(1).map(line => 
+                        `<div style="margin: 8px 0; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">${line}</div>`
+                    ).join('')}
+                </div>
+            </div>`;
+        }
+        
+        if (firstLine.includes('예방') || firstLine.includes('대책')) {
+            return `<div style="margin-bottom: 25px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px; padding: 12px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                    <span style="font-size: 24px; margin-right: 10px;">✅</span>
+                    <strong style="color: #2e7d32; font-size: 18px;">${firstLine}</strong>
+                </div>
+                <div style="padding-left: 15px;">
+                    ${lines.slice(1).map(line => 
+                        `<div style="margin: 8px 0; padding: 10px; background: white; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">${line}</div>`
+                    ).join('')}
+                </div>
+            </div>`;
+        }
+        
+        if (firstLine.includes('중요') || firstLine.includes('주의')) {
+            return `<div style="margin-top: 20px; padding: 15px; background: #fff3e0; border-radius: 8px; border: 2px solid #ff9800;">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-size: 24px; margin-right: 10px;">⚠️</span>
+                    <strong style="color: #e65100;">${section}</strong>
+                </div>
+            </div>`;
+        }
+        
+        return `<div style="margin-bottom: 15px; line-height: 1.8;">${section}</div>`;
+    }).join('')}
+</div>
+
+
+
+        </div>
+        
+        ${checklistHtml}
+        
+        <div style="background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%); padding: 20px; border-radius: 12px; border: 3px solid #4caf50; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2); margin-top: 20px;">
+            <div style="display: flex; align-items: center;">
+                <div style="background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);">
+                    <span style="color: white; font-size: 20px; font-weight: bold;">✓</span>
+                </div>
+                <p style="margin: 0; color: #1b5e20; font-weight: 600; font-size: 16px;"> MSL 근로자 본인은 상기 안전자료 숙지 및 TBM 체크리스트를 이행할 것을 확인합니다.</p>
+            </div>
+        </div>
+    `;
+    
+    const modal = document.getElementById('signatureModal');
+    modal.classList.add('show');
+    setTimeout(() => initializeSignatureCanvas(), 100);
+}
         
         function closeSignatureModal() {
             const modal = document.getElementById('signatureModal');
@@ -864,6 +1175,216 @@
                 adminBadge.addEventListener('click', toggleAdmin);
             }
         });
+
+
+function loadManageData() {
+            loadSignatureStats();
+            loadEmployeeManagement();
+        }
+
+        async function loadSignatureStats() {
+            const container = document.getElementById('signatureStats');
+            if (!container) return;
+            
+            await loadDocumentsFromFirebase();
+            await loadSignaturesFromFirebase();
+            
+            if (documents.length === 0) {
+                container.innerHTML = '<p>통계를 표시할 문서가 없습니다.</p>';
+                return;
+            }
+            
+            container.innerHTML = documents.map(doc => {
+                const docSigs = signatures.filter(s => s.documentId === doc.id);
+                const rate = docSigs.length;
+                
+                return `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <strong>${doc.title}</strong>
+                        <div style="background: #e9ecef; height: 8px; border-radius: 4px; margin-top: 10px;">
+                            <div style="background: linear-gradient(135deg, #28a745, #20c997); height: 100%; width: ${Math.min(rate * 10, 100)}%;"></div>
+                        </div>
+                        <small>${docSigs.length}명 서명 완료</small>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadEmployeeManagement() {
+            const container = document.getElementById('employeeManagement');
+            if (!container) return;
+            
+            container.innerHTML = '<p>직원 관리 기능은 향후 추가 예정입니다.</p>';
+        }
+
+        function addEmployee() {
+            alert('직원 추가 기능은 향후 추가 예정입니다.');
+        }
+
+
+
+
+
+async function exportAllSignatures() {
+    await loadDocumentsFromFirebase();
+    await loadSignaturesFromFirebase();
+    
+    if (documents.length === 0) {
+        alert('배포된 문서가 없습니다.');
+        return;
+    }
+    
+    let csv = '\ufeff';
+    csv += '=== MSL 안전교육 서명현황 종합 보고서 ===\n';
+    csv += `보고서 생성일시: ${new Date().toLocaleString('ko-KR')}\n\n`;
+    
+    documents.forEach((doc, docIndex) => {
+        const docSigs = signatures.filter(s => s.documentId === doc.id);
+        
+        csv += `\n[문서 ${docIndex + 1}]\n`;
+        csv += `문서명,배포일,자료구분,서명인원\n`;
+        csv += `"${doc.title}","${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}","${getDocumentTypeName(doc.type)}",${docSigs.length}\n\n`;
+        
+        if (docSigs.length > 0) {
+            csv += `No,서명자,부서,서명일시`;
+            
+            if (doc.checklistItems && doc.checklistItems.length > 0) {
+                doc.checklistItems.forEach((item, idx) => {
+                    csv += `,"체크${idx + 1}: ${item}"`;
+                });
+            }
+            csv += '\n';
+            
+            docSigs.forEach((sig, idx) => {
+                csv += `${idx + 1},"${sig.signerName}","${sig.signerDept}","${sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR') : '방금'}"`;
+                
+                if (sig.checklistResults && sig.checklistResults.length > 0) {
+                    sig.checklistResults.forEach(result => {
+                        csv += `,"${result.checked ? '✓' : '✗'}"`;
+                    });
+                }
+                csv += '\n';
+            });
+        } else {
+            csv += '(서명자 없음)\n';
+        }
+        
+        csv += '\n' + '='.repeat(80) + '\n';
+    });
+    
+    csv += `\n\n총 문서 수: ${documents.length}건\n`;
+    csv += `총 서명 수: ${signatures.length}건\n`;
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `MSL_전체서명현황_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    
+    alert('✅ 전체 서명현황 보고서가 다운로드되었습니다.');
+}
+
+
+async function sendReminder() {
+    await loadDocumentsFromFirebase();
+    await loadSignaturesFromFirebase();
+    
+    if (documents.length === 0) {
+        alert('배포된 문서가 없습니다.');
+        return;
+    }
+    
+    // 미서명자 찾기
+    let unsignedList = [];
+    documents.forEach(doc => {
+        const docSigs = signatures.filter(s => s.documentId === doc.id);
+        const signedNames = docSigs.map(s => s.signerName);
+        
+        // 실제로는 직원 목록과 비교해야 하지만, 서명한 사람들만 표시
+        if (docSigs.length < 19) {  // 예시: 전체 직원 19명
+            unsignedList.push({
+                doc: doc,
+                signedCount: docSigs.length,
+                totalCount: 19
+            });
+        }
+    });
+    
+    if (unsignedList.length === 0) {
+        alert('모든 직원이 서명을 완료했습니다!');
+        return;
+    }
+    
+    showReminderModal(unsignedList);
+}
+
+function showReminderModal(unsignedList) {
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;';
+    
+    const baseUrl = 'https://mslcomp.github.io/msl-safety-system/';
+    
+    let messageText = '📋 [MSL 안전교육 서명 요청]\n\n';
+    messageText += '아래 문서들은 아직 서명이 완료되지 않았습니다.\n';
+    messageText += '링크를 클릭하여 서명해 주시기 바랍니다.\n\n';
+    messageText += '═══════════════════\n\n';
+    
+    unsignedList.forEach(item => {
+        const signUrl = `${baseUrl}?doc=${item.doc.id}`;
+        messageText += `📄 ${item.doc.title}\n`;
+        messageText += `🔗 서명 링크: ${signUrl}\n`;
+        messageText += `📊 현황: ${item.signedCount}/${item.totalCount}명 완료\n\n`;
+    });
+    
+    messageText += '═══════════════════\n';
+    messageText += '※ 모바일에서 링크를 클릭하면 바로 서명 가능합니다.';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 15px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; border-radius: 15px 15px 0 0;">
+                <h3 style="margin: 0;">미서명자 알림 발송</h3>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #dc3545; color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                    <strong>⚠️ 배포 안내</strong>
+                    <p style="margin: 10px 0 5px 0; font-size: 13px;">아래 메시지를 복사하여 카카오톡 단체방에 공유하세요.</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #e9ecef;">
+                    <pre style="white-space: pre-wrap; font-family: 'Malgun Gothic', sans-serif; font-size: 13px; line-height: 1.6; margin: 0; max-height: 400px; overflow-y: auto;">${messageText}</pre>
+                </div>
+                
+                <button onclick="copyReminderMessage(\`${messageText.replace(/`/g, '\\`')}\`)" class="btn btn-success" style="width: 100%;">
+                    📋 메시지 복사하기
+                </button>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;">
+                    <strong>💡 사용 방법</strong>
+                    <ol style="margin: 10px 0 0 0; padding-left: 20px; font-size: 13px;">
+                        <li>위 "메시지 복사하기" 버튼 클릭</li>
+                        <li>카카오톡 단체방 열기</li>
+                        <li>메시지 입력창에 붙여넣기 (Ctrl+V)</li>
+                        <li>전송하면 미서명자들이 링크로 바로 서명 가능</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function copyReminderMessage(message) {
+    navigator.clipboard.writeText(message).then(() => {
+        alert('✅ 메시지가 클립보드에 복사되었습니다!\n\n카카오톡을 열어서 붙여넣기(Ctrl+V) 하세요.');
+    }).catch(() => {
+        alert('복사에 실패했습니다. 직접 선택하여 복사해주세요.');
+    });
+}
+
+
     </script>
 </body>
 </html>
