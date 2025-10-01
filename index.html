@@ -1073,6 +1073,19 @@ async function editDocument(docId) {
                 alert('문서를 찾을 수 없습니다.');
                 return;
             }
+
+        await loadSignaturesFromFirebase();
+             const existingSignature = signatures.find(sig => 
+           sig.documentId === currentDocumentId && 
+           sig.signerName === signerName
+        );
+
+        if (existingSignature) {
+            alert(`${signerName}님은 이미 이 문서에 서명하셨습니다.\n\n기존 서명 정보:\n부서: ${existingSignature.signerDept}\n서명일시: ${existingSignature.signedAt ? new Date(existingSignature.signedAt.toDate()).toLocaleString('ko-KR') : '방금'}\n\n동명이인이 아니라면 중복 서명이 불가능합니다.`);
+            return;
+        }
+
+
             
             const checklistResults = [];
             if (doc.checklistItems && doc.checklistItems.length > 0) {
