@@ -980,6 +980,91 @@ async function editDocument(docId) {
     
     document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}개 완료`;
 }
+
+function showNameInputModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 24px; width: 90%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px 24px; text-align: center;">
+                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 3px solid rgba(255,255,255,0.3);">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h3 style="margin: 0; color: white; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">본인 확인</h3>
+                <p style="margin: 12px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; line-height: 1.5;">서명 현황 확인을 위해<br>이름을 입력해주세요</p>
+            </div>
+            
+            <div style="padding: 32px 24px;">
+                <form id="nameInputForm">
+                    <div style="position: relative; margin-bottom: 24px;">
+                        <input type="text" 
+                               id="userNameInput" 
+                               placeholder="이름을 입력하세요" 
+                               autocomplete="name"
+                               required
+                               style="width: 100%; padding: 16px 20px; padding-left: 50px; border: 2px solid #e9ecef; border-radius: 14px; font-size: 16px; font-weight: 600; transition: all 0.3s; color: #2d3436; background: #f8f9fa;"
+                               onfocus="this.style.borderColor='#667eea'; this.style.background='white'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.15)';"
+                               onblur="this.style.borderColor='#e9ecef'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">
+                        <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 20px; opacity: 0.5;">👤</span>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" 
+                                onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" 
+                                style="flex: 1; padding: 16px; background: #f1f3f5; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; color: #495057; cursor: pointer; transition: all 0.3s;"
+                                onmouseover="this.style.background='#e9ecef'"
+                                onmouseout="this.style.background='#f1f3f5'">
+                            취소
+                        </button>
+                        <button type="submit" 
+                                style="flex: 2; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; font-size: 15px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(102,126,234,0.4); transition: all 0.3s;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.5)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.4)'">
+                            확인
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <style>
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 폼 제출 이벤트
+    document.getElementById('nameInputForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('userNameInput').value.trim();
+        if (name) {
+            localStorage.setItem('mslUserName', name);
+            modal.remove();
+            loadPendingDocuments();
+        }
+    });
+    
+    // 입력창에 자동 포커스
+    setTimeout(() => {
+        document.getElementById('userNameInput').focus();
+    }, 300);
+}
+
+
      
 function openSignatureModal(documentId) {
     currentDocumentId = documentId;
