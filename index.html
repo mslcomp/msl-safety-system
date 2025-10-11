@@ -72,33 +72,40 @@
             transform: scale(1.05);
         }
         
-        .nav-tabs {
-            display: flex;
-            background: #f8f9fa;
-        }
-        
-        .nav-tab {
-            flex: 1;
-            padding: 15px 10px;
-            text-align: center;
-            background: #f8f9fa;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .nav-tab:hover {
-            background: #e9ecef;
-        }
-        
-        .nav-tab.active {
-          background: white;
-           border-bottom-color: #00b894;
-           color: #00b894;
-        }
+       .nav-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-radius: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.nav-tab {
+    flex: 1;
+    padding: 16px 10px;
+    text-align: center;
+    background: #f8f9fa;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.3s;
+    border-bottom: 3px solid transparent;
+    color: #95a5a6;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+}
+
+.nav-tab:hover {
+    background: #e9ecef;
+    color: #2d3436;
+}
+
+.nav-tab.active {
+    background: white;
+    border-bottom-color: #00b894;
+    color: #00b894;
+}
         
         .nav-tab.disabled {
             opacity: 0.5;
@@ -282,30 +289,62 @@
             padding: 40px;
             color: #666;
         }
+
+        @media (max-width: 480px) {
+    .header {
+        padding: 20px 16px;
+    }
+    
+    .container {
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    .nav-tab {
+        font-size: 14px;
+        padding: 14px 8px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+}
     </style>
 </head>
 <body>
     <div class="container">
-   <div class="header">
-    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-        <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: 14px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+<div class="header">
+    <div style="text-align: center; padding: 8px 0;">
+        <!-- 로고 + 타이틀 통합 -->
+        <div style="display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 50px; border: 2px solid rgba(255,255,255,0.25); box-shadow: 0 8px 32px rgba(0,0,0,0.1); margin-bottom: 16px;">
+            <div style="background: white; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#667eea" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div style="text-align: left;">
+                <div style="color: white; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;">MSL 안전보건 전자서명 플랫폼</div>
+                <div style="color: rgba(255,255,255,0.85); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 2px;">DIGITAL SAFETY PLATFORM</div>
+            </div>
         </div>
-       <div style="text-align: left;">
-    <div style="font-size: 11px; font-weight: 600; opacity: 0.85; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;">Digital Safety Platform</div>
-    <h1 style="font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.5px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); line-height: 1.3;">MSL 안전보건 전자서명</h1>
-</div>
+        
+        <!-- 3개 뱃지를 2줄로 배치 -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px;">
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; min-width: 200px; text-align: center;">
+                ㈜엠에스엘콤프레서
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 320px;">
+                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; white-space: nowrap;">
+                    중대재해 ZERO
+                </div>
+                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; white-space: nowrap;">
+                    교육이수 100%
+                </div>
+            </div>
+        </div>
     </div>
-    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;">
-        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">
-            ㈜엠에스엘콤프레서
-        </div>
-        <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(255,255,255,0.2);">
-            📋 안전교육 & TBM
-        </div>
-    </div>
+    
     <div class="admin-badge" id="adminBadge">
         <span id="adminStatus">작업자 모드</span>
     </div>
@@ -898,23 +937,43 @@ async function editDocument(docId) {
         return;
     }
     
+    const userName = localStorage.getItem('mslUserName');
     let completedCount = 0;
-    const userName = prompt('본인 이름을 입력하세요 (서명 현황 확인용):');
     
-    container.innerHTML = `
-        <div style="background: white; margin: -20px; padding: 20px;">
+    // 이름이 없으면 입력 모달 표시
+    if (!userName && documents.length > 0) {
+    showNameInputModal();
+    return;
+}
     
-            <h3 style="font-size: 20px; font-weight: bold; color: #000; margin-bottom: 20px; line-height: 1.4;">
-     (주)엠에스엘콤프레서 전사안전보건목표<br> 중대재해발생ZERO<br> 안전보건교육이수 100%
-</h3>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; color: color: #000;">
-                    <span style="font-size: 20px; margin-right: 8px;">📅</span>
-                    <span style="font-weight: bold;">${new Date().toLocaleDateString('ko-KR')}</span>
-                </div>
-                <div style="font-weight: bold; color: #666;" id="checkCount">0/${documents.length}개 완료</div>
+    
+container.innerHTML = `
+    <div style="background: white; margin: -20px; padding: 20px;">
+
+       <!-- 안전보건 목표 이미지 배너 -->
+    <div style="margin: -20px -20px 20px -20px; overflow: hidden; border-radius: 0;">
+    <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
+         alt="산업재해 절벽방어 - 안전하고 건강한 일터, 행복한 대한민국" 
+         style="width: 100%; height: auto; display: block; max-height: 250px; object-fit: cover;">
+    </div>
+        
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; color: #000;">
+            <span style="font-size: 20px; margin-right: 8px;">📅</span>
+            <span style="font-weight: bold;">${new Date().toLocaleDateString('ko-KR')}</span>
+        </div>
+        ${userName ? `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 14px; color: #666;">👤 ${userName}</span>
+                <button onclick="changeUserName()" style="background: white; border: 2px solid #e9ecef; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.borderColor='#667eea'; this.style.color='#667eea'" onmouseout="this.style.borderColor='#e9ecef'; this.style.color='#666'">
+                    변경
+                </button>
             </div>
+        ` : ''}
+    </div>
+    <div style="font-weight: bold; color: #666;" id="checkCount">0/${documents.length}개 완료</div>
+</div>
             
             <div>
                 ${documents.map(doc => {
@@ -981,6 +1040,13 @@ async function editDocument(docId) {
     document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}개 완료`;
 }
 
+function changeUserName() {
+    localStorage.removeItem('mslUserName');
+    window.currentUserName = null;
+    loadPendingDocuments();
+}
+
+
 function showNameInputModal() {
     const modal = document.createElement('div');
     modal.className = 'modal show';
@@ -988,14 +1054,20 @@ function showNameInputModal() {
     
     modal.innerHTML = `
         <div style="background: white; border-radius: 24px; width: 90%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 32px 24px; text-align: center;">
-                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); width: 64px; height: 64px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 3px solid rgba(255,255,255,0.3);">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- ⭐ 헤더 부분 교체 ⭐ -->
+            <div style="background: linear-gradient(135deg, #00b894 0%, #00a383 100%); padding: 40px 24px; text-align: center; position: relative;">
+                <!-- 안전제일 로고 -->
+                <div style="background: white; width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,0,0,0.15); border: 6px solid #00b894;">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 십자가 -->
+                        <rect x="42" y="15" width="16" height="70" fill="#00b894" rx="2"/>
+                        <rect x="15" y="42" width="70" height="16" fill="#00b894" rx="2"/>
                     </svg>
                 </div>
-                <h3 style="margin: 0; color: white; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">본인 확인</h3>
-                <p style="margin: 12px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 500; line-height: 1.5;">서명 현황 확인을 위해<br>이름을 입력해주세요</p>
+                
+                <h3 style="margin: 0 0 12px 0; color: white; font-size: 28px; font-weight: 900; letter-spacing: 2px;">안전제일</h3>
+                <p style="margin: 0; color: white; font-size: 16px; font-weight: 700; letter-spacing: 1px;">SAFETY FIRST</p>
+                <p style="margin: 16px 0 0 0; color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 600; line-height: 1.6;">서명 현황 확인을 위해<br>이름을 입력해주세요</p>
             </div>
             
             <div style="padding: 32px 24px;">
@@ -1007,7 +1079,7 @@ function showNameInputModal() {
                                autocomplete="name"
                                required
                                style="width: 100%; padding: 16px 20px; padding-left: 50px; border: 2px solid #e9ecef; border-radius: 14px; font-size: 16px; font-weight: 600; transition: all 0.3s; color: #2d3436; background: #f8f9fa;"
-                               onfocus="this.style.borderColor='#667eea'; this.style.background='white'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.15)';"
+                               onfocus="this.style.borderColor='#00b894'; this.style.background='white'; this.style.boxShadow='0 4px 12px rgba(0,184,148,0.15)';"
                                onblur="this.style.borderColor='#e9ecef'; this.style.background='#f8f9fa'; this.style.boxShadow='none';">
                         <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 20px; opacity: 0.5;">👤</span>
                     </div>
@@ -1021,9 +1093,9 @@ function showNameInputModal() {
                             취소
                         </button>
                         <button type="submit" 
-                                style="flex: 2; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 12px; font-size: 15px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(102,126,234,0.4); transition: all 0.3s;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.5)'"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.4)'">
+                                style="flex: 2; padding: 16px; background: linear-gradient(135deg, #00b894 0%, #00a383 100%); border: none; border-radius: 12px; font-size: 15px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(0,184,148,0.4); transition: all 0.3s;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,184,148,0.5)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,184,148,0.4)'">
                             확인
                         </button>
                     </div>
@@ -1047,7 +1119,6 @@ function showNameInputModal() {
     
     document.body.appendChild(modal);
     
-    // 폼 제출 이벤트
     document.getElementById('nameInputForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const name = document.getElementById('userNameInput').value.trim();
@@ -1058,7 +1129,6 @@ function showNameInputModal() {
         }
     });
     
-    // 입력창에 자동 포커스
     setTimeout(() => {
         document.getElementById('userNameInput').focus();
     }, 300);
@@ -1158,6 +1228,7 @@ function openSignatureModal(documentId) {
               onblur="this.style.borderColor='#E9ECEF'; this.style.background='white';"></textarea>
     <div style="margin-top: 12px; color: #74B9FF; font-size: 13px; font-weight: 500;">
         💡 작업 중 발견한 위험요소나 건의사항을 자유롭게 작성해주세요
+           <br>건의사항이 없으면 다음항목을 작성해주세요
     </div>
 </div>
         
