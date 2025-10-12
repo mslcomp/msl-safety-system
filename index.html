@@ -309,7 +309,14 @@
         width: 95%;
         margin: 10px;
     }
+       .safety-banner {
+        transform: scale(1.15);
+        margin: -20px -20px 30px -20px !important;
+    }
+    
 }
+
+
     </style>
 </head>
 <body>
@@ -710,16 +717,30 @@ async function downloadDocumentReport(docId) {
     
     const docSigs = signatures.filter(s => s.documentId === docId);
     
+    // 고정 체크리스트 항목
+    const fixedChecklistItems = [
+        '개인 보호구 착용',
+        '위험요소 발견시 작업중지 및 보고',
+        '교육 및 안전관리 규정 준수'
+    ];
+    
+    const allChecklistItems = [...fixedChecklistItems];
+    if (doc.checklistItems && doc.checklistItems.length > 0) {
+        allChecklistItems.push(...doc.checklistItems);
+    }
+    
     let csv = '\ufeff';
-    csv += `=== ${doc.title} 서명현황 보고서 ===\n`;
-    csv += `보고서 생성일시: ${new Date().toLocaleString('ko-KR')}\n\n`;
+    
+    // 제목
+    csv += `MSL 안전보건 시스템 서명현황 보고서\n`;
+    csv += `보고서 생성일시,${new Date().toLocaleString('ko-KR')}\n\n`;
     
     // 문서 정보
-    csv += '[문서 정보]\n';
-    csv += `문서명: ${doc.title}\n`;
-    csv += `배포일: ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}\n`;
-    csv += `자료구분: ${getDocumentTypeName(doc.type)}\n`;
-    csv += `대상부서: ${doc.targetDepartments.map(d => {
+    csv += `[문서 정보]\n`;
+    csv += `문서명,${doc.title}\n`;
+    csv += `배포일,${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}\n`;
+    csv += `자료구분,${getDocumentTypeName(doc.type)}\n`;
+    csv += `대상부서,${doc.targetDepartments.map(d => {
         const deptNames = {
             'all': '전체부서',
             'manufacturing': '제조팀',
@@ -729,45 +750,89 @@ async function downloadDocumentReport(docId) {
         };
         return deptNames[d] || d;
     }).join(', ')}\n`;
-    csv += `서명인원: ${docSigs.length}명\n\n`;
+    csv += `서명인원,${docSigs.length}명\n\n`;
     
     // 문서 내용
-    csv += '[자료 내용]\n';
-    csv += `${doc.content}\n\n`;
-    csv += '='.repeat(80) + '\n\n';
+    csv += `[자료 내용]\n`;
+    csv += `"${doc.content.replace(/"/g, '""')}"\n\n`;
     
-    // 체크리스트
-    if (doc.checklistItems && doc.checklistItems.length > 0) {
-        csv += '[체크리스트 항목]\n';
-        doc.checklistItems.forEach((item, idx) => {
-            csv += `${idx + 1}. ${item}\n`;
-        });
-        csv += '\n' + '='.repeat(80) + '\n\n';
-    }
+    csv += `${'='.repeat(100)}\n\n`;
     
-    // 서명 현황
-    csv += '[서명 현황]\n';
+    // 서명 현황 헤더
+    csv += `[서명 현황]\n`;
     if (docSigs.length === 0) {
-        csv += '(서명자 없음)\n';
+        csv += `(서명자 없음)\n`;
     } else {
+        // 헤더 행
         csv += `No,서명자,부서,서명일시`;
         
-        if (doc.checklistItems && doc.checklistItems.length > 0) {
-            doc.checklistItems.forEach((item, idx) => {
-                csv += `,"${item}"`;
-            });
-        }
-        csv += '\n';
+        // 체크리스트 항목 헤더
+        allChecklistItems.forEach((item, idx) => {
+            csv += `,"체크${idx + 1}"`;
+        });
         
+        csv += `,"안전보건 건의사항"\n`;
+        
+        // 데이터 행
         docSigs.forEach((sig, idx) => {
             csv += `${idx + 1},"${sig.signerName}","${sig.signerDept}","${sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR') : '방금'}"`;
             
+            // 체크리스트 결과
             if (sig.checklistResults && sig.checklistResults.length > 0) {
                 sig.checklistResults.forEach(result => {
                     csv += `,"${result.checked ? '✓' : '✗'}"`;
                 });
+            } else {
+                allChecklistItems.forEach(() => {
+                    csv += `,"미체크"`;
+                });
             }
+            
+            // 건의사항
+            const suggestion = sig.riskSuggestion && sig.riskSuggestion.trim() 
+                ? sig.riskSuggestion.replace(/"/g, '""').replace(/\n/g, ' ') 
+                : '없음';
+            csv += `,"${suggestion}"`;
+            
             csv += '\n';
+        });
+        
+        csv += `\n`;
+        
+        // 체크리스트 상세 설명
+        csv += `${'='.repeat(100)}\n\n`;
+        csv += `[체크리스트 항목 상세]\n`;
+        allChecklistItems.forEach((item, idx) => {
+            csv += `체크${idx + 1},"${item}"\n`;
+        });
+    }
+    
+    // 통계
+    csv += `\n${'='.repeat(100)}\n\n`;
+    csv += `[통계]\n`;
+    csv += `총 서명인원,${docSigs.length}명\n`;
+    
+    if (allChecklistItems.length > 0 && docSigs.length > 0) {
+        csv += `\n[체크리스트 통계]\n`;
+        allChecklistItems.forEach((item, idx) => {
+            const checkedCount = docSigs.filter(sig => 
+                sig.checklistResults && 
+                sig.checklistResults[idx] && 
+                sig.checklistResults[idx].checked
+            ).length;
+            const percentage = ((checkedCount / docSigs.length) * 100).toFixed(1);
+            csv += `체크${idx + 1},${checkedCount}명 (${percentage}%)\n`;
+        });
+    }
+    
+    // 건의사항 목록
+    const withSuggestions = docSigs.filter(sig => sig.riskSuggestion && sig.riskSuggestion.trim());
+    if (withSuggestions.length > 0) {
+        csv += `\n${'='.repeat(100)}\n\n`;
+        csv += `[안전보건 건의사항 목록]\n`;
+        csv += `No,서명자,부서,건의내용\n`;
+        withSuggestions.forEach((sig, idx) => {
+            csv += `${idx + 1},"${sig.signerName}","${sig.signerDept}","${sig.riskSuggestion.replace(/"/g, '""').replace(/\n/g, ' ')}"\n`;
         });
     }
     
@@ -778,7 +843,7 @@ async function downloadDocumentReport(docId) {
     link.download = fileName;
     link.click();
     
-    alert('개별 문서 보고서가 다운로드되었습니다.');
+    alert('✅ 개별 문서 보고서가 다운로드되었습니다.');
 }
 
 
@@ -948,12 +1013,12 @@ async function editDocument(docId) {
     
     container.innerHTML = `
         <div style="background: white; margin: -20px; padding: 20px;">
-            <!-- 안전보건 목표 이미지 배너 -->
-            <div style="margin: -20px -20px 24px -20px; overflow: hidden;">
-                <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
-                     alt="산업재해 절벽방어" 
-                     style="width: 100%; height: auto; display: block;">
-            </div>
+<!-- 안전보건 목표 이미지 배너 -->
+<div style="margin: -20px -20px 24px -20px; overflow: hidden;" class="safety-banner">
+    <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
+         alt="산업재해 절벽방어" 
+         style="width: 100%; height: auto; display: block;">
+</div>  
             
             <!-- 날짜와 완료 개수 카드 -->
 <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
@@ -1213,7 +1278,7 @@ function openSignatureModal(documentId) {
 
     const fixedChecklistItems = [
     '나는 작업에 필요한 개인 보호구(안전모, 안전화, 기타 안전보호구 등)를 올바르게 착용하고 관리한다.',
-    '나는 위험요소를 발견한 즉시 작업을 중지하고 안전조치 하도록 관리감독자에게 건의한다.',
+    '나는 위험요소(인적, 물적)를 발견한 즉시 작업을 중지하고 안전조치 하도록 관리감독자에게 건의한다.',
     '나는 회사(현장)에서 실시하는 교육 및 제반 안전관리 규정을 따르고 적극 참여한다.'
 ];
 
@@ -1306,15 +1371,11 @@ if (allChecklistItems.length > 0) {
         <h4 style="margin: 0; color: #2D3436; font-size: 17px; font-weight: 700;">안전보건관련 건의사항</h4>
     </div>
     <textarea id="riskSuggestion" 
-              placeholder="내용을 입력해주세요." 
+              placeholder="작업 중 발견한 위험요소나 건의사항을 자유롭게 작성해주세요. 건의사항이 없으면 다음항목을 작성해주세요." 
               style="width: 100%; min-height: 120px; padding: 16px; border: 2px solid #E9ECEF; border-radius: 12px; font-size: 15px; font-family: 'Malgun Gothic', sans-serif; resize: vertical; transition: all 0.3s; color: #2D3436; line-height: 1.6;"
               onfocus="this.style.borderColor='#667EEA'; this.style.background='#F8F9FF';"
               onblur="this.style.borderColor='#E9ECEF'; this.style.background='white';"></textarea>
-    <div style="margin-top: 12px; color: #74B9FF; font-size: 13px; font-weight: 500;">
-        💡 작업 중 발견한 위험요소나 건의사항을 자유롭게 작성해주세요
-           건의사항이 없으면 다음항목을 작성해주세요
-    </div>
-</div>
+
         
         <div style="background: linear-gradient(135deg, #00B894 0%, #00CEC9 100%); padding: 20px 24px; border-radius: 16px; box-shadow: 0 6px 20px rgba(0, 184, 148, 0.25); margin-top: 20px;">
             <div style="display: flex; align-items: center;">
@@ -1437,7 +1498,7 @@ if (allChecklistItems.length > 0) {
          // 고정 체크리스트 항목
 const fixedChecklistItems = [
     '나는 작업에 필요한 개인 보호구(안전모, 안전화, 기타 안전보호구 등)를 올바르게 착용하고 관리한다.',
-    '나는 위험요소를 발견한 즉시 작업을 중지하고 안전조치 하도록 관리감독자에게 건의한다.',
+    '나는 위험요소(인적, 물적)를 발견한 즉시 작업을 중지하고 안전조치 하도록 관리감독자에게 건의한다.',
     '나는 회사(현장)에서 실시하는 교육 및 제반 안전관리 규정을 따르고 적극 참여한다.'
 ];
 
@@ -1644,46 +1705,137 @@ async function exportAllSignatures() {
         return;
     }
     
+    // 고정 체크리스트 항목
+    const fixedChecklistItems = [
+        '개인 보호구 착용',
+        '위험요소 발견시 작업중지 및 보고',
+        '교육 및 안전관리 규정 준수'
+    ];
+    
     let csv = '\ufeff';
-    csv += '=== MSL 안전교육 서명현황 종합 보고서 ===\n';
-    csv += `보고서 생성일시: ${new Date().toLocaleString('ko-KR')}\n\n`;
+    csv += `MSL 안전교육 서명현황 종합 보고서\n`;
+    csv += `보고서 생성일시,${new Date().toLocaleString('ko-KR')}\n\n`;
+    
+    csv += `${'='.repeat(120)}\n\n`;
     
     documents.forEach((doc, docIndex) => {
         const docSigs = signatures.filter(s => s.documentId === doc.id);
         
-        csv += `\n[문서 ${docIndex + 1}]\n`;
-        csv += `문서명,배포일,자료구분,서명인원\n`;
-        csv += `"${doc.title}","${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}","${getDocumentTypeName(doc.type)}",${docSigs.length}\n\n`;
+        const allChecklistItems = [...fixedChecklistItems];
+        if (doc.checklistItems && doc.checklistItems.length > 0) {
+            allChecklistItems.push(...doc.checklistItems);
+        }
+        
+        csv += `[문서 ${docIndex + 1}] ${doc.title}\n`;
+        csv += `배포일,${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}\n`;
+        csv += `자료구분,${getDocumentTypeName(doc.type)}\n`;
+        csv += `서명인원,${docSigs.length}명\n\n`;
         
         if (docSigs.length > 0) {
+            // 헤더
             csv += `No,서명자,부서,서명일시`;
+            allChecklistItems.forEach((item, idx) => {
+                csv += `,"체크${idx + 1}"`;
+            });
+            csv += `,"안전보건 건의사항"\n`;
             
-            if (doc.checklistItems && doc.checklistItems.length > 0) {
-                doc.checklistItems.forEach((item, idx) => {
-                    csv += `,"체크${idx + 1}: ${item}"`;
-                });
-            }
-            csv += '\n';
-            
+            // 데이터
             docSigs.forEach((sig, idx) => {
                 csv += `${idx + 1},"${sig.signerName}","${sig.signerDept}","${sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR') : '방금'}"`;
                 
+                // 체크리스트
                 if (sig.checklistResults && sig.checklistResults.length > 0) {
                     sig.checklistResults.forEach(result => {
                         csv += `,"${result.checked ? '✓' : '✗'}"`;
                     });
+                } else {
+                    allChecklistItems.forEach(() => {
+                        csv += `,"미체크"`;
+                    });
                 }
+                
+                // 건의사항
+                const suggestion = sig.riskSuggestion && sig.riskSuggestion.trim() 
+                    ? sig.riskSuggestion.replace(/"/g, '""').replace(/\n/g, ' ') 
+                    : '없음';
+                csv += `,"${suggestion}"`;
                 csv += '\n';
             });
+            
+            // 체크리스트 항목 설명
+            csv += `\n[체크리스트 항목]\n`;
+            allChecklistItems.forEach((item, idx) => {
+                csv += `체크${idx + 1},"${item}"\n`;
+            });
+            
+            // 통계
+            csv += `\n[통계]\n`;
+            csv += `서명 완료,${docSigs.length}명\n`;
+            if (allChecklistItems.length > 0) {
+                csv += `\n[체크리스트 통계]\n`;
+                allChecklistItems.forEach((item, idx) => {
+                    const checkedCount = docSigs.filter(sig => 
+                        sig.checklistResults && 
+                        sig.checklistResults[idx] && 
+                        sig.checklistResults[idx].checked
+                    ).length;
+                    const percentage = docSigs.length > 0 ? ((checkedCount / docSigs.length) * 100).toFixed(1) : 0;
+                    csv += `체크${idx + 1},${checkedCount}명 (${percentage}%)\n`;
+                });
+            }
+            
+            // 건의사항 목록
+            const withSuggestions = docSigs.filter(sig => sig.riskSuggestion && sig.riskSuggestion.trim());
+            if (withSuggestions.length > 0) {
+                csv += `\n[안전보건 건의사항 목록]\n`;
+                csv += `No,서명자,부서,건의내용\n`;
+                withSuggestions.forEach((sig, idx) => {
+                    csv += `${idx + 1},"${sig.signerName}","${sig.signerDept}","${sig.riskSuggestion.replace(/"/g, '""').replace(/\n/g, ' ')}"\n`;
+                });
+            }
         } else {
-            csv += '(서명자 없음)\n';
+            csv += `(서명자 없음)\n`;
         }
         
-        csv += '\n' + '='.repeat(80) + '\n';
+        csv += `\n${'='.repeat(120)}\n\n`;
     });
     
-    csv += `\n\n총 문서 수: ${documents.length}건\n`;
-    csv += `총 서명 수: ${signatures.length}건\n`;
+    // 전체 통계
+    csv += `[전체 통계]\n`;
+    csv += `총 문서 수,${documents.length}건\n`;
+    csv += `총 서명 수,${signatures.length}건\n`;
+    csv += `평균 서명률,${documents.length > 0 ? (signatures.length / documents.length).toFixed(1) : 0}명/문서\n\n`;
+    
+    // 부서별 통계
+    const deptStats = {};
+    signatures.forEach(sig => {
+        if (!deptStats[sig.signerDept]) {
+            deptStats[sig.signerDept] = 0;
+        }
+        deptStats[sig.signerDept]++;
+    });
+    
+    csv += `[부서별 서명 통계]\n`;
+    csv += `부서,서명 건수\n`;
+    Object.entries(deptStats)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([dept, count]) => {
+            csv += `"${dept}",${count}건\n`;
+        });
+    
+    // 전체 건의사항 통합
+    const allSuggestions = signatures.filter(sig => sig.riskSuggestion && sig.riskSuggestion.trim());
+    if (allSuggestions.length > 0) {
+        csv += `\n${'='.repeat(120)}\n\n`;
+        csv += `[전체 안전보건 건의사항 통합]\n`;
+        csv += `No,문서명,서명자,부서,서명일시,건의내용\n`;
+        
+        allSuggestions.forEach((sig, idx) => {
+            const doc = documents.find(d => d.id === sig.documentId);
+            const docTitle = doc ? doc.title : '알 수 없음';
+            csv += `${idx + 1},"${docTitle}","${sig.signerName}","${sig.signerDept}","${sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR') : '방금'}","${sig.riskSuggestion.replace(/"/g, '""').replace(/\n/g, ' ')}"\n`;
+        });
+    }
     
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
