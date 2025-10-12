@@ -942,39 +942,57 @@ async function editDocument(docId) {
     
     // 이름이 없으면 입력 모달 표시
     if (!userName && documents.length > 0) {
-    showNameInputModal();
-    return;
-}
+        showNameInputModal();
+        return;
+    }
     
-    
-container.innerHTML = `
-    <div style="background: white; margin: -20px; padding: 20px;">
-
-       <!-- 안전보건 목표 이미지 배너 -->
-    <div style="margin: -20px -20px 20px -20px; overflow: hidden; border-radius: 0;">
-    <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
-         alt="산업재해 절벽방어 - 안전하고 건강한 일터, 행복한 대한민국" 
-         style="width: 100%; height: auto; display: block; max-height: 250px; object-fit: cover;">
-    </div>
-        
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <div style="display: flex; align-items: center; color: #000;">
-            <span style="font-size: 20px; margin-right: 8px;">📅</span>
-            <span style="font-weight: bold;">${new Date().toLocaleDateString('ko-KR')}</span>
-        </div>
-        ${userName ? `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 14px; color: #666;">👤 ${userName}</span>
-                <button onclick="changeUserName()" style="background: white; border: 2px solid #e9ecef; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.borderColor='#667eea'; this.style.color='#667eea'" onmouseout="this.style.borderColor='#e9ecef'; this.style.color='#666'">
-                    변경
-                </button>
+    container.innerHTML = `
+        <div style="background: white; margin: -20px; padding: 20px;">
+            <!-- 안전보건 목표 이미지 배너 -->
+            <div style="margin: -20px -20px 24px -20px; overflow: hidden;">
+                <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
+                     alt="산업재해 절벽방어" 
+                     style="width: 100%; height: auto; display: block;">
             </div>
-        ` : ''}
-    </div>
-    <div style="font-weight: bold; color: #666;" id="checkCount">0/${documents.length}개 완료</div>
-</div>
             
+            <!-- 날짜와 완료 개수 카드 -->
+            <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${userName ? '16px' : '0'};">
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: 14px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                            <span style="font-size: 22px;">📅</span>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #95a5a6; font-weight: 600; margin-bottom: 2px;">TODAY</div>
+                            <div style="font-weight: 800; font-size: 17px; color: #2d3436; letter-spacing: -0.5px;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+                        </div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 12px 20px; border-radius: 24px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap;" id="checkCount">
+                        0/${documents.length}
+                    </div>
+                </div>
+                
+                ${userName ? `
+                    <div style="border-top: 1px solid #f0f0f0; padding-top: 16px; margin-top: 0;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #e9ecef;">
+                                    <span style="font-size: 20px;">👤</span>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; color: #95a5a6; font-weight: 600; margin-bottom: 2px;">작업자</div>
+                                    <div style="font-size: 16px; font-weight: 800; color: #2d3436; letter-spacing: -0.5px;">${userName}</div>
+                                </div>
+                            </div>
+                            <button onclick="changeUserName()" style="background: white; border: 2px solid #667eea; padding: 10px 18px; border-radius: 14px; font-size: 14px; font-weight: 700; color: #667eea; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(102,126,234,0.15);" onmouseover="this.style.background='#667eea'; this.style.color='white'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='white'; this.style.color='#667eea'; this.style.transform='translateY(0)'">
+                                변경
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <!-- 문서 목록 -->
             <div>
                 ${documents.map(doc => {
                     const docSigs = signatures.filter(s => s.documentId === doc.id);
@@ -983,49 +1001,51 @@ container.innerHTML = `
                     if (isCompleted) completedCount++;
                     
                     return `
-                        <div style="background: white; border: 2px solid ${isCompleted ? '#00b894' : '#e9ecef'}; border-radius: 16px; padding: 0; margin-bottom: 16px; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); transition: all 0.3s;" onclick="openSignatureModal('${doc.id}')" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'">
+                        <div style="background: white; border: 2px solid ${isCompleted ? '#00b894' : '#e9ecef'}; border-radius: 20px; padding: 0; margin-bottom: 20px; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); transition: all 0.3s;" onclick="openSignatureModal('${doc.id}')" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'">
                             
                             ${isCompleted ? `
-                                <div style="position: absolute; top: 16px; right: 16px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(0,184,148,0.4); z-index: 2;">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                                <div style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 16px rgba(0,184,148,0.5); z-index: 2;">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
                                 </div>
                             ` : ''}
                             
-                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}; padding: 20px; padding-right: 60px;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                    <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3);">
-                                        <span style="font-size: 20px;">📋</span>
+                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}; padding: 24px; padding-right: 70px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3);">
+                                        <span style="font-size: 24px;">📋</span>
                                     </div>
-                                    <div style="color: white; font-size: 17px; font-weight: 700; flex: 1; line-height: 1.3;">
+                                    <div style="color: white; font-size: 18px; font-weight: 800; flex: 1; line-height: 1.4; letter-spacing: -0.5px;">
                                         ${doc.title}
                                     </div>
                                 </div>
                             </div>
                             
-                            <div style="padding: 20px;">
-                                <div style="color: #636e72; font-size: 14px; line-height: 1.7; margin-bottom: 16px;">
-                                    ${doc.content.substring(0, 100)}${doc.content.length > 100 ? '...' : ''}
+                            <div style="padding: 24px;">
+                                <div style="color: #636e72; font-size: 15px; line-height: 1.8; margin-bottom: 20px; font-weight: 500;">
+                                    ${doc.content.substring(0, 80)}${doc.content.length > 80 ? '...' : ''}
                                 </div>
                                 
                                 ${isCompleted ? `
-                                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 14px 18px; border-radius: 10px; border-left: 4px solid #00b894;">
+                                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 18px 20px; border-radius: 14px; border-left: 5px solid #00b894;">
                                         <div style="display: flex; align-items: center; justify-content: space-between;">
                                             <div>
-                                                <div style="color: #00b894; font-size: 14px; font-weight: 700; margin-bottom: 4px;">✓ 서명 완료</div>
-                                                <div style="color: #00b894; font-size: 12px; opacity: 0.8;">
+                                                <div style="color: #00b894; font-size: 16px; font-weight: 800; margin-bottom: 6px;">✓ 서명 완료</div>
+                                                <div style="color: #00b894; font-size: 13px; font-weight: 600; opacity: 0.9;">
                                                     ${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}
                                                 </div>
                                             </div>
-                                            <div style="background: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #00b894;">완료</div>
+                                            <div style="background: white; padding: 10px 18px; border-radius: 24px; font-size: 13px; font-weight: 800; color: #00b894;">완료</div>
                                         </div>
                                     </div>
                                 ` : `
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); border-radius: 10px; border-left: 4px solid #ff6b6b;">
-                                        <div style="color: #d63031; font-size: 14px; font-weight: 700;">서명이 필요합니다</div>
-                                        <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px rgba(255,107,107,0.3);">
-                                            → 서명하기
+                                    <div style="background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); padding: 18px 20px; border-radius: 14px; border-left: 5px solid #ff6b6b;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <div style="color: #d63031; font-size: 16px; font-weight: 800;">서명 필요</div>
+                                            <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 10px 20px; border-radius: 24px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 12px rgba(255,107,107,0.4);">
+                                                서명하기 →
+                                            </div>
                                         </div>
                                     </div>
                                 `}
@@ -1037,7 +1057,7 @@ container.innerHTML = `
         </div>
     `;
     
-    document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}개 완료`;
+    document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
 }
 
 function changeUserName() {
@@ -1134,6 +1154,63 @@ function showNameInputModal() {
     }, 300);
 }
 
+function closeNameInputModal() {
+    // 모달 찾아서 제거
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => modal.remove());
+    
+    // 익명 사용자로 문서 목록 표시
+    window.currentUserName = '익명';
+    
+    const container = document.getElementById('pendingDocuments');
+    const userName = window.currentUserName;
+    let completedCount = 0;
+    
+    container.innerHTML = `
+        <div style="background: white; margin: -20px; padding: 20px;">
+            <!-- 안전보건 목표 이미지 배너 -->
+            <div style="margin: -20px -20px 20px -20px; overflow: hidden; border-radius: 0;">
+                <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
+                     alt="산업재해 절벽방어" 
+                     style="width: 100%; height: auto; display: block;">
+            </div>
+            
+            <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                <!-- 날짜와 완료 개수 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; color: #2d3436;">
+                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                            <span style="font-size: 20px;">📅</span>
+                        </div>
+                        <span style="font-weight: 700; font-size: 16px; color: #2d3436;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</span>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 10px 18px; border-radius: 20px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(0,184,148,0.3);" id="checkCount">0/${documents.length}개</div>
+                </div>
+                
+                <!-- 익명 사용자 -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg, #fff5f5, #ffe8e8); border-radius: 12px; border: 2px solid #ffdddd;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="background: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <span style="font-size: 18px;">👤</span>
+                        </div>
+                        <span style="font-size: 15px; font-weight: 700; color: #999;">익명</span>
+                    </div>
+                    <button onclick="showNameInputModal()" style="background: white; border: 2px solid #00b894; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; color: #00b894; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,184,148,0.2);" onmouseover="this.style.background='#00b894'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#00b894'">
+                        이름 입력
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                ${documents.map(doc => {
+                    return `문서 카드 HTML...`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('checkCount').textContent = `0/${documents.length}개`;
+}
 
      
 function openSignatureModal(documentId) {
