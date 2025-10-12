@@ -1210,11 +1210,24 @@ function closeNameInputModal() {
 function openSignatureModal(documentId) {
     currentDocumentId = documentId;
     const doc = documents.find(d => d.id === documentId);
+
+    const fixedChecklistItems = [
+    '나는 작업에 필요한 개인 보호구(안전모, 안전화, 기타 안전보호구 등)를 올바르게 착용하고 관리한다.',
+    '나는 위험요소를 발견한 즉시 작업을 중지하고 안전조치 하도록 관리감독자에게 건의한다.',
+    '나는 회사(현장)에서 실시하는 교육 및 제반 안전관리 규정을 따르고 적극 참여한다.'
+];
+
+// 고정 체크리스트 + 문서별 추가 항목 결합
+const allChecklistItems = [...fixedChecklistItems];
+if (doc.checklistItems && doc.checklistItems.length > 0) {
+    allChecklistItems.push(...doc.checklistItems);
+}
+
     
     let checklistHtml = '';
-    if (doc.checklistItems && doc.checklistItems.length > 0) {
-        checklistHtml = `
-            <div style="background: #fff; padding: 0; margin: 25px 0;">
+if (allChecklistItems.length > 0) {
+    checklistHtml = `
+        <div style="background: #fff; padding: 0; margin: 25px 0;">
                 <div style="display: flex; align-items: center; padding: 18px; background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); border-radius: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(255, 107, 53, 0.25);">
                     <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 14px; border: 2px solid rgba(255,255,255,0.3);">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1228,7 +1241,7 @@ function openSignatureModal(documentId) {
                 </div>
                 
                 <div style="display: grid; gap: 12px;">
-                    ${doc.checklistItems.map((item, index) => `
+                       ${allChecklistItems.map((item, index) => `
                         <label style="display: flex; align-items: flex-start; padding: 18px; background: #F8F9FA; border-radius: 14px; cursor: pointer; transition: all 0.25s ease; border: 2px solid transparent;" 
                                onmouseover="this.style.background='#FFF'; this.style.borderColor='#FF6B35'; this.style.transform='translateX(4px)'" 
                                onmouseout="this.style.background='#F8F9FA'; this.style.borderColor='transparent'; this.style.transform='translateX(0)'">
@@ -1421,10 +1434,23 @@ function openSignatureModal(documentId) {
 
 
             
-            const checklistResults = [];
-            if (doc.checklistItems && doc.checklistItems.length > 0) {
-                let allChecked = true;
-                doc.checklistItems.forEach((item, index) => {
+         // 고정 체크리스트 항목
+const fixedChecklistItems = [
+    '나는 작업에 필요한 개인 보호구(안전모, 안전화, 기타 안전보호구 등)를 올바르게 착용하고 관리한다.',
+    '나는 위험요소를 발견한 즉시 작업을 중지하고 안전조치 하도록 관리감독자에게 건의한다.',
+    '나는 회사(현장)에서 실시하는 교육 및 제반 안전관리 규정을 따르고 적극 참여한다.'
+];
+
+// 고정 체크리스트 + 문서별 추가 항목 결합
+const allChecklistItems = [...fixedChecklistItems];
+if (doc.checklistItems && doc.checklistItems.length > 0) {
+    allChecklistItems.push(...doc.checklistItems);
+}
+
+const checklistResults = [];
+if (allChecklistItems.length > 0) {
+    let allChecked = true;
+    allChecklistItems.forEach((item, index) => {
                     const checkbox = document.getElementById(`checklist_${index}`);
                     const isChecked = checkbox ? checkbox.checked : false;
                     checklistResults.push({ item: item, checked: isChecked });
@@ -1509,17 +1535,17 @@ function openSignatureModal(documentId) {
                         </div>
                         
                         <!-- 체크리스트 결과 -->
-                        ${sig.checklistResults && sig.checklistResults.length > 0 ? `
-                            <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #FF6B35;">
-                                <div style="font-weight: bold; color: #FF6B35; margin-bottom: 10px; font-size: 14px;">✓ TBM 체크리스트</div>
-                                ${sig.checklistResults.map(result => `
-                                    <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                                        <span style="margin-right: 10px; font-size: 18px;">${result.checked ? '✅' : '❌'}</span>
-                                        <span style="color: #333; font-size: 14px;">${result.item}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        ` : ''}
+${sig.checklistResults && sig.checklistResults.length > 0 ? `
+    <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #FF6B35;">
+        <div style="font-weight: bold; color: #FF6B35; margin-bottom: 10px; font-size: 14px;">✓ 안전 체크리스트 (${sig.checklistResults.length}개 항목)</div>
+        ${sig.checklistResults.map((result, idx) => `
+            <div style="display: flex; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid #f0f0f0;">
+                <span style="margin-right: 12px; font-size: 20px; flex-shrink: 0;">${result.checked ? '✅' : '❌'}</span>
+                <span style="color: #333; font-size: 14px; line-height: 1.6; flex: 1;">${idx + 1}. ${result.item}</span>
+            </div>
+        `).join('')}
+    </div>
+` : ''}
                         
                         <!-- 위험요소 제안 -->
                         ${sig.riskSuggestion && sig.riskSuggestion.trim() ? `
