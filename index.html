@@ -956,41 +956,35 @@ async function editDocument(docId) {
             </div>
             
             <!-- 날짜와 완료 개수 카드 -->
-            <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: ${userName ? '16px' : '0'};">
-                    <div style="display: flex; align-items: center;">
-                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: 14px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
-                            <span style="font-size: 22px;">📅</span>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; color: #95a5a6; font-weight: 600; margin-bottom: 2px;">TODAY</div>
-                            <div style="font-weight: 800; font-size: 17px; color: #2d3436; letter-spacing: -0.5px;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
-                        </div>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 12px 20px; border-radius: 24px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap;" id="checkCount">
-                        0/${documents.length}
-                    </div>
-                </div>
-                
-                ${userName ? `
-                    <div style="border-top: 1px solid #f0f0f0; padding-top: 16px; margin-top: 0;">
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #e9ecef;">
-                                    <span style="font-size: 20px;">👤</span>
-                                </div>
-                                <div>
-                                    <div style="font-size: 11px; color: #95a5a6; font-weight: 600; margin-bottom: 2px;">작업자</div>
-                                    <div style="font-size: 16px; font-weight: 800; color: #2d3436; letter-spacing: -0.5px;">${userName}</div>
-                                </div>
-                            </div>
-                            <button onclick="changeUserName()" style="background: white; border: 2px solid #667eea; padding: 10px 18px; border-radius: 14px; font-size: 14px; font-weight: 700; color: #667eea; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(102,126,234,0.15);" onmouseover="this.style.background='#667eea'; this.style.color='white'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='white'; this.style.color='#667eea'; this.style.transform='translateY(0)'">
-                                변경
-                            </button>
-                        </div>
-                    </div>
-                ` : ''}
+<div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+    <!-- 첫 번째 줄: 날짜 + 완료개수 -->
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: ${userName ? '14px' : '0'};">
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                <span style="font-size: 20px;">📅</span>
             </div>
+            <div style="font-weight: 800; font-size: 16px; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 10px 18px; border-radius: 20px; font-weight: 800; font-size: 15px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
+            0/${documents.length}
+        </div>
+    </div>
+    
+    ${userName ? `
+        <!-- 두 번째 줄: 작업자 + 변경버튼 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid #f0f0f0;">
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid #e9ecef;">
+                    <span style="font-size: 20px;">👤</span>
+                </div>
+                <div style="font-size: 16px; font-weight: 800; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userName}</div>
+            </div>
+            <button onclick="changeUserName()" style="background: white; border: 2px solid #667eea; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; color: #667eea; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(102,126,234,0.15); flex-shrink: 0;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+                변경
+            </button>
+        </div>
+    ` : ''}
+</div>
             
             <!-- 문서 목록 -->
             <div>
@@ -1011,16 +1005,16 @@ async function editDocument(docId) {
                                 </div>
                             ` : ''}
                             
-                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}; padding: 24px; padding-right: 70px;">
-                                <div style="display: flex; align-items: center; gap: 12px;">
-                                    <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3);">
-                                        <span style="font-size: 24px;">📋</span>
-                                    </div>
-                                    <div style="color: white; font-size: 18px; font-weight: 800; flex: 1; line-height: 1.4; letter-spacing: -0.5px;">
-                                        ${doc.title}
-                                    </div>
-                                </div>
+                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}; padding: 20px; padding-right: 65px;">
+                     <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0;">
+                                <span style="font-size: 22px;">📋</span>
+                           </div>
+                           <div style="color: white; font-size: 16px; font-weight: 800; line-height: 1.3; letter-spacing: -0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                               ${doc.title}
                             </div>
+                     </div>
+                    </div>
                             
                             <div style="padding: 24px;">
                                 <div style="color: #636e72; font-size: 15px; line-height: 1.8; margin-bottom: 20px; font-weight: 500;">
@@ -1305,7 +1299,7 @@ function openSignatureModal(documentId) {
               onblur="this.style.borderColor='#E9ECEF'; this.style.background='white';"></textarea>
     <div style="margin-top: 12px; color: #74B9FF; font-size: 13px; font-weight: 500;">
         💡 작업 중 발견한 위험요소나 건의사항을 자유롭게 작성해주세요
-           <br>건의사항이 없으면 다음항목을 작성해주세요
+           건의사항이 없으면 다음항목을 작성해주세요
     </div>
 </div>
         
