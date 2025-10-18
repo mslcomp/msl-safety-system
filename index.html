@@ -291,7 +291,7 @@
             color: #666;
         }
 
-       @media (max-width: 480px) {
+      @media (max-width: 480px) {
     .header {
         padding: 20px 16px;
     }
@@ -311,13 +311,22 @@
         margin: 10px;
     }
     
-    /* 안전 배너 모바일 조정 제거 */
+    /* 모바일에서 안전 배너 스케일 제거 */
     .safety-banner {
-        margin-bottom: 24px;
+        transform: scale(1);
+        margin: 0 0 24px 0 !important;
     }
-
+    
+    /* 모바일에서 카드 패딩 조정 */
+    .card {
+        padding: 20px;
+    }
+    
+    /* 모바일에서 탭 컨텐츠 패딩 조정 */
+    .tab-content {
+        padding: 20px;
+    }
 }
-
 
     </style>
 </head>
@@ -1205,11 +1214,11 @@ async function editDocument(docId) {
         <div id="newsBanner" style="margin-bottom: 20px;"></div>
         
         <!-- 안전보건 목표 이미지 배너 -->
-<div style="margin-bottom: 24px; overflow: hidden;" class="safety-banner">
-    <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
-         alt="산업재해 절벽방어" 
-         style="width: 100%; height: auto; display: block;">
-</div>  
+        <div style="margin-bottom: 24px; overflow: hidden;" class="safety-banner">
+            <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
+                 alt="산업재해 절벽방어" 
+                 style="width: 100%; height: auto; display: block;">
+        </div>
             
            <!-- 날짜와 완료 개수 카드 -->
 <div style="background: white; border: 2px solid #f0f0f0; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
