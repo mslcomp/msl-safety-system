@@ -1198,10 +1198,14 @@ async function editDocument(docId) {
         return;
     }
     
-    container.innerHTML = `
-        <div style="background: white; margin: -20px; padding: 20px;">
-<!-- 안전보건 목표 이미지 배너 -->
-<div style="margin: -20px -20px 24px -20px; overflow: hidden;" class="safety-banner">
+   container.innerHTML = `
+    <div style="background: white; margin: -20px; padding: 20px;">
+        
+        <!-- 뉴스 배너 -->
+        <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
+        
+        <!-- 안전보건 목표 이미지 배너 -->
+        <div style="margin: -20px -20px 24px -20px; overflow: hidden;" class="safety-banner">
     <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
          alt="산업재해 절벽방어" 
          style="width: 100%; height: auto; display: block;">
@@ -1306,11 +1310,220 @@ async function editDocument(docId) {
     document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
 }
 
+
+
+// 뉴스 배너 로드
+loadNewsBanner();
+
+
+
 function changeUserName() {
     localStorage.removeItem('mslUserName');
     window.currentUserName = null;
     loadPendingDocuments();
 }
+
+// ========== 뉴스 배너 관련 함수들 ==========
+
+// 실시간 안전 뉴스 배너 로드
+async function loadNewsBanner() {
+    const container = document.getElementById('newsBanner');
+    if (!container) return;
+    
+    try {
+        // 캐시 확인 (1시간 유효)
+        const cachedNews = localStorage.getItem('msl_news_cache');
+        const cacheTime = localStorage.getItem('msl_news_cache_time');
+        
+        if (cachedNews && cacheTime) {
+            const now = Date.now();
+            const cacheAge = now - parseInt(cacheTime);
+            
+            // ⭐ 여기! 이 부분을 수정
+            if (cacheAge < 3600000) { // 1시간 = 3600000ms
+                console.log('캐시된 뉴스 사용');
+                displayNewsBanner(JSON.parse(cachedNews));
+                return;
+            }
+        }
+        
+        // 새 뉴스 가져오기
+        console.log('새 안전 뉴스 로드');
+        const news = await fetchSafetyNews();
+        
+        if (news) {
+            localStorage.setItem('msl_news_cache', JSON.stringify(news));
+            localStorage.setItem('msl_news_cache_time', Date.now().toString());
+            displayNewsBanner(news);
+        } else {
+            displayDefaultBanner();
+        }
+        
+    } catch (error) {
+        console.error('뉴스 로드 오류:', error);
+        displayDefaultBanner();
+    }
+}
+
+// 안전보건공단 RSS 뉴스 가져오기
+async function fetchSafetyNews() {
+    try {
+        // 여러 안전 관련 RSS 소스
+        const rssSources = [
+            'https://www.kosha.or.kr/kosha/data/news.do',  // 안전보건공단 보도자료
+            'https://www.moel.go.kr/news/newsView.do'      // 고용노동부 보도자료 (백업)
+        ];
+        
+        // RSS를 JSON으로 변환 (무료 서비스)
+        const rssUrl = rssSources[0];
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=5`;
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (data.status === 'ok' && data.items && data.items.length > 0) {
+            // 안전 관련 키워드 필터링
+            const safetyKeywords = ['안전', '사고', '재해', '산업', '작업', '보호', '예방', '점검'];
+            
+            const relevantNews = data.items.find(item => 
+                safetyKeywords.some(keyword => item.title.includes(keyword))
+            ) || data.items[0];
+            
+            // HTML 태그 제거
+            const description = relevantNews.description
+                ? relevantNews.description.replace(/<[^>]*>/g, '').substring(0, 100)
+                : '';
+            
+            return {
+                title: relevantNews.title,
+                description: description,
+                url: relevantNews.link,
+                source: '안전보건공단',
+                publishedAt: relevantNews.pubDate
+            };
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('RSS 로드 오류:', error);
+        return null;
+    }
+}
+
+// 뉴스 배너 표시
+function displayNewsBanner(news) {
+    const container = document.getElementById('newsBanner');
+    if (!container) return;
+    
+    const today = new Date().toLocaleDateString('ko-KR', { 
+        month: 'long', 
+        day: 'numeric', 
+        weekday: 'short' 
+    });
+    
+    container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 16px 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; cursor: pointer; transition: all 0.3s;" 
+             onclick="window.open('${news.url}', '_blank')"
+             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255,107,107,0.4)'"
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255,107,107,0.3)'">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); animation: pulse 2s infinite;">
+                    <span style="font-size: 22px;">📰</span>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                        <span>${today}</span>
+                        <span style="opacity: 0.6;">•</span>
+                        <span>${news.source}</span>
+                        <span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-size: 10px;">NEW</span>
+                    </div>
+                    <div style="color: white; font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                        ${news.title}
+                    </div>
+                    ${news.description ? `
+                        <div style="color: rgba(255,255,255,0.85); font-size: 12px; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px;">
+                            ${news.description}
+                        </div>
+                    ` : ''}
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 14px; font-size: 11px; color: white; font-weight: 600;">
+                        <span>자세히 보기</span>
+                        <span style="font-size: 12px;">→</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            @keyframes pulse {
+                0%, 100% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.1);
+                }
+            }
+        </style>
+    `;
+}
+
+// 기본 배너 (뉴스 없을 때)
+function displayDefaultBanner() {
+    const container = document.getElementById('newsBanner');
+    if (!container) return;
+    
+    const today = new Date().toLocaleDateString('ko-KR', { 
+        month: 'long', 
+        day: 'numeric', 
+        weekday: 'short' 
+    });
+    
+    container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #00b894 0%, #00cec9 100%); padding: 16px 20px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); animation: slideDown 0.5s ease-out;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3);">
+                    <span style="font-size: 22px;">⚠️</span>
+                </div>
+                <div style="flex: 1;">
+                    <div style="color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; margin-bottom: 4px;">
+                        ${today} • 안전 공지
+                    </div>
+                    <div style="color: white; font-size: 15px; font-weight: 700; line-height: 1.4;">
+                        안전제일! 오늘도 안전한 하루 되세요 🦺
+                    </div>
+                    <div style="color: rgba(255,255,255,0.85); font-size: 12px; margin-top: 4px;">
+                        작업 전 안전점검을 생활화합시다
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            @keyframes slideDown {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+    `;
+}
+
+
 
 
 function showNameInputModal() {
