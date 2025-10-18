@@ -291,7 +291,7 @@
             color: #666;
         }
 
-      @media (max-width: 480px) {
+  @media (max-width: 480px) {
     .header {
         padding: 20px 16px;
     }
@@ -1191,21 +1191,21 @@ async function editDocument(docId) {
         return;
     }
     
-   container.innerHTML = `
-    <div style="background: white; padding: 20px;">
+ container.innerHTML = `
+    <div style="background: white; margin: -20px; padding: 20px;">
         
         <!-- 뉴스 배너 -->
-        <div id="newsBanner" style="margin-bottom: 20px;"></div>
+        <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
         
         <!-- 안전보건 목표 이미지 배너 -->
-        <div style="margin-bottom: 24px; overflow: hidden;" class="safety-banner">
+        <div style="margin: -20px -20px 24px -20px; overflow: hidden;" class="safety-banner">
             <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
                  alt="산업재해 절벽방어" 
                  style="width: 100%; height: auto; display: block;">
         </div>
             
-           <!-- 날짜와 완료 개수 카드 -->
-<div style="background: white; border: 2px solid #f0f0f0; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+        <!-- 날짜와 완료 개수 카드 -->
+        <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin: 0 -20px 20px -20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
     <!-- 첫 번째 줄: 날짜 + 완료개수 -->
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: ${userName ? '16px' : '0'};">
         <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
@@ -1484,10 +1484,7 @@ async function fetchSafetyNews() {
     }
 }
 
-// 뉴스 배너 표시 (날짜 제거, 클릭 불가)
-// 뉴스 배너 표시 (개선된 레이아웃)
-// 뉴스 배너 표시 (모서리 각지게)
-// 뉴스 배너 표시 (너비 조정)
+// 뉴스 배너 표시 (원래대로 넓게)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
