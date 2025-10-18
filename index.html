@@ -1306,7 +1306,34 @@ async function editDocument(docId) {
         </div>
     `;
     
-    document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
+document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
+    
+    // ⭐ 여기부터 추가 시작 ⭐
+    // 뉴스 배너 자동 로드
+    setTimeout(() => {
+        const banner = document.getElementById('newsBanner');
+        if (banner) {
+            console.log('✅ 배너 div 찾음, 뉴스 로드 시작');
+            loadNewsBanner();
+        } else {
+            console.log('❌ 배너 div 없음 - 생성 중...');
+            
+            // 안전보건 배너 이미지 찾기
+            const safetyBanner = document.querySelector('.safety-banner');
+            if (safetyBanner) {
+                // 바로 위에 뉴스 배너 삽입
+                const newBanner = document.createElement('div');
+                newBanner.id = 'newsBanner';
+                newBanner.style.cssText = 'margin: -20px -20px 20px -20px;';
+                safetyBanner.parentNode.insertBefore(newBanner, safetyBanner);
+                console.log('✅ 배너 div 생성 완료');
+                
+                // 뉴스 로드
+                setTimeout(() => loadNewsBanner(), 100);
+            }
+        }
+    }, 500);
+    // ⭐ 여기까지 추가 끝 ⭐
 }
 
 
@@ -1443,44 +1470,58 @@ async function fetchSafetyNews() {
     }
 }
 
-// 뉴스 배너 표시
+// 뉴스 배너 표시 (개선된 디자인)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
     
-    const today = new Date().toLocaleDateString('ko-KR', { 
+    // 날짜 포맷팅 (년월일 요일)
+    const newsDate = news.publishedAt ? new Date(news.publishedAt) : new Date();
+    const formattedDate = newsDate.toLocaleDateString('ko-KR', { 
+        year: 'numeric',
         month: 'long', 
         day: 'numeric', 
         weekday: 'short' 
     });
     
     container.innerHTML = `
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 16px 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; cursor: pointer; transition: all 0.3s;" 
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 18px 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; cursor: pointer; transition: all 0.3s;" 
              onclick="window.open('${news.url}', '_blank')"
              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255,107,107,0.4)'"
              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255,107,107,0.3)'">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); animation: pulse 2s infinite;">
-                    <span style="font-size: 22px;">📰</span>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
+                <!-- 아이콘 -->
+                <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); animation: pulse 2s infinite;">
+                    <span style="font-size: 24px;">🚨</span>
                 </div>
-                <div style="flex: 1; min-width: 0;">
-                    <div style="color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
-                        <span>${today}</span>
-                        <span style="opacity: 0.6;">•</span>
-                        <span>${news.source}</span>
-                        <span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-size: 10px;">NEW</span>
+                
+                <!-- 콘텐츠 -->
+                <div style="text-align: center; width: 100%;">
+                    <!-- 날짜 및 출처 -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <span style="color: rgba(255,255,255,0.95); font-size: 12px; font-weight: 600;">${formattedDate}</span>
+                        <span style="color: rgba(255,255,255,0.7); font-size: 11px;">•</span>
+                        <span style="color: rgba(255,255,255,0.95); font-size: 12px; font-weight: 600;">${news.source}</span>
+                        <span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; color: white;">NEW</span>
                     </div>
-                    <div style="color: white; font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                    
+                    <!-- 제목 -->
+                    <div style="color: white; font-size: 16px; font-weight: 700; line-height: 1.5; margin-bottom: 10px; word-break: keep-all;">
                         ${news.title}
                     </div>
+                    
+                    <!-- 설명 -->
                     ${news.description ? `
-                        <div style="color: rgba(255,255,255,0.85); font-size: 12px; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 8px;">
+                        <div style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.6; margin-bottom: 12px; word-break: keep-all; max-width: 600px; margin-left: auto; margin-right: auto;">
                             ${news.description}
                         </div>
                     ` : ''}
-                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 14px; font-size: 11px; color: white; font-weight: 600;">
+                    
+                    <!-- 버튼 -->
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 16px; font-size: 12px; color: white; font-weight: 600; border: 1px solid rgba(255,255,255,0.3);">
                         <span>자세히 보기</span>
-                        <span style="font-size: 12px;">→</span>
+                        <span style="font-size: 14px;">→</span>
                     </div>
                 </div>
             </div>
