@@ -291,7 +291,7 @@
             color: #666;
         }
 
-        @media (max-width: 480px) {
+       @media (max-width: 480px) {
     .header {
         padding: 20px 16px;
     }
@@ -310,11 +310,12 @@
         width: 95%;
         margin: 10px;
     }
-       .safety-banner {
-        transform: scale(1.15);
-        margin: -20px -20px 30px -20px !important;
-    }
     
+    /* 안전 배너 모바일 조정 제거 */
+    .safety-banner {
+        margin-bottom: 24px;
+    }
+
 }
 
 
@@ -1198,13 +1199,13 @@ async function editDocument(docId) {
     }
     
    container.innerHTML = `
-    <div style="background: white; margin: -20px; padding: 20px;">
+    <div style="background: white; padding: 20px;">
         
         <!-- 뉴스 배너 -->
-        <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
+        <div id="newsBanner" style="margin-bottom: 20px;"></div>
         
         <!-- 안전보건 목표 이미지 배너 -->
-        <div style="margin: -20px -20px 24px -20px; overflow: hidden;" class="safety-banner">
+<div style="margin-bottom: 24px; overflow: hidden;" class="safety-banner">
     <img src="https://github.com/mslcomp/msl-safety-system/raw/main/safety-banner.jpg" 
          alt="산업재해 절벽방어" 
          style="width: 100%; height: auto; display: block;">
@@ -1493,12 +1494,13 @@ async function fetchSafetyNews() {
 // 뉴스 배너 표시 (날짜 제거, 클릭 불가)
 // 뉴스 배너 표시 (개선된 레이아웃)
 // 뉴스 배너 표시 (모서리 각지게)
+// 뉴스 배너 표시 (너비 조정)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
     
     container.innerHTML = `
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s; margin-bottom: 20px;">
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s;">
             
             <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
                 <!-- 아이콘 -->
