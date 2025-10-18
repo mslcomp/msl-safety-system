@@ -675,24 +675,58 @@ manageTab.innerHTML = `
         let attachmentType = null;
         
         // 파일이 있으면 업로드
-        if (file) {
-            const loadingMsg = alert('파일 업로드 중...');
-            
-            const timestamp = Date.now();
-            const fileName = `attachments/${timestamp}_${file.name}`;
-            const storageRef = storage.ref(fileName);
-            
-            // 파일 업로드
-            const snapshot = await storageRef.put(file);
-            attachmentURL = await snapshot.ref.getDownloadURL();
-            attachmentName = file.name;
-            attachmentType = file.type;
-            
-            console.log('파일 업로드 완료:', attachmentURL);
-        }
+if (file) {
+    console.log('파일 업로드 시작:', file.name, '크기:', file.size);
+    
+    // 업로드 버튼 비활성화
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '📤 파일 업로드 중...';
+    submitBtn.style.opacity = '0.6';
+    
+    try {
+        const timestamp = Date.now();
+        const fileName = `attachments/${timestamp}_${file.name}`;
+        const storageRef = storage.ref(fileName);
         
-        // Firestore에 문서 저장
-        await db.collection('documents').add({
+        // 업로드 진행률 표시
+        const uploadTask = storageRef.put(file);
+        
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                submitBtn.textContent = `📤 업로드 중... ${Math.round(progress)}%`;
+                console.log('업로드 진행률:', progress + '%');
+            },
+            (error) => {
+                // 업로드 실패
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
+                throw error;
+            }
+        );
+        
+        // 업로드 완료 대기
+        await uploadTask;
+        const snapshot = await uploadTask.snapshot;
+        attachmentURL = await snapshot.ref.getDownloadURL();
+        attachmentName = file.name;
+        attachmentType = file.type;
+        
+        console.log('파일 업로드 완료:', attachmentURL);
+        
+        // 버튼 원래대로
+        submitBtn.textContent = '✅ 업로드 완료!';
+        
+    } catch (uploadError) {
+        throw uploadError;
+    }
+}
+
+// Firestore에 문서 저장
+await db.collection('documents').add({
             title: title,
             type: type,
             content: content,
