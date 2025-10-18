@@ -1367,30 +1367,12 @@ async function loadNewsBanner() {
     console.log('📰 뉴스 배너 로드 시작...');
     
     try {
-        // 캐시 확인 (10분 유효)
-        const cachedNews = localStorage.getItem('msl_news_cache');
-        const cacheTime = localStorage.getItem('msl_news_cache_time');
-        
-        if (cachedNews && cacheTime) {
-            const now = Date.now();
-            const cacheAge = now - parseInt(cacheTime);
-            
-            // ⭐ 캐시 시간을 10분으로 단축 (더 자주 업데이트)
-            if (cacheAge < 600000) { // 10분 = 600000ms
-                console.log('✅ 캐시된 뉴스 사용 (유효 시간:', Math.floor((600000 - cacheAge) / 1000), '초 남음)');
-                displayNewsBanner(JSON.parse(cachedNews));
-                return;
-            }
-        }
-        
-        // 새 뉴스 가져오기
+        // ⭐ 캐시 체크 부분 제거하고 항상 새로 로드
         console.log('🔄 새 안전 뉴스 로드...');
         const news = await fetchSafetyNews();
         
         if (news) {
             console.log('✅ 뉴스 로드 성공:', news.title);
-            localStorage.setItem('msl_news_cache', JSON.stringify(news));
-            localStorage.setItem('msl_news_cache_time', Date.now().toString());
             displayNewsBanner(news);
         } else {
             console.log('⚠️ 뉴스 없음 - 기본 배너 표시');
@@ -1411,8 +1393,8 @@ async function fetchSafetyNews() {
         // ⭐ 날짜별 뉴스 목록 (안전보건공단 사고속보 연동)
         const newsDatabase = [
             {
-                title: '🚨 최근 중대재해 사고속보 - 사망사고 발생',
-                description: '안전보건공단 사고감시 및 대응 페이지에서 최신 사고 사례를 확인하세요. 클릭하여 상세 내용을 확인할 수 있습니다.',
+                title: '최근 중대재해 사고속보 - 사망사고 발생',
+                description: '안전보건공단 사고감시 및 대응 페이지에서 최신 사고 사례를 확인하세요.',
                 url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
                 source: '안전보건공단',
                 date: '2024-10-18'
@@ -1425,8 +1407,8 @@ async function fetchSafetyNews() {
                 date: '2024-10-17'
             },
             {
-                title: '추락재해 예방, 안전난간이 생명을 지킵니다',
-                description: '2m 이상 높이에서 작업 시 안전난간 설치는 필수입니다. 최근 사고 사례를 통해 예방법을 확인하세요.',
+                title: '보호구는 생명줄, 바르게 착용합시다',
+                description: '지정된 개인 보호구(안전모, 안전화 등)를 규격에 맞게 착용합시다.',
                 url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
                 source: '안전보건공단',
                 date: '2024-10-16'
@@ -1439,22 +1421,60 @@ async function fetchSafetyNews() {
                 date: '2024-10-15'
             },
             {
-                title: '안전보건교육 100% 이수, 안전한 일터의 첫걸음',
-                description: '근로자 안전보건교육은 산업재해 예방의 기본입니다. 최근 사고 통계를 확인하세요.',
+                title: '지게차 운전! 시야 확보가 최우선!',
+                description: '운전 중 후진 및 교차로 통과 시 반드시 전후방을 확인하고, 경적을 울려 보행자에게 알립시다.',
+                url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
+                source: '안전보건공단',
+                date: '2024-10-14'
+            },
+             {
+                title: '화물 적재! 안전을 위해 적재 상태를 확인합시다',
+                description: '트럭으로 화물을 운반하기 전, 적재 상태와 결속 상태를 철저히 점검하여 낙하 사고를 예방합시다.',
+                url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
+                source: '안전보건공단',
+                date: '2024-10-18'
+            },
+            {
+                title: '안전은 함께하는 약속, 매일 점검합시다',
+                description: '작업 전 서로의 안전 상태를 확인하고, 부족한 점은 채워주는 긍정적인 안전 문화를 만들어갑시다.',
+                url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
+                source: '안전보건공단',
+                date: '2024-10-17'
+            },
+            {
+                title: '화기 작업, 가연물 제거가 우선!',
+                description: '용접, 절단 등 불꽃을 사용하는 작업 전, 주변 10m 이내의 가연성 물질을 제거합시다.',
+                url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
+                source: '안전보건공단',
+                date: '2024-10-16'
+            },
+            {
+                title: '내 컨디션 확인! 건강이 안전입니다',
+                description: '작업 전 몸 상태를 스스로 확인하고, 무리한 작업으로 인한 사고를 예방합시다.',
+                url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
+                source: '안전보건공단',
+                date: '2024-10-15'
+            },
+            {
+                title: '사다리 작업! 2인 1조 원칙입니다',
+                description: '사다리 작업 시 반드시 하부에 안전 작업자가 사다리를 지지하고 주변을 통제합시다.',
                 url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
                 source: '안전보건공단',
                 date: '2024-10-14'
             }
         ];
         
-        // 오늘 날짜 기준으로 뉴스 선택 (순환)
-        const today = new Date();
-        const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-        const newsIndex = dayOfYear % newsDatabase.length;
+        // 🎲 완전 랜덤으로 뉴스 선택
+        const randomValue = Math.random();
+        const newsIndex = Math.floor(randomValue * newsDatabase.length);
+        
+        console.log('🎲 랜덤값:', randomValue);
+        console.log('📊 선택된 인덱스:', newsIndex);
+        console.log('📰 총 뉴스 개수:', newsDatabase.length);
         
         const selectedNews = newsDatabase[newsIndex];
         
-        console.log('✅ 오늘의 안전 뉴스:', selectedNews.title.substring(0, 30) + '...');
+        console.log('✅ 선택된 뉴스 제목:', selectedNews.title);
         
         return {
             title: selectedNews.title,
@@ -1470,25 +1490,13 @@ async function fetchSafetyNews() {
     }
 }
 
-// 뉴스 배너 표시 (개선된 디자인)
+// 뉴스 배너 표시 (날짜 제거, 클릭 불가)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
     
-    // 날짜 포맷팅 (년월일 요일)
-    const newsDate = news.publishedAt ? new Date(news.publishedAt) : new Date();
-    const formattedDate = newsDate.toLocaleDateString('ko-KR', { 
-        year: 'numeric',
-        month: 'long', 
-        day: 'numeric', 
-        weekday: 'short' 
-    });
-    
     container.innerHTML = `
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 18px 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; cursor: pointer; transition: all 0.3s;" 
-             onclick="window.open('${news.url}', '_blank')"
-             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255,107,107,0.4)'"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255,107,107,0.3)'">
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 18px 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s;">
             
             <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
                 <!-- 아이콘 -->
@@ -1498,12 +1506,10 @@ function displayNewsBanner(news) {
                 
                 <!-- 콘텐츠 -->
                 <div style="text-align: center; width: 100%;">
-                    <!-- 날짜 및 출처 -->
+                    <!-- 출처만 표시 (날짜 제거) -->
                     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <span style="color: rgba(255,255,255,0.95); font-size: 12px; font-weight: 600;">${formattedDate}</span>
-                        <span style="color: rgba(255,255,255,0.7); font-size: 11px;">•</span>
                         <span style="color: rgba(255,255,255,0.95); font-size: 12px; font-weight: 600;">${news.source}</span>
-                        <span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; color: white;">NEW</span>
+                        <span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; color: white;">안전공지</span>
                     </div>
                     
                     <!-- 제목 -->
@@ -1517,12 +1523,6 @@ function displayNewsBanner(news) {
                             ${news.description}
                         </div>
                     ` : ''}
-                    
-                    <!-- 버튼 -->
-                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 16px; font-size: 12px; color: white; font-weight: 600; border: 1px solid rgba(255,255,255,0.3);">
-                        <span>자세히 보기</span>
-                        <span style="font-size: 14px;">→</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1550,7 +1550,6 @@ function displayNewsBanner(news) {
         </style>
     `;
 }
-
 // 기본 배너 (뉴스 없을 때)
 function displayDefaultBanner() {
     const container = document.getElementById('newsBanner');
