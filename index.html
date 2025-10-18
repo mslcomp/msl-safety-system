@@ -1331,7 +1331,7 @@ async function loadNewsBanner() {
     if (!container) return;
     
     try {
-        // 캐시 확인 (1시간 유효)
+        // 캐시 확인 (10분 유효)
         const cachedNews = localStorage.getItem('msl_news_cache');
         const cacheTime = localStorage.getItem('msl_news_cache_time');
         
@@ -1339,8 +1339,8 @@ async function loadNewsBanner() {
             const now = Date.now();
             const cacheAge = now - parseInt(cacheTime);
             
-            // ⭐ 여기! 이 부분을 수정
-            if (cacheAge < 3600000) { // 1시간 = 3600000ms
+            // ⭐ 캐시 시간을 10분으로 단축 (더 자주 업데이트)
+            if (cacheAge < 600000) { // 10분 = 600000ms
                 console.log('캐시된 뉴스 사용');
                 displayNewsBanner(JSON.parse(cachedNews));
                 return;
@@ -1370,7 +1370,7 @@ async function fetchSafetyNews() {
     try {
         // 여러 안전 관련 RSS 소스
         const rssSources = [
-            'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',  // 안전보건공단 보도자료
+            'https://www.kosha.or.kr/kosha/data/news.do',  // 안전보건공단 보도자료
             'https://www.moel.go.kr/news/newsView.do'      // 고용노동부 보도자료 (백업)
         ];
         
