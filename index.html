@@ -1382,7 +1382,7 @@ async function fetchSafetyNews() {
         console.log('🔍 뉴스 가져오기 시작...');
         
         // RSS를 JSON으로 변환 (무료 서비스)
-        const rssUrl = 'https://www.kosha.or.kr/rss/news.do';
+        const rssUrl = 'https://www.moel.go.kr/rss/policy.do';  
         const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=5`;
         
         const response = await fetch(apiUrl, {
