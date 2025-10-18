@@ -1491,12 +1491,13 @@ async function fetchSafetyNews() {
 }
 
 // 뉴스 배너 표시 (날짜 제거, 클릭 불가)
+// 뉴스 배너 표시 (날짜 제거, 클릭 불가)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
     
     container.innerHTML = `
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 18px 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s;">
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 18px 16px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s; border-radius: 16px; margin: 0 4px;">
             
             <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
                 <!-- 아이콘 -->
@@ -1519,7 +1520,7 @@ function displayNewsBanner(news) {
                     
                     <!-- 설명 -->
                     ${news.description ? `
-                        <div style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.6; margin-bottom: 12px; word-break: keep-all; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        <div style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.6; margin-bottom: 0; word-break: keep-all; max-width: 600px; margin-left: auto; margin-right: auto;">
                             ${news.description}
                         </div>
                     ` : ''}
