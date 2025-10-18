@@ -124,14 +124,14 @@
             display: block;
         }
         
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
-        }
+       .card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 2px solid #f0f0f0;
+}
         
         .card h3 {
             color: #dc3545;
@@ -1210,31 +1210,31 @@ async function editDocument(docId) {
          style="width: 100%; height: auto; display: block;">
 </div>  
             
-            <!-- 날짜와 완료 개수 카드 -->
-<div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+           <!-- 날짜와 완료 개수 카드 -->
+<div style="background: white; border: 2px solid #f0f0f0; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
     <!-- 첫 번째 줄: 날짜 + 완료개수 -->
-    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: ${userName ? '14px' : '0'};">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: ${userName ? '16px' : '0'};">
         <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
-                <span style="font-size: 20px;">📅</span>
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                <span style="font-size: 22px;">📅</span>
             </div>
-            <div style="font-weight: 800; font-size: 16px; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+            <div style="font-weight: 800; font-size: 17px; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
         </div>
-        <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 10px 18px; border-radius: 20px; font-weight: 800; font-size: 15px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
+        <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 12px 20px; border-radius: 24px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
             0/${documents.length}
         </div>
     </div>
     
     ${userName ? `
         <!-- 두 번째 줄: 작업자 + 변경버튼 -->
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; border-top: 1px solid #f0f0f0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 16px; border-top: 2px solid #f8f9fa;">
             <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid #e9ecef;">
-                    <span style="font-size: 20px;">👤</span>
+                <div style="background: #f8f9fa; width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid #e9ecef;">
+                    <span style="font-size: 22px;">👤</span>
                 </div>
-                <div style="font-size: 16px; font-weight: 800; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userName}</div>
+                <div style="font-size: 17px; font-weight: 800; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userName}</div>
             </div>
-            <button onclick="changeUserName()" style="background: white; border: 2px solid #667eea; padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; color: #667eea; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(102,126,234,0.15); flex-shrink: 0;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
+            <button onclick="changeUserName()" style="background: white; border: 2px solid #667eea; padding: 10px 18px; border-radius: 14px; font-size: 14px; font-weight: 700; color: #667eea; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(102,126,234,0.15); flex-shrink: 0;" onmouseover="this.style.background='#667eea'; this.style.color='white'" onmouseout="this.style.background='white'; this.style.color='#667eea'">
                 변경
             </button>
         </div>
@@ -1393,8 +1393,8 @@ async function fetchSafetyNews() {
         // ⭐ 날짜별 뉴스 목록 (안전보건공단 사고속보 연동)
         const newsDatabase = [
             {
-                title: '최근 중대재해 사고속보 - 사망사고 발생',
-                description: '안전보건공단 사고감시 및 대응 페이지에서 최신 사고 사례를 확인하세요.',
+                title: '기온급강하 저체온주의! ',
+                description: '낮은 기온은 근육을 경직시켜 넘어짐 사고를 유발합니다. 작업 전 충분한 스트레칭으로 몸을 풀어줍시다..',
                 url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
                 source: '안전보건공단',
                 date: '2024-10-18'
@@ -1491,36 +1491,37 @@ async function fetchSafetyNews() {
 }
 
 // 뉴스 배너 표시 (날짜 제거, 클릭 불가)
-// 뉴스 배너 표시 (날짜 제거, 클릭 불가)
+// 뉴스 배너 표시 (개선된 레이아웃)
+// 뉴스 배너 표시 (모서리 각지게)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
     
     container.innerHTML = `
-        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 18px 16px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s; border-radius: 16px; margin: 0 4px;">
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s; margin-bottom: 20px;">
             
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
                 <!-- 아이콘 -->
-                <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); animation: pulse 2s infinite;">
-                    <span style="font-size: 24px;">🚨</span>
+                <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); animation: pulse 2s infinite;">
+                    <span style="font-size: 28px;">🚨</span>
                 </div>
                 
                 <!-- 콘텐츠 -->
                 <div style="text-align: center; width: 100%;">
-                    <!-- 출처만 표시 (날짜 제거) -->
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <span style="color: rgba(255,255,255,0.95); font-size: 12px; font-weight: 600;">${news.source}</span>
-                        <span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; color: white;">안전공지</span>
+                    <!-- 출처 -->
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                        <span style="color: rgba(255,255,255,0.95); font-size: 13px; font-weight: 600;">${news.source}</span>
+                        <span style="background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: white;">안전공지</span>
                     </div>
                     
                     <!-- 제목 -->
-                    <div style="color: white; font-size: 16px; font-weight: 700; line-height: 1.5; margin-bottom: 10px; word-break: keep-all;">
+                    <div style="color: white; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; word-break: keep-all;">
                         ${news.title}
                     </div>
                     
                     <!-- 설명 -->
                     ${news.description ? `
-                        <div style="color: rgba(255,255,255,0.9); font-size: 13px; line-height: 1.6; margin-bottom: 0; word-break: keep-all; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        <div style="color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; word-break: keep-all;">
                             ${news.description}
                         </div>
                     ` : ''}
@@ -1545,7 +1546,7 @@ function displayNewsBanner(news) {
                     transform: scale(1);
                 }
                 50% {
-                    transform: scale(1.1);
+                    transform: scale(1.05);
                 }
             }
         </style>
