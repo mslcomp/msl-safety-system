@@ -7,9 +7,8 @@
     <title>MSL 안전자료 배포 및 서명 시스템</title>
     
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <style>
@@ -1313,7 +1312,12 @@ async function editDocument(docId) {
 
 
 // 뉴스 배너 로드
-loadNewsBanner();
+// 뉴스 배너 로드 (가장 먼저 실행)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadNewsBanner);
+} else {
+    loadNewsBanner();
+}
 
 
 
@@ -1328,7 +1332,12 @@ function changeUserName() {
 // 실시간 안전 뉴스 배너 로드
 async function loadNewsBanner() {
     const container = document.getElementById('newsBanner');
-    if (!container) return;
+    if (!container) {
+        console.log('❌ newsBanner 컨테이너를 찾을 수 없습니다');
+        return;
+    }
+    
+    console.log('📰 뉴스 배너 로드 시작...');
     
     try {
         // 캐시 확인 (10분 유효)
@@ -1341,26 +1350,28 @@ async function loadNewsBanner() {
             
             // ⭐ 캐시 시간을 10분으로 단축 (더 자주 업데이트)
             if (cacheAge < 600000) { // 10분 = 600000ms
-                console.log('캐시된 뉴스 사용');
+                console.log('✅ 캐시된 뉴스 사용 (유효 시간:', Math.floor((600000 - cacheAge) / 1000), '초 남음)');
                 displayNewsBanner(JSON.parse(cachedNews));
                 return;
             }
         }
         
         // 새 뉴스 가져오기
-        console.log('새 안전 뉴스 로드');
+        console.log('🔄 새 안전 뉴스 로드...');
         const news = await fetchSafetyNews();
         
         if (news) {
+            console.log('✅ 뉴스 로드 성공:', news.title);
             localStorage.setItem('msl_news_cache', JSON.stringify(news));
             localStorage.setItem('msl_news_cache_time', Date.now().toString());
             displayNewsBanner(news);
         } else {
+            console.log('⚠️ 뉴스 없음 - 기본 배너 표시');
             displayDefaultBanner();
         }
         
     } catch (error) {
-        console.error('뉴스 로드 오류:', error);
+        console.error('❌ 뉴스 로드 오류:', error);
         displayDefaultBanner();
     }
 }
@@ -1368,18 +1379,27 @@ async function loadNewsBanner() {
 // 안전보건공단 RSS 뉴스 가져오기
 async function fetchSafetyNews() {
     try {
-        // 여러 안전 관련 RSS 소스
-        const rssSources = [
-            'https://www.kosha.or.kr/kosha/data/news.do',  // 안전보건공단 보도자료
-            'https://www.moel.go.kr/news/newsView.do'      // 고용노동부 보도자료 (백업)
-        ];
+        console.log('🔍 뉴스 가져오기 시작...');
         
         // RSS를 JSON으로 변환 (무료 서비스)
-        const rssUrl = rssSources[0];
+        const rssUrl = 'https://www.kosha.or.kr/rss/news.do';
         const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&count=5`;
         
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('📡 API 응답 상태:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`API 오류: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('📰 받은 뉴스 데이터:', data);
         
         if (data.status === 'ok' && data.items && data.items.length > 0) {
             // 안전 관련 키워드 필터링
@@ -1394,6 +1414,8 @@ async function fetchSafetyNews() {
                 ? relevantNews.description.replace(/<[^>]*>/g, '').substring(0, 100)
                 : '';
             
+            console.log('✅ 뉴스 선택됨:', relevantNews.title);
+            
             return {
                 title: relevantNews.title,
                 description: description,
@@ -1403,9 +1425,10 @@ async function fetchSafetyNews() {
             };
         }
         
+        console.log('❌ 뉴스 데이터 없음');
         return null;
     } catch (error) {
-        console.error('RSS 로드 오류:', error);
+        console.error('❌ RSS 로드 오류:', error);
         return null;
     }
 }
@@ -2083,13 +2106,28 @@ ${sig.checklistResults && sig.checklistResults.length > 0 ? `
 }
         
         window.addEventListener('load', async function() {
-            await loadPendingDocuments();
-            
-            const adminBadge = document.getElementById('adminBadge');
-            if (adminBadge) {
-                adminBadge.addEventListener('click', toggleAdmin);
-            }
-        });
+    // 뉴스 배너는 Firebase와 독립적으로 먼저 로드
+    try {
+        await loadNewsBanner();
+        console.log('✅ 뉴스 배너 로드 완료');
+    } catch (error) {
+        console.error('⚠️ 뉴스 배너 로드 실패:', error);
+        displayDefaultBanner();
+    }
+    
+    // Firebase 문서 로드
+    try {
+        await loadPendingDocuments();
+        console.log('✅ 문서 로드 완료');
+    } catch (error) {
+        console.error('❌ 문서 로드 실패:', error);
+    }
+    
+    const adminBadge = document.getElementById('adminBadge');
+    if (adminBadge) {
+        adminBadge.addEventListener('click', toggleAdmin);
+    }
+});
 
 
 function loadManageData() {
