@@ -401,111 +401,6 @@ function showSuccessMessage(name) {
 }
 
 
-/* ⭐ 다크모드 스타일 ⭐ */
-body.dark-mode {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-}
-
-body.dark-mode .container {
-    background: #1a1a2e;
-    color: #eee;
-}
-
-body.dark-mode .header {
-    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
-}
-
-body.dark-mode .nav-tabs {
-    background: #16213e;
-}
-
-body.dark-mode .nav-tab {
-    background: #16213e;
-    color: #aaa;
-}
-
-body.dark-mode .nav-tab:hover {
-    background: #1e3c72;
-    color: #eee;
-}
-
-body.dark-mode .nav-tab.active {
-    background: #1a1a2e;
-    color: #00b894;
-}
-
-body.dark-mode .card {
-    background: #16213e;
-    border-color: #2a3f5f;
-    color: #eee;
-}
-
-body.dark-mode .document-card {
-    background: linear-gradient(135deg, #1e1e30 0%, #252538 100%);
-    border-color: #ff6b6b;
-}
-
-body.dark-mode .form-input,
-body.dark-mode .form-select,
-body.dark-mode .form-textarea {
-    background: #1a1a2e;
-    border-color: #2a3f5f;
-    color: #eee;
-}
-
-body.dark-mode .form-input:focus,
-body.dark-mode .form-select:focus,
-body.dark-mode .form-textarea:focus {
-    border-color: #00b894;
-}
-
-body.dark-mode .modal {
-    background-color: rgba(0,0,0,0.85);
-}
-
-body.dark-mode .modal-content {
-    background: #1a1a2e;
-    color: #eee;
-}
-
-body.dark-mode .modal-header {
-    background: #16213e;
-    border-bottom-color: #2a3f5f;
-}
-
-body.dark-mode .loading {
-    color: #aaa;
-}
-
-/* 다크모드 토글 버튼 */
-.dark-mode-toggle {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(255,255,255,0.2);
-    border: 2px solid rgba(255,255,255,0.3);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 20px;
-    transition: all 0.3s;
-    z-index: 100;
-}
-
-.dark-mode-toggle:hover {
-    background: rgba(255,255,255,0.3);
-    transform: scale(1.1);
-}
-
-body.dark-mode .dark-mode-toggle {
-    background: rgba(0,0,0,0.3);
-    border-color: rgba(255,255,255,0.2);
-}
-
 
 
 
@@ -514,10 +409,7 @@ body.dark-mode .dark-mode-toggle {
 <body>
     <div class="container">
 <div class="header">
-    <!-- ⭐ 다크모드 토글 버튼 추가 ⭐ -->
-    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
-        <span id="darkModeIcon">🌙</span>
-    </button>
+    
     
     <div style="text-align: center; padding: 8px 0;">
     <div style="text-align: center; padding: 8px 0;">
@@ -1995,15 +1887,17 @@ function closeNameInputModal() {
             
             <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
                 <!-- 날짜와 완료 개수 -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; color: #2d3436;">
-                        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
-                            <span style="font-size: 20px;">📅</span>
-                        </div>
-                        <span style="font-weight: 700; font-size: 16px; color: #2d3436;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</span>
-                    </div>
-                    <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 10px 18px; border-radius: 20px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 12px rgba(0,184,148,0.3);" id="checkCount">0/${documents.length}개</div>
-                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+            <span style="font-size: 18px;">📅</span>
+        </div>
+        <div style="font-weight: 800; font-size: 13px; color: #2d3436; letter-spacing: -0.8px; line-height: 1.2;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+    </div>
+    <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 8px 14px; border-radius: 20px; font-weight: 800; font-size: 13px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
+        0/${documents.length}
+    </div>
+</div>
                 
                 <!-- 익명 사용자 -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: linear-gradient(135deg, #fff5f5, #ffe8e8); border-radius: 12px; border: 2px solid #ffdddd;">
@@ -2425,47 +2319,14 @@ ${sig.checklistResults && sig.checklistResults.length > 0 ? `
         
 
 
-// ⭐ 다크모드 토글 함수 ⭐
-function toggleDarkMode() {
-    const body = document.body;
-    const icon = document.getElementById('darkModeIcon');
-    
-    body.classList.toggle('dark-mode');
-    
-    // 아이콘 변경
-    if (body.classList.contains('dark-mode')) {
-        icon.textContent = '☀️';
-        localStorage.setItem('darkMode', 'enabled');
-    } else {
-        icon.textContent = '🌙';
-        localStorage.setItem('darkMode', 'disabled');
-    }
-}
 
-// 페이지 로드 시 다크모드 설정 복원
-function initDarkMode() {
-    const darkMode = localStorage.getItem('darkMode');
-    const icon = document.getElementById('darkModeIcon');
-    
-    if (darkMode === 'enabled') {
-        document.body.classList.add('dark-mode');
-        if (icon) icon.textContent = '☀️';
-    }
-}
 
-// 페이지 로드 시 다크모드 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    initDarkMode();
-});
+
 
 
 
         window.addEventListener('load', async function() {
-    // 다크모드 초기화 (이미 DOMContentLoaded에서 실행되므로 여기서도 실행)
-    initDarkMode();
-    
-    // 기존 코드 계속...
-    // 뉴스 배너는 Firebase와 독립적으로 먼저 로드
+
     try {
         await loadNewsBanner();
         console.log('✅ 뉴스 배너 로드 완료');
