@@ -11,6 +11,70 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+ <!-- ⭐ Confetti 라이브러리 추가 ⭐ -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+// ⭐ Confetti 효과 함수 ⭐
+function showConfetti() {
+    const duration = 3000; // 3초 동안
+    const end = Date.now() + duration;
+    
+    const colors = ['#00b894', '#00cec9', '#667eea', '#764ba2', '#ff6b6b'];
+    
+    (function frame() {
+        confetti({
+            particleCount: 3,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: colors
+        });
+        confetti({
+            particleCount: 3,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: colors
+        });
+        
+        if (Date.now() < end) {
+            requestAnimationFrame(frame);
+        }
+    }());
+}
+
+// 성공 메시지와 함께 표시
+function showSuccessMessage(name) {
+    // Confetti 효과
+    showConfetti();
+    
+    // 성공 모달 (선택사항)
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; animation: popIn 0.5s ease-out;';
+    
+    modal.innerHTML = `
+        <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+        <div style="font-size: 24px; font-weight: 800; color: #00b894; margin-bottom: 10px;">서명 완료!</div>
+        <div style="font-size: 16px; color: #666; margin-bottom: 20px;">${name}님의 서명이 성공적으로 등록되었습니다.</div>
+        <button onclick="this.parentElement.remove()" style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,184,148,0.3);">확인</button>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 3초 후 자동 닫기
+    setTimeout(() => {
+        if (modal.parentElement) {
+            modal.remove();
+        }
+    }, 3000);
+}
+
+    </script>
+
+    
+
     <style>
         * {
             margin: 0;
@@ -312,11 +376,150 @@
     }
 }
 
+@keyframes highlight {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 8px 30px rgba(102,126,234,0.4);
+        border-color: #667eea;
+    }
+}
+
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+
+/* ⭐ 다크모드 스타일 ⭐ */
+body.dark-mode {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+}
+
+body.dark-mode .container {
+    background: #1a1a2e;
+    color: #eee;
+}
+
+body.dark-mode .header {
+    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+}
+
+body.dark-mode .nav-tabs {
+    background: #16213e;
+}
+
+body.dark-mode .nav-tab {
+    background: #16213e;
+    color: #aaa;
+}
+
+body.dark-mode .nav-tab:hover {
+    background: #1e3c72;
+    color: #eee;
+}
+
+body.dark-mode .nav-tab.active {
+    background: #1a1a2e;
+    color: #00b894;
+}
+
+body.dark-mode .card {
+    background: #16213e;
+    border-color: #2a3f5f;
+    color: #eee;
+}
+
+body.dark-mode .document-card {
+    background: linear-gradient(135deg, #1e1e30 0%, #252538 100%);
+    border-color: #ff6b6b;
+}
+
+body.dark-mode .form-input,
+body.dark-mode .form-select,
+body.dark-mode .form-textarea {
+    background: #1a1a2e;
+    border-color: #2a3f5f;
+    color: #eee;
+}
+
+body.dark-mode .form-input:focus,
+body.dark-mode .form-select:focus,
+body.dark-mode .form-textarea:focus {
+    border-color: #00b894;
+}
+
+body.dark-mode .modal {
+    background-color: rgba(0,0,0,0.85);
+}
+
+body.dark-mode .modal-content {
+    background: #1a1a2e;
+    color: #eee;
+}
+
+body.dark-mode .modal-header {
+    background: #16213e;
+    border-bottom-color: #2a3f5f;
+}
+
+body.dark-mode .loading {
+    color: #aaa;
+}
+
+/* 다크모드 토글 버튼 */
+.dark-mode-toggle {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s;
+    z-index: 100;
+}
+
+.dark-mode-toggle:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+
+body.dark-mode .dark-mode-toggle {
+    background: rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.2);
+}
+
+
+
+
     </style>
 </head>
 <body>
     <div class="container">
 <div class="header">
+    <!-- ⭐ 다크모드 토글 버튼 추가 ⭐ -->
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+        <span id="darkModeIcon">🌙</span>
+    </button>
+    
+    <div style="text-align: center; padding: 8px 0;">
     <div style="text-align: center; padding: 8px 0;">
         <!-- 로고 + 타이틀 통합 -->
         <div style="display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 50px; border: 2px solid rgba(255,255,255,0.25); box-shadow: 0 8px 32px rgba(0,0,0,0.1); margin-bottom: 16px;">
@@ -1149,27 +1352,31 @@ async function editDocument(docId) {
         const doc = documents.find(d => d.id === docId);
         if (doc) {
             container.innerHTML = `
-                <div style="background: white; border-radius: 20px; padding: 0; margin: 20px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.1); overflow: hidden; border: 2px solid #e9ecef;">
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3);">
-                                <span style="font-size: 24px;">📋</span>
-                            </div>
-                            <div>
-                                <div style="color: rgba(255,255,255,0.85); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">안전 교육 자료</div>
-                                <div style="color: white; font-size: 18px; font-weight: 700;">${doc.title}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="padding: 24px;">
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea; margin-bottom: 20px;">
-                            <div style="color: #2d3436; line-height: 1.8; white-space: pre-line; font-size: 15px;">${doc.content}</div>
-                        </div>
-                        <button class="btn btn-danger" onclick="openSignatureModal('${doc.id}')" style="width: 100%; padding: 16px; font-size: 16px; border-radius: 12px; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: none; box-shadow: 0 4px 15px rgba(255,107,107,0.3);">
-                            ✍️ 전자서명 하기
-                        </button>
-                    </div>
-                </div>
+                <!-- 날짜와 완료 개수 카드 -->
+<div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin: 0 -20px 20px -20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+    <!-- 첫 번째 줄: 날짜 + 완료개수 -->
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                <span style="font-size: 22px;">📅</span>
+            </div>
+            <div style="font-weight: 800; font-size: 17px; color: #2d3436; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 12px 20px; border-radius: 24px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
+            0/${documents.length}
+        </div>
+    </div>
+    
+    <!-- ⭐ 프로그레스 바 추가 ⭐ -->
+    <div style="margin-bottom: ${userName ? '16px' : '0'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 13px; font-weight: 600; color: #666;">진행률</span>
+            <span style="font-size: 13px; font-weight: 700; color: #00b894;" id="progressPercent">0%</span>
+        </div>
+        <div style="background: #f0f0f0; height: 10px; border-radius: 10px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+            <div id="progressBar" style="background: linear-gradient(135deg, #00b894, #00cec9); height: 100%; width: 0%; transition: width 0.8s ease-out, box-shadow 0.3s; box-shadow: 0 0 10px rgba(0,184,148,0.5);"></div>
+        </div>
+    </div>
             `;
         } else {
             container.innerHTML = '<p style="color: #dc3545;">문서를 찾을 수 없습니다.</p>';
@@ -1216,6 +1423,18 @@ async function editDocument(docId) {
         </div>
         <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 12px 20px; border-radius: 24px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
             0/${documents.length}
+        </div>
+    </div>
+
+    
+     <!-- 프로그레스 바 -->
+    <div style="margin-bottom: ${userName ? '16px' : '0'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 13px; font-weight: 600; color: #666;">📊 진행률</span>
+            <span style="font-size: 14px; font-weight: 800; color: #00b894;" id="progressPercent">0%</span>
+        </div>
+        <div style="background: #f0f0f0; height: 12px; border-radius: 10px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+            <div id="progressBar" style="background: linear-gradient(90deg, #00b894, #00cec9); height: 100%; width: 0%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(0,184,148,0.6);"></div>
         </div>
     </div>
     
@@ -1300,7 +1519,29 @@ async function editDocument(docId) {
         </div>
     `;
     
+// 완료 개수 업데이트
 document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
+
+// ⭐ 프로그레스 바 업데이트 추가 ⭐
+const percentage = documents.length > 0 ? Math.round((completedCount / documents.length) * 100) : 0;
+const progressBar = document.getElementById('progressBar');
+const progressPercent = document.getElementById('progressPercent');
+
+if (progressBar && progressPercent) {
+    setTimeout(() => {
+        progressBar.style.width = `${percentage}%`;
+        progressPercent.textContent = `${percentage}%`;
+        
+        // 100% 완료 시 효과
+        if (percentage === 100) {
+            progressBar.style.background = 'linear-gradient(135deg, #f39c12, #f1c40f)';
+            progressBar.style.boxShadow = '0 0 20px rgba(243,156,18,0.8)';
+            progressPercent.style.color = '#f39c12';
+        }
+    }, 300);
+}
+
+
     
     // ⭐ 여기부터 추가 시작 ⭐
     // 뉴스 배너 자동 로드
@@ -1388,7 +1629,7 @@ async function fetchSafetyNews() {
         const newsDatabase = [
             {
                 title: '기온급강하 저체온주의! ',
-                description: '낮은 기온은 근육을 경직시켜 넘어짐 사고를 유발합니다. 작업 전 충분한 스트레칭으로 몸을 풀어줍시다..',
+                description: '낮은 기온은 근육을 경직시켜 넘어짐 사고를 유발합니다. 작업 전 충분한 스트레칭으로 몸을 풀어줍시다.',
                 url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
                 source: '안전보건공단',
                 date: '2024-10-18'
@@ -1409,7 +1650,7 @@ async function fetchSafetyNews() {
             },
             {
                 title: '끼임재해 주의! 기계 작동 전 확인하세요',
-                description: '회전체 작업 시 장갑 착용 금지, 작업 전 반드시 기계 정지 확인이 필요합니다. 사고 사례 보기',
+                description: '회전체 작업 시 장갑 착용 금지, 작업 전 반드시 기계 정지 확인이 필요합니다. ',
                 url: 'https://portal.kosha.or.kr/business-apply-search/etc-biz/acc-invest-act/cont2',
                 source: '안전보건공단',
                 date: '2024-10-15'
@@ -1484,7 +1725,7 @@ async function fetchSafetyNews() {
     }
 }
 
-// 뉴스 배너 표시 (원래대로 넓게)
+// 뉴스 배너 표시 (로고 및 배지 제거)
 function displayNewsBanner(news) {
     const container = document.getElementById('newsBanner');
     if (!container) return;
@@ -1492,7 +1733,7 @@ function displayNewsBanner(news) {
     container.innerHTML = `
         <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 20px; box-shadow: 0 4px 12px rgba(255,107,107,0.3); animation: slideDown 0.5s ease-out; transition: all 0.3s;">
             
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
                 <!-- 아이콘 -->
                 <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.3); animation: pulse 2s infinite;">
                     <span style="font-size: 28px;">🚨</span>
@@ -1500,23 +1741,23 @@ function displayNewsBanner(news) {
                 
                 <!-- 콘텐츠 -->
                 <div style="text-align: center; width: 100%;">
-                    <!-- 출처 -->
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-                        <span style="color: rgba(255,255,255,0.95); font-size: 13px; font-weight: 600;">${news.source}</span>
-                        <span style="background: rgba(255,255,255,0.25); padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: white;">안전공지</span>
-                    </div>
-                    
                     <!-- 제목 -->
-                    <div style="color: white; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; word-break: keep-all;">
+                    <div style="color: white; font-size: 18px; font-weight: 800; line-height: 1.4; margin-bottom: 12px; word-break: keep-all; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         ${news.title}
                     </div>
                     
                     <!-- 설명 -->
                     ${news.description ? `
-                        <div style="color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; word-break: keep-all;">
+                        <div style="color: rgba(255,255,255,0.95); font-size: 14px; line-height: 1.6; margin-bottom: 16px; word-break: keep-all; font-weight: 500;">
                             ${news.description}
                         </div>
                     ` : ''}
+                    
+                    <!-- 서명하러 가기 버튼 -->
+                    <button onclick="scrollToDocuments()" style="background: white; color: #ff6b6b; padding: 14px 28px; border: none; border-radius: 30px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; animation: bounce 2s infinite;" onmouseover="this.style.transform='translateY(-3px) scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0) scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
+                        <span>✍️ 서명하러 가기</span>
+                        <span style="font-size: 18px;">↓</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1541,8 +1782,34 @@ function displayNewsBanner(news) {
                     transform: scale(1.05);
                 }
             }
+            
+            @keyframes bounce {
+                0%, 100% {
+                    transform: translateY(0);
+                }
+                50% {
+                    transform: translateY(-5px);
+                }
+            }
         </style>
     `;
+}
+
+// 스크롤 함수 추가 (script 영역 맨 아래에 추가)
+function scrollToDocuments() {
+    const firstDoc = document.querySelector('[onclick^="openSignatureModal"]');
+    if (firstDoc) {
+        firstDoc.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // 시각적 강조 효과
+        const card = firstDoc.closest('[style*="border"]');
+        if (card) {
+            card.style.animation = 'highlight 1s ease-out';
+            setTimeout(() => {
+                card.style.animation = '';
+            }, 1000);
+        }
+    }
 }
 // 기본 배너 (뉴스 없을 때)
 function displayDefaultBanner() {
@@ -2054,21 +2321,24 @@ if (allChecklistItems.length > 0) {
             }
 
             try {
-                const riskSuggestion = document.getElementById('riskSuggestion').value.trim();
+    const riskSuggestion = document.getElementById('riskSuggestion').value.trim();
 
-                await db.collection('signatures').add({
-                    documentId: currentDocumentId,
-                    signerName: signerName,
-                    signerDept: signerDept,
-                    signatureImage: canvas.toDataURL('image/png'),
-                    checklistResults: checklistResults,
-                    riskSuggestion: riskSuggestion || '',
-                    signedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                closeSignatureModal();
-                alert(signerName + '님의 서명이 완료되었습니다!');
-                loadPendingDocuments();
+    await db.collection('signatures').add({
+        documentId: currentDocumentId,
+        signerName: signerName,
+        signerDept: signerDept,
+        signatureImage: canvas.toDataURL('image/png'),
+        checklistResults: checklistResults,
+        riskSuggestion: riskSuggestion || '',
+        signedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    closeSignatureModal();
+    
+    // ⭐ 기존 alert 대신 Confetti 효과 + 성공 메시지 ⭐
+    showSuccessMessage(signerName);
+    
+    loadPendingDocuments();
                 if (isAdmin) {
                     await loadSignaturesFromFirebase();
                     loadDistributedDocuments();
@@ -2153,7 +2423,48 @@ ${sig.checklistResults && sig.checklistResults.length > 0 ? `
     });
 }
         
+
+
+// ⭐ 다크모드 토글 함수 ⭐
+function toggleDarkMode() {
+    const body = document.body;
+    const icon = document.getElementById('darkModeIcon');
+    
+    body.classList.toggle('dark-mode');
+    
+    // 아이콘 변경
+    if (body.classList.contains('dark-mode')) {
+        icon.textContent = '☀️';
+        localStorage.setItem('darkMode', 'enabled');
+    } else {
+        icon.textContent = '🌙';
+        localStorage.setItem('darkMode', 'disabled');
+    }
+}
+
+// 페이지 로드 시 다크모드 설정 복원
+function initDarkMode() {
+    const darkMode = localStorage.getItem('darkMode');
+    const icon = document.getElementById('darkModeIcon');
+    
+    if (darkMode === 'enabled') {
+        document.body.classList.add('dark-mode');
+        if (icon) icon.textContent = '☀️';
+    }
+}
+
+// 페이지 로드 시 다크모드 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initDarkMode();
+});
+
+
+
         window.addEventListener('load', async function() {
+    // 다크모드 초기화 (이미 DOMContentLoaded에서 실행되므로 여기서도 실행)
+    initDarkMode();
+    
+    // 기존 코드 계속...
     // 뉴스 배너는 Firebase와 독립적으로 먼저 로드
     try {
         await loadNewsBanner();
