@@ -1889,11 +1889,12 @@ function closeNameInputModal() {
                 <!-- 날짜와 완료 개수 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px;">
     <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
-        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
             <span style="font-size: 18px;">📅</span>
         </div>
-        <div style="font-weight: 800; font-size: 13px; color: #2d3436; letter-spacing: -0.8px; line-height: 1.2;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+        <div style="font-weight: 800; font-size: 13px; color: #2d3436; letter-spacing: -0.8px; line-height: 1.2; white-space: nowrap;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
     </div>
+    <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 8px 14px; border-radius: 20px; font-weight: 800; font-size: 13px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
     <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 8px 14px; border-radius: 20px; font-weight: 800; font-size: 13px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
         0/${documents.length}
     </div>
