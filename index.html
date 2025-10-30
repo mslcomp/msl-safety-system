@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSL 안전보건 TBM 배포 및 서명 시스템</title>
+    <title>MSL 안전자료 배포 및 서명 시스템</title>
     
     <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1653,110 +1653,146 @@ ${topThree.length > 0 ? `
     ` : ''}
 </div>
             
-          <!-- 📌 최신 교육 (1개만 전체 표시) -->
+          
+
+<!-- 📋 전달사항 목록 (세련된 디자인) -->
 ${documents.length > 0 ? `
     <div style="margin-bottom: 24px;">
-        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 12px 20px; border-radius: 12px 12px 0 0; margin: 0 -20px;">
-            <h3 style="margin: 0; color: white; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 20px;">📌</span> 최근 전달사항
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 14px 20px; border-radius: 16px 16px 0 0; margin: 0 -20px; box-shadow: 0 4px 16px rgba(102,126,234,0.25);">
+            <h3 style="margin: 0; color: white; font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">📋</span> 전달사항
             </h3>
         </div>
         
-        ${(() => {
-            const latestDoc = documents[0];
-            const docSigs = signatures.filter(s => s.documentId === latestDoc.id);
-            const mySignature = userName ? docSigs.find(s => s.signerName === userName) : null;
-            const isCompleted = !!mySignature;
-            if (isCompleted) completedCount++;
-            
-            return `
-                <div style="background: white; border: 2px solid ${isCompleted ? '#00b894' : '#ff6b6b'}; border-top: none; border-radius: 0 0 20px 20px; padding: 24px; margin: 0 -20px 0 -20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); position: relative;">
-                    
-                    ${isCompleted ? `
-                        <div style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 16px rgba(0,184,148,0.5); z-index: 2;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    ` : ''}
-                    
-                    <div style="padding-right: ${isCompleted ? '50px' : '0'};">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
-                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894, #00cec9)' : 'linear-gradient(135deg, #667eea, #764ba2)'}; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <span style="font-size: 22px;">📋</span>
-                            </div>
-                            <div style="flex: 1;">
-                                <div style="color: #2d3436; font-size: 17px; font-weight: 800; line-height: 1.3; margin-bottom: 4px;">
-                                    ${latestDoc.title}
-                                </div>
-                                <div style="font-size: 12px; color: #666;">
-                                    ${latestDoc.createdAt ? new Date(latestDoc.createdAt.toDate()).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '방금'} 배포
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="background: #f8f9fa; padding: 16px; border-radius: 12px; border-left: 4px solid ${isCompleted ? '#00b894' : '#667eea'}; margin-bottom: 16px;">
-                           <div style="color: #636e72; font-size: 14px; line-height: 1.6; text-align: center;">
-    ${latestDoc.content.substring(0, 120)}${latestDoc.content.length > 120 ? '...' : ''}
-</div>
-                        </div>
-                        
-${isCompleted ? `
-    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 16px; border-radius: 12px; border-left: 4px solid #00b894; cursor: pointer; text-align: center;" onclick="showAlreadySignedAlert('${latestDoc.title.replace(/'/g, "\\'")}', '${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}')">
-        <div style="color: #00b894; font-size: 15px; font-weight: 700; margin-bottom: 4px;">✓ 서명 완료</div>
-        <div style="color: #00b894; font-size: 12px; font-weight: 600;">
-            ${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}
-        </div>
-    </div>
-` : `
-                            <button onclick="openSignatureModal('${latestDoc.id}')" style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(102,126,234,0.4); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.4)'">
-                                ✍️ 서명하러 가기
-                            </button>
-                        `}
-                    </div>
-                </div>
-            `;
-        })()}
-    </div>
-` : ''}
-
-<!-- 📚 이전 교육 목록 -->
-${documents.length > 1 ? `
-    <div style="margin-bottom: 24px;">
-        <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 12px 12px 0 0; margin: 0 -20px; border: 2px solid #e9ecef; border-bottom: none;">
-            <h3 style="margin: 0; color: #2d3436; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 18px;">📚</span> 이전 전달 목록 <span style="background: #667eea; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-left: 8px;">${documents.length - 1}개</span>
-            </h3>
-        </div>
-        
-        <div style="background: white; border: 2px solid #e9ecef; border-top: none; border-radius: 0 0 20px 20px; padding: 16px; margin: 0 -20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+        <div style="background: white; border: 2px solid #e9ecef; border-top: none; border-radius: 0 0 16px 16px; padding: 12px; margin: 0 -20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
             <div style="display: grid; gap: 10px;">
-                ${documents.slice(1).map((doc, index) => {
+                ${documents.map((doc, index) => {
                     const docSigs = signatures.filter(s => s.documentId === doc.id);
                     const mySignature = userName ? docSigs.find(s => s.signerName === userName) : null;
                     const isCompleted = !!mySignature;
                     if (isCompleted) completedCount++;
+                    const isLatest = index === 0;
                     
                     return `
-                        <div style="background: ${isCompleted ? '#f0f9f4' : '#fff5f5'}; padding: 14px 16px; border-radius: 12px; border: 2px solid ${isCompleted ? '#c8e6c9' : '#ffdddd'}; cursor: pointer; transition: all 0.3s;" onclick="${isCompleted ? `showAlreadySignedAlert('${doc.title.replace(/'/g, "\\'")}', '${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}')` : `openSignatureModal('${doc.id}')`}" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-                                    <div style="font-size: 24px; flex-shrink: 0;">
-                                        ${isCompleted ? '✅' : '📋'}
+                        <div style="
+                            background: ${isLatest 
+                                ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                                : (isCompleted ? '#f8f9fa' : '#fff')
+                            }; 
+                            padding: ${isLatest ? '16px' : '14px'}; 
+                            border-radius: ${isLatest ? '14px' : '12px'}; 
+                            border: ${isLatest ? 'none' : '2px solid ' + (isCompleted ? '#e9ecef' : '#f1f3f5')}; 
+                            cursor: pointer; 
+                            transition: all 0.3s; 
+                            position: relative;
+                            box-shadow: ${isLatest ? '0 6px 20px rgba(102,126,234,0.3)' : '0 2px 8px rgba(0,0,0,0.04)'};
+                        " onclick="${isCompleted ? `showAlreadySignedAlert('${doc.title.replace(/'/g, "\\'")}', '${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}')` : `openSignatureModal('${doc.id}')`}" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            
+                            ${isLatest ? `
+                                <div style="position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: white; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; border: 1px solid rgba(255,255,255,0.3);">
+                                    NEW
+                                </div>
+                            ` : ''}
+                            
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="
+                                    background: ${isLatest 
+                                        ? 'rgba(255,255,255,0.25)' 
+                                        : (isCompleted ? 'linear-gradient(135deg, #00b894, #00cec9)' : 'linear-gradient(135deg, #a29bfe, #6c5ce7)')
+                                    }; 
+                                    width: ${isLatest ? '48px' : '40px'}; 
+                                    height: ${isLatest ? '48px' : '40px'}; 
+                                    border-radius: 12px; 
+                                    display: flex; 
+                                    align-items: center; 
+                                    justify-content: center; 
+                                    flex-shrink: 0;
+                                    box-shadow: ${isLatest ? '0 4px 12px rgba(0,0,0,0.15)' : '0 2px 8px rgba(0,0,0,0.1)'};
+                                    backdrop-filter: blur(10px);
+                                    border: ${isLatest ? '2px solid rgba(255,255,255,0.3)' : 'none'};
+                                ">
+                                    <span style="font-size: ${isLatest ? '24px' : '20px'};">
+                                        ${isCompleted ? '✓' : '📄'}
+                                    </span>
+                                </div>
+                                
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="
+                                        font-size: ${isLatest ? '16px' : '14px'}; 
+                                        font-weight: 800; 
+                                        color: ${isLatest ? 'white' : '#2d3436'}; 
+                                        margin-bottom: 4px; 
+                                        overflow: hidden; 
+                                        text-overflow: ellipsis; 
+                                        white-space: nowrap;
+                                        text-shadow: ${isLatest ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'};
+                                    ">
+                                        ${doc.title}
                                     </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <div style="font-size: 14px; font-weight: 700; color: #2d3436; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            ${doc.title}
-                                        </div>
-                                        <div style="font-size: 11px; color: #666;">
-                                            ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '방금'} · ${isCompleted ? '서명완료' : '서명필요'}
-                                        </div>
+                                    <div style="
+                                        font-size: 11px; 
+                                        color: ${isLatest ? 'rgba(255,255,255,0.9)' : '#868e96'}; 
+                                        font-weight: 600;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                    ">
+                                        <span style="
+                                            background: ${isLatest ? 'rgba(255,255,255,0.2)' : '#f1f3f5'}; 
+                                            padding: 3px 8px; 
+                                            border-radius: 6px;
+                                            backdrop-filter: blur(10px);
+                                        ">
+                                            ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '방금'}
+                                        </span>
+                                        ${isCompleted ? `
+                                            <span style="color: ${isLatest ? 'rgba(255,255,255,0.95)' : '#00b894'};">
+                                                ✓ 완료
+                                            </span>
+                                        ` : ''}
                                     </div>
                                 </div>
-                                <div style="font-size: 18px; color: ${isCompleted ? '#00b894' : '#667eea'}; flex-shrink: 0;">
-                                    ▶
+                                
+                                <div style="font-size: 20px; color: ${isLatest ? 'rgba(255,255,255,0.8)' : '#adb5bd'}; flex-shrink: 0;">
+                                    ${isLatest ? '→' : '›'}
                                 </div>
                             </div>
+                            
+                            ${isLatest && isCompleted ? `
+                                <div style="
+                                    margin-top: 12px; 
+                                    padding-top: 12px; 
+                                    border-top: 1px solid rgba(255,255,255,0.2);
+                                    text-align: center;
+                                    color: rgba(255,255,255,0.9);
+                                    font-size: 11px;
+                                    font-weight: 600;
+                                ">
+                                    ${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'} 서명완료
+                                </div>
+                            ` : ''}
+                            
+                            ${isLatest && !isCompleted ? `
+                                <div style="
+                                    margin-top: 12px; 
+                                    padding-top: 12px; 
+                                    border-top: 1px solid rgba(255,255,255,0.2);
+                                ">
+                                    <div style="
+                                        background: rgba(255,255,255,0.2); 
+                                        backdrop-filter: blur(10px);
+                                        color: white; 
+                                        padding: 10px; 
+                                        border-radius: 10px; 
+                                        text-align: center; 
+                                        font-size: 13px; 
+                                        font-weight: 700;
+                                        border: 1px solid rgba(255,255,255,0.3);
+                                    ">
+                                        ✍️ 서명하기
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }).join('')}
@@ -1764,6 +1800,9 @@ ${documents.length > 1 ? `
         </div>
     </div>
 ` : ''}
+
+
+
     `; 
 // 완료 개수 업데이트
 document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
