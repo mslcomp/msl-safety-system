@@ -220,6 +220,27 @@ function sendReminderForDoc(docId) {
         alert('❌ 복사에 실패했습니다.');
     });
 }
+
+
+// 수정 모달의 첨부 타입 전환 함수
+function toggleEditAttachmentInput() {
+    const type = document.getElementById('editAttachmentType')?.value;
+    if (!type) return;
+    
+    const gdriveInput = document.getElementById('editGdriveInput');
+    const linkInput = document.getElementById('editLinkInput');
+    
+    if (gdriveInput) gdriveInput.style.display = type === 'gdrive' ? 'block' : 'none';
+    if (linkInput) linkInput.style.display = type === 'link' ? 'block' : 'none';
+    
+    if (type === 'none') {
+        const gdriveLink = document.getElementById('editGdriveLink');
+        const externalLink = document.getElementById('editExternalLink');
+        if (gdriveLink) gdriveLink.value = '';
+        if (externalLink) externalLink.value = '';
+    }
+}
+
 </script>
 
 
@@ -837,17 +858,46 @@ const employees = [
                                 <label class="form-label">자료 내용</label>
                                 <textarea class="form-textarea" id="documentContent" rows="6" required></textarea>
                             </div>
+
+
                             
                             <div class="form-group">
     <label class="form-label">체크리스트 항목 (선택사항)</label>
     <textarea class="form-textarea" id="checklistItems" rows="4" placeholder="한 줄에 하나씩 입력&#10;예: 안전보호구 착용 완료"></textarea>
 </div>
 <div class="form-group">
-    <label class="form-label">📎 첨부파일 (선택사항)</label>
-    <input type="file" class="form-input" id="attachmentFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style="padding: 8px;">
-    <small style="color: #666; font-size: 12px; display: block; margin-top: 6px;">
-        지원 형식: PDF, JPG, PNG, DOC, DOCX (최대 10MB)
-    </small>
+    <label class="form-label">📎 첨부 자료 (선택사항)</label>
+    
+    <select class="form-select" id="attachmentType" onchange="toggleAttachmentInput()" style="margin-bottom: 12px;">
+        <option value="none">📭 첨부 없음</option>
+        <option value="gdrive">📁 Google Drive 링크</option>
+        <option value="link">🔗 외부 링크 (Dropbox, OneDrive 등)</option>
+    </select>
+    
+    <!-- Google Drive 입력 -->
+    <div id="gdriveInput" style="display: none;">
+        <input type="url" class="form-input" id="gdriveLink" placeholder="https://drive.google.com/file/d/..." style="margin-bottom: 8px; border-color: #4285f4;">
+        <div style="background: linear-gradient(135deg, #e8f0fe, #d2e3fc); padding: 12px; border-radius: 8px; border-left: 4px solid #4285f4; font-size: 13px; line-height: 1.6; color: #1a73e8; margin-bottom: 12px;">
+            <div style="font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>💡</span> Google Drive 공유 링크 만들기
+            </div>
+            <div style="color: #5f6368;">
+                1. Google Drive에서 파일 우클릭<br>
+                2. "공유" 또는 "링크 가져오기" 클릭<br>
+                3. "링크가 있는 모든 사용자" 선택<br>
+                4. 링크 복사 후 여기에 붙여넣기
+            </div>
+        </div>
+    </div>
+    
+    <!-- 외부 링크 입력 -->
+    <div id="linkInput" style="display: none;">
+        <input type="url" class="form-input" id="externalLink" placeholder="https://..." style="margin-bottom: 8px; border-color: #667eea;">
+        <div style="background: linear-gradient(135deg, #f0f0ff, #e8e6ff); padding: 12px; border-radius: 8px; border-left: 4px solid #667eea; font-size: 13px; color: #5f6368;">
+            <div style="font-weight: 700; margin-bottom: 4px;">💡 지원 서비스</div>
+            Dropbox, OneDrive, 네이버 MYBOX, 카카오톡 파일 등
+        </div>
+    </div>
 </div>
 <button type="submit" class="btn btn-danger">자료 배포</button>
                         </form>
@@ -940,103 +990,134 @@ manageTab.innerHTML = `
     const title = document.getElementById('documentTitle').value.trim();
     const type = document.getElementById('documentType').value;
     const content = document.getElementById('documentContent').value.trim();
-    const targetDepts = Array.from(document.getElementById('targetDepts').selectedOptions).map(o => o.value);
     const checklistText = document.getElementById('checklistItems').value.trim();
-    const checklistItems = checklistText ? checklistText.split('\n').filter(item => item.trim()) : [];
-    const fileInput = document.getElementById('attachmentFile');
-    const file = fileInput ? fileInput.files[0] : null;
+    const attachmentType = document.getElementById('attachmentType').value;
     
-    if (!title || !type || !content || targetDepts.length === 0) {
-        alert('모든 필수 항목을 입력해주세요.');
+    if (!title || !type || !content) {
+        alert('필수 항목을 모두 입력해주세요.');
         return;
     }
     
-    // 파일 크기 체크 (10MB)
-    if (file && file.size > 10 * 1024 * 1024) {
-        alert('첨부파일은 10MB 이하만 가능합니다.');
-        return;
-    }
+    // 체크리스트 파싱
+    const checklistItems = checklistText
+        .split('\n')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
     
-    try {
-        let attachmentURL = null;
-        let attachmentName = null;
-        let attachmentType = null;
-        
-        // 파일이 있으면 업로드
-if (file) {
-    console.log('파일 업로드 시작:', file.name, '크기:', file.size);
+    // 대상 부서
+    const deptSelect = document.getElementById('targetDepts');
+    const targetDepts = Array.from(deptSelect.selectedOptions).map(opt => opt.value);
     
-    // 업로드 버튼 비활성화
-    const submitBtn = e.target.querySelector('button[type="submit"]');
+    // 로딩 표시
+    const submitBtn = document.querySelector('#distributionForm button[type="submit"]');
     const originalText = submitBtn.textContent;
+    submitBtn.textContent = '배포 중...';
     submitBtn.disabled = true;
-    submitBtn.textContent = '📤 파일 업로드 중...';
-    submitBtn.style.opacity = '0.6';
     
     try {
-        const timestamp = Date.now();
-        const fileName = `attachments/${timestamp}_${file.name}`;
-        const storageRef = storage.ref(fileName);
+        let attachmentInfo = null;
         
-        // 업로드 진행률 표시
-        const uploadTask = storageRef.put(file);
-        
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                submitBtn.textContent = `📤 업로드 중... ${Math.round(progress)}%`;
-                console.log('업로드 진행률:', progress + '%');
-            },
-            (error) => {
-                // 업로드 실패
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-                submitBtn.style.opacity = '1';
-                throw error;
+        // 첨부 자료 처리
+        if (attachmentType === 'gdrive') {
+            const link = document.getElementById('gdriveLink').value.trim();
+            if (link) {
+                // Google Drive 링크 유효성 검사
+                if (!link.includes('drive.google.com')) {
+                    alert('올바른 Google Drive 링크를 입력해주세요.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+                
+                attachmentInfo = {
+                    type: 'gdrive',
+                    url: link,
+                    name: 'Google Drive 파일',
+                    icon: '📁'
+                };
             }
-        );
+        } else if (attachmentType === 'link') {
+            const link = document.getElementById('externalLink').value.trim();
+            if (link) {
+                // URL 유효성 검사
+                try {
+                    new URL(link);
+                } catch {
+                    alert('올바른 URL을 입력해주세요.');
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                    return;
+                }
+                
+                // 서비스 종류 판별
+                let serviceName = '외부 링크';
+                let icon = '🔗';
+                
+                if (link.includes('dropbox.com')) {
+                    serviceName = 'Dropbox';
+                    icon = '📦';
+                } else if (link.includes('onedrive') || link.includes('1drv.ms')) {
+                    serviceName = 'OneDrive';
+                    icon = '☁️';
+                } else if (link.includes('naver.com')) {
+                    serviceName = '네이버 MYBOX';
+                    icon = '🟢';
+                }
+                
+                attachmentInfo = {
+                    type: 'link',
+                    url: link,
+                    name: serviceName,
+                    icon: icon
+                };
+            }
+        }
         
-        // 업로드 완료 대기
-        await uploadTask;
-        const snapshot = await uploadTask.snapshot;
-        attachmentURL = await snapshot.ref.getDownloadURL();
-        attachmentName = file.name;
-        attachmentType = file.type;
-        
-        console.log('파일 업로드 완료:', attachmentURL);
-        
-        // 버튼 원래대로
-        submitBtn.textContent = '✅ 업로드 완료!';
-        
-    } catch (uploadError) {
-        throw uploadError;
-    }
-}
-
-// Firestore에 문서 저장
-await db.collection('documents').add({
+        // Firestore에 문서 추가
+        const docData = {
             title: title,
             type: type,
             content: content,
-            targetDepartments: targetDepts,
             checklistItems: checklistItems,
-            attachmentURL: attachmentURL,
-            attachmentName: attachmentName,
-            attachmentType: attachmentType,
+            targetDepartments: targetDepts,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'distributed'
-        });
+            createdBy: localStorage.getItem('mslUserName') || 'admin',
+            status: 'active'
+        };
         
-        alert('✅ 안전자료가 성공적으로 배포되었습니다!' + (file ? '\n📎 첨부파일 포함' : ''));
-        e.target.reset();
-        await loadDocumentsFromFirebase();
-        loadDistributedDocuments();
+        // 첨부 정보가 있으면 추가
+        if (attachmentInfo) {
+            docData.attachment = attachmentInfo;
+        }
+        
+        await db.collection('documents').add(docData);
+        
+        // 성공 메시지
+        const message = attachmentInfo 
+            ? `✅ 문서와 ${attachmentInfo.name}이(가) 성공적으로 배포되었습니다!` 
+            : '✅ 문서가 성공적으로 배포되었습니다!';
+        alert(message);
+        
+        // 폼 초기화
+        document.getElementById('distributionForm').reset();
+        document.getElementById('attachmentType').value = 'none';
+        const gdriveInput = document.getElementById('gdriveInput');
+        const linkInput = document.getElementById('linkInput');
+        if (gdriveInput) gdriveInput.style.display = 'none';
+        if (linkInput) linkInput.style.display = 'none';
+        
+        // 관리 탭으로 이동
+        showTab('manage');
         
     } catch (error) {
-        console.error('배포 오류:', error);
-        alert('배포 중 오류가 발생했습니다: ' + error.message);
+        console.error('배포 실패:', error);
+        alert('❌ 배포에 실패했습니다: ' + error.message);
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
     }
 }
+
         
         async function loadDistributedDocuments() {
     const container = document.getElementById('distributedDocuments');
@@ -1390,6 +1471,41 @@ async function editDocument(docId) {
                         <label class="form-label">자료 내용</label>
                         <textarea class="form-textarea" id="editContent" rows="6" required>${doc.content}</textarea>
                     </div>
+
+<!-- 📎 첨부 자료 -->
+<div class="form-group">
+    <label class="form-label">📎 첨부 자료</label>
+    
+    <select class="form-select" id="editAttachmentType" onchange="toggleEditAttachmentInput()" style="margin-bottom: 12px;">
+        <option value="none" ${!doc.attachment ? 'selected' : ''}>📭 첨부 없음</option>
+        <option value="gdrive" ${doc.attachment?.type === 'gdrive' ? 'selected' : ''}>📁 Google Drive 링크</option>
+        <option value="link" ${doc.attachment?.type === 'link' ? 'selected' : ''}>🔗 외부 링크</option>
+    </select>
+    
+    <!-- Google Drive 입력 -->
+    <div id="editGdriveInput" style="display: ${doc.attachment?.type === 'gdrive' ? 'block' : 'none'};">
+        <input type="url" class="form-input" id="editGdriveLink" 
+               value="${doc.attachment?.type === 'gdrive' ? doc.attachment.url : ''}" 
+               placeholder="https://drive.google.com/file/d/..." 
+               style="margin-bottom: 8px; border-color: #4285f4;">
+        <div style="background: linear-gradient(135deg, #e8f0fe, #d2e3fc); padding: 10px; border-radius: 8px; border-left: 4px solid #4285f4; font-size: 12px; color: #1a73e8;">
+            💡 Google Drive 파일의 공유 링크를 입력하세요
+        </div>
+    </div>
+    
+    <!-- 외부 링크 입력 -->
+    <div id="editLinkInput" style="display: ${doc.attachment?.type === 'link' ? 'block' : 'none'};">
+        <input type="url" class="form-input" id="editExternalLink" 
+               value="${doc.attachment?.type === 'link' ? doc.attachment.url : ''}" 
+               placeholder="https://..." 
+               style="margin-bottom: 8px; border-color: #667eea;">
+        <div style="background: linear-gradient(135deg, #f0f0ff, #e8e6ff); padding: 10px; border-radius: 8px; border-left: 4px solid #667eea; font-size: 12px; color: #5f6368;">
+            💡 Dropbox, OneDrive 등의 링크
+        </div>
+    </div>
+</div>
+
+
                 
                     <button type="submit" class="btn btn-primary">수정 완료</button>
                 </form>
@@ -1400,47 +1516,103 @@ async function editDocument(docId) {
     document.body.appendChild(modal);
     
     document.getElementById('editDocumentForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const title = document.getElementById('editTitle').value.trim();
-        const type = document.getElementById('editType').value;
-        const content = document.getElementById('editContent').value.trim();
-        const targetDepts = Array.from(document.getElementById('editTargetDepts').selectedOptions).map(o => o.value);
-        const checklistText = document.getElementById('editChecklistItems').value.trim();
-        const checklistItems = checklistText ? checklistText.split('\n').filter(item => item.trim()) : [];
-        
-        if (!title || !type || !content || targetDepts.length === 0) {
-            alert('모든 필수 항목을 입력해주세요.');
-            return;
-        }
-        
-        try {
-            await db.collection('documents').doc(docId).update({
-                title: title,
-                type: type,
-                content: content,
-                targetDepartments: targetDepts,
-                checklistItems: checklistItems,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            
-            modal.remove();
-            alert('문서가 수정되었습니다.');
-            await loadDocumentsFromFirebase();
-            loadDistributedDocuments();
-            
-        } catch (error) {
-            alert('수정 중 오류가 발생했습니다: ' + error.message);
-        }
-    });
+    e.preventDefault();
     
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.remove();
-    });
+    
+    const title = document.getElementById('editTitle').value.trim();
+    const type = document.getElementById('editType').value;
+    const content = document.getElementById('editContent').value.trim();
+    const attachmentType = document.getElementById('editAttachmentType').value;
+    
+    if (!title || !type || !content) {
+        alert('필수 항목을 모두 입력해주세요.');
+        return;
+    }
+    
+    try {
+        let attachmentInfo = null;
+        
+        // ✅ 첨부 자료 처리
+        if (attachmentType === 'gdrive') {
+            const link = document.getElementById('editGdriveLink').value.trim();
+            if (link) {
+                if (!link.includes('drive.google.com')) {
+                    alert('올바른 Google Drive 링크를 입력해주세요.');
+                    return;
+                }
+                
+                attachmentInfo = {
+                    type: 'gdrive',
+                    url: link,
+                    name: 'Google Drive 파일',
+                    icon: '📁'
+                };
+            }
+        } else if (attachmentType === 'link') {
+            const link = document.getElementById('editExternalLink').value.trim();
+            if (link) {
+                try {
+                    new URL(link);
+                } catch {
+                    alert('올바른 URL을 입력해주세요.');
+                    return;
+                }
+                
+                let serviceName = '외부 링크';
+                let icon = '🔗';
+                
+                if (link.includes('dropbox.com')) {
+                    serviceName = 'Dropbox';
+                    icon = '📦';
+                } else if (link.includes('onedrive') || link.includes('1drv.ms')) {
+                    serviceName = 'OneDrive';
+                    icon = '☁️';
+                } else if (link.includes('naver.com')) {
+                    serviceName = '네이버 MYBOX';
+                    icon = '🟢';
+                }
+                
+                attachmentInfo = {
+                    type: 'link',
+                    url: link,
+                    name: serviceName,
+                    icon: icon
+                };
+            }
+        }
+        
+        // Firestore 업데이트
+        const updateData = {
+            title: title,
+            type: type,
+            content: content,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // 첨부 정보 추가 또는 삭제
+        if (attachmentInfo) {
+            updateData.attachment = attachmentInfo;
+        } else if (attachmentType === 'none') {
+            updateData.attachment = firebase.firestore.FieldValue.delete();
+        }
+        
+        await db.collection('documents').doc(docId).update(updateData);
+        
+        alert('✅ 문서가 수정되었습니다!');
+        
+        // 모달 닫기
+        document.querySelector('.modal')?.remove();
+        
+        // 목록 새로고침
+        await loadDistributedDocuments();
+        
+    } catch (error) {
+        console.error('수정 실패:', error);
+        alert('❌ 수정에 실패했습니다: ' + error.message);
+    }
+});
+
 }
-
-
-
         
       async function loadPendingDocuments() {
     const container = document.getElementById('pendingDocuments');
@@ -2466,6 +2638,36 @@ if (allChecklistItems.length > 0) {
     </div>
         
         ${checklistHtml}
+
+        ${doc.attachment ? `
+    <div style="margin: 20px 0;">
+        <button onclick="window.open('${doc.attachment.url}', '_blank'); event.stopPropagation();" style="
+            width: 100%;
+            padding: 18px;
+            background: ${doc.attachment.type === 'gdrive' 
+                ? 'linear-gradient(135deg, #4285f4, #1a73e8)' 
+                : 'linear-gradient(135deg, #667eea, #764ba2)'};
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px ${doc.attachment.type === 'gdrive' 
+                ? 'rgba(66, 133, 244, 0.4)' 
+                : 'rgba(102, 126, 234, 0.4)'};
+            transition: all 0.3s;
+            font-family: 'Malgun Gothic', sans-serif;
+        " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)'">
+            <span style="font-size: 24px;">${doc.attachment.icon}</span>
+            <span>${doc.attachment.name} 보기</span>
+        </button>
+    </div>
+` : ''}
         <div style="background: #fff; padding: 20px; border-radius: 16px; border: 2px solid #E9ECEF; margin: 25px 0;">
     <div style="display: flex; align-items: center; margin-bottom: 16px;">
         <span style="font-size: 22px; margin-right: 10px;">⚠️</span>
