@@ -3,7 +3,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MSL 안전자료 배포 및 서명 시스템</title>
     
     <!-- Firebase SDK -->
@@ -212,7 +212,7 @@ function sendReminderForDoc(docId) {
     const baseUrl = 'https://mslcomp.github.io/msl-safety-system/';
     const signUrl = `${baseUrl}?doc=${docId}`;
     
-    let message = `📋 [MSL 안전교육 서명 요청]\n\n`;
+    let message = `📋 [MSL 안전보건 전자 서명 요청]\n\n`;
     message += `📄 ${doc.title}\n`;
     message += `📊 완료율: ${docSigs.length}/${employees.length}명 (${Math.round((docSigs.length/employees.length)*100)}%)\n\n`;
     message += `🔗 서명링크: ${signUrl}\n\n`;
@@ -2645,7 +2645,7 @@ if (allChecklistItems.length > 0) {
                     <span style="font-size: 26px;">📋</span>
                 </div>
                 <div style="flex: 1;">
-                    <div style="color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">안전교육 자료</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">안전보건 회람자료</div>
                     <h4 style="margin: 0; color: white; font-size: 19px; font-weight: 700; line-height: 1.3;">${doc.title}</h4>
                 </div>
             </div>
@@ -3401,7 +3401,7 @@ async function exportAllSignatures() {
     ];
     
     let csv = '\ufeff';
-    csv += `MSL 안전교육 서명현황 종합 보고서\n`;
+    csv += `MSL 안전보건 전자 서명현황 종합 보고서\n`;
     csv += `보고서 생성일시,${new Date().toLocaleString('ko-KR')}\n\n`;
     
     csv += `${'='.repeat(120)}\n\n`;
@@ -3586,7 +3586,7 @@ function showReminderModal(reminderData) {
         item.unsignedNames.forEach(name => allUnsignedSet.add(name));
     });
     
-    let messageText = '📋 [MSL 안전교육 서명 요청]\n\n';
+    let messageText = '📋 [MSL 안전보건 회람자료 서명 요청]\n\n';
     messageText += `⚠️ 아래 교육들에 서명이 필요합니다.\n`;
     messageText += `📊 전체 미서명자: ${allUnsignedSet.size}명 / ${employees.length}명\n\n`;
     messageText += '═══════════════════\n\n';
