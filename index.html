@@ -2618,81 +2618,55 @@ if (allChecklistItems.length > 0) {
                 </div>
             </div>
         </div>
-        <div style="padding: 24px; background: white; line-height: 1.8; color: #2D3436; white-space: pre-line; font-size: 15px;">
-            ${doc.content}
-        </div>
-        ${doc.attachmentURL ? `
-            <div style="padding: 20px 24px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 16px; border-radius: 12px; border: 2px solid #e9ecef;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <span style="font-size: 32px;">📎</span>
-                        <div>
-                            <div style="font-size: 14px; font-weight: 700; color: #2d3436; margin-bottom: 4px;">${doc.attachmentName}</div>
-                            <div style="font-size: 12px; color: #666;">첨부파일</div>
-                        </div>
-                    </div>
-                    <a href="${doc.attachmentURL}" target="_blank" download="${doc.attachmentName}" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px rgba(102,126,234,0.3);">다운로드</a>
+        
+        <!-- 내용 + 첨부파일 버튼 -->
+        <div style="padding: 24px; background: white;">
+            <div style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); padding: 20px; border-radius: 16px; border: 2px solid #dee2e6; margin-bottom: ${doc.attachment ? '0' : '0'};">
+                <div style="color: #495057; line-height: 1.8; font-size: 15px; white-space: pre-line; margin-bottom: ${doc.attachment ? '16px' : '0'};">
+                    ${doc.content}
                 </div>
-            </div>
-        ` : ''}
-    </div>
-        
-        ${checklistHtml}
-
-        ${doc.attachment ? `
-    <div style="margin: 20px 0;">
-        <button onclick="window.open('${doc.attachment.url}', '_blank'); event.stopPropagation();" style="
-            width: 100%;
-            padding: 18px;
-            background: ${doc.attachment.type === 'gdrive' 
-                ? 'linear-gradient(135deg, #4285f4, #1a73e8)' 
-                : 'linear-gradient(135deg, #667eea, #764ba2)'};
-            border: none;
-            border-radius: 14px;
-            color: white;
-            font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 6px 20px ${doc.attachment.type === 'gdrive' 
-                ? 'rgba(66, 133, 244, 0.4)' 
-                : 'rgba(102, 126, 234, 0.4)'};
-            transition: all 0.3s;
-            font-family: 'Malgun Gothic', sans-serif;
-        " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)'">
-            <span style="font-size: 24px;">${doc.attachment.icon}</span>
-            <span>${doc.attachment.name} 보기</span>
-        </button>
-    </div>
-` : ''}
-        <div style="background: #fff; padding: 20px; border-radius: 16px; border: 2px solid #E9ECEF; margin: 25px 0;">
-    <div style="display: flex; align-items: center; margin-bottom: 16px;">
-        <span style="font-size: 22px; margin-right: 10px;">⚠️</span>
-        <h4 style="margin: 0; color: #2D3436; font-size: 17px; font-weight: 700;">안전보건관련 건의사항</h4>
-    </div>
-    <textarea id="riskSuggestion" 
-              placeholder="작업 중 발견한 위험요소나 건의사항을 자유롭게 작성해주세요. 건의사항이 없으면 다음항목을 작성해주세요." 
-              style="width: 100%; min-height: 120px; padding: 16px; border: 2px solid #E9ECEF; border-radius: 12px; font-size: 15px; font-family: 'Malgun Gothic', sans-serif; resize: vertical; transition: all 0.3s; color: #2D3436; line-height: 1.6;"
-              onfocus="this.style.borderColor='#667EEA'; this.style.background='#F8F9FF';"
-              onblur="this.style.borderColor='#E9ECEF'; this.style.background='white';"></textarea>
-
-        
-        <div style="background: linear-gradient(135deg, #00B894 0%, #00CEC9 100%); padding: 20px 24px; border-radius: 16px; box-shadow: 0 6px 20px rgba(0, 184, 148, 0.25); margin-top: 20px;">
-            <div style="display: flex; align-items: center;">
-               <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 14px; border: 2px solid rgba(255,255,255,0.3);">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-</div>
-                <p style="margin: 0; color: white; font-weight: 600; font-size: 14px; line-height: 1.6;">
-                    MSL 근로자 본인은 안전자료 숙지 및<br>TBM 체크리스트를 이행할 것을 확인합니다.
-                </p>
+                
+                ${doc.attachment ? `
+                    <button onclick="window.open('${doc.attachment.url}', '_blank'); event.stopPropagation();" style="
+                        width: 100%;
+                        padding: 14px;
+                        background: linear-gradient(135deg, #4285f4, #1a73e8);
+                        border: none;
+                        border-radius: 12px;
+                        color: white;
+                        font-size: 15px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+                        transition: all 0.3s;
+                        font-family: 'Malgun Gothic', sans-serif;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(66, 133, 244, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(66, 133, 244, 0.3)'">
+                        <span style="font-size: 18px;">📁</span>
+                        <span>안전보건 자료 클릭</span>
+                    </button>
+                ` : ''}
             </div>
         </div>
-    `;
+    </div>
+    
+    ${checklistHtml}
+
+    <div style="background: #fff; padding: 20px; border-radius: 16px; border: 2px solid #E9ECEF; margin: 25px 0;">
+        <div style="display: flex; align-items: center; margin-bottom: 16px;">
+            <span style="font-size: 22px; margin-right: 10px;">⚠️</span>
+            <h4 style="margin: 0; color: #2D3436; font-size: 17px; font-weight: 700;">안전보건관련 건의사항</h4>
+        </div>
+        <textarea id="riskSuggestion" 
+                  placeholder="작업 중 발견한 위험요소나 건의사항을 자유롭게 작성해주세요. 건의사항이 없으면 다음항목을 작성해주세요." 
+                  style="width: 100%; min-height: 120px; padding: 16px; border: 2px solid #E9ECEF; border-radius: 12px; font-size: 15px; font-family: 'Malgun Gothic', sans-serif; resize: vertical; transition: all 0.3s; color: #2D3436; line-height: 1.6;"
+                  onfocus="this.style.borderColor='#667EEA'; this.style.background='#F8F9FF';"
+                  onblur="this.style.borderColor='#E9ECEF'; this.style.background='white';"></textarea>
+    </div>
+`;
     
     const modal = document.getElementById('signatureModal');
     modal.classList.add('show');
