@@ -190,6 +190,9 @@ async function showSignatureDetail(docId) {
         </style>
     `;
     
+
+
+    
     document.body.appendChild(modal);
     
     modal.addEventListener('click', function(e) {
@@ -596,10 +599,36 @@ body {
 }
 
 
+    /* 가로 스크롤 방지 */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+    }
+    
+    /* 모달도 고정 */
+    .modal {
+        overflow-x: hidden;
+        width: 100%;
+    }
+    
+    /* 기존 스타일들... */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+
 
 
 
     </style>
+
+
+
+
+
 </head>
 <body>
     <div class="container">
