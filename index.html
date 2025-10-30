@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSL 안전자료 배포 및 서명 시스템</title>
+    <title>MSL 안전보건 TBM 배포 및 서명 시스템</title>
     
     <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -73,6 +73,157 @@ function showSuccessMessage(name) {
     </script>
 
     
+<script>
+    // 📊 서명 상세 명단 팝업
+async function showSignatureDetail(docId) {
+    await loadDocumentsFromFirebase();
+    await loadSignaturesFromFirebase();
+    
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) {
+        alert('문서를 찾을 수 없습니다.');
+        return;
+    }
+    
+    const docSigs = signatures.filter(s => s.documentId === docId);
+    const signedNames = docSigs.map(s => s.signerName);
+    
+    // 미서명자 찾기
+    const unsignedEmployees = employees.filter(emp => !signedNames.includes(emp));
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 2px solid #f0f0f0; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 20px 20px 0 0; position: sticky; top: 0; z-index: 10;">
+                <div>
+                    <h3 style="margin: 0; color: white; font-size: 18px; font-weight: 800;">${doc.title}</h3>
+                    <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">서명현황: ${docSigs.length}/${employees.length}명 (${Math.round((docSigs.length/employees.length)*100)}%)</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: white; color: #667eea; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">&times;</button>
+            </div>
+            
+            <div style="padding: 24px;">
+                <!-- 통계 요약 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+                    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 16px; border-radius: 12px; border-left: 4px solid #00b894; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 800; color: #00b894; margin-bottom: 4px;">${docSigs.length}</div>
+                        <div style="font-size: 12px; color: #666; font-weight: 600;">✅ 서명 완료</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fff5f5, #ffe8e8); padding: 16px; border-radius: 12px; border-left: 4px solid #ff6b6b; text-align: center;">
+                        <div style="font-size: 28px; font-weight: 800; color: #ff6b6b; margin-bottom: 4px;">${unsignedEmployees.length}</div>
+                        <div style="font-size: 12px; color: #666; font-weight: 600;">❌ 미서명</div>
+                    </div>
+                </div>
+                
+                <!-- 서명 완료자 명단 -->
+                ${docSigs.length > 0 ? `
+                    <div style="background: #f0f9f4; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #c8e6c9;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span style="font-size: 20px;">✅</span>
+                            <h4 style="margin: 0; color: #00b894; font-size: 16px; font-weight: 700;">서명 완료 (${docSigs.length}명)</h4>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${docSigs.map(sig => `
+                                <div style="background: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #00b894; border: 2px solid #c8e6c9; box-shadow: 0 2px 4px rgba(0,184,148,0.1);">
+                                    ${sig.signerName}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- 미서명자 명단 -->
+                ${unsignedEmployees.length > 0 ? `
+                    <div style="background: #fff5f5; padding: 20px; border-radius: 12px; border: 2px solid #ffdddd; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span style="font-size: 20px;">❌</span>
+                            <h4 style="margin: 0; color: #ff6b6b; font-size: 16px; font-weight: 700;">미서명 (${unsignedEmployees.length}명)</h4>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${unsignedEmployees.map(name => `
+                                <div style="background: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #ff6b6b; border: 2px solid #ffdddd; box-shadow: 0 2px 4px rgba(255,107,107,0.1);">
+                                    ${name}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : `
+                    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 40px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #00b894; margin-bottom: 8px;">전원 서명 완료!</div>
+                        <div style="font-size: 14px; color: #666;">모든 직원이 서명을 완료했습니다.</div>
+                    </div>
+                `}
+                
+                <!-- 버튼 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="padding: 14px; background: #f1f3f5; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: #495057; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f1f3f5'">
+                        닫기
+                    </button>
+                    ${unsignedEmployees.length > 0 ? `
+                        <button onclick="sendReminderForDoc('${docId}')" style="padding: 14px; background: linear-gradient(135deg, #00b894, #00cec9); border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(0,184,148,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            📢 알림 발송
+                        </button>
+                    ` : `
+                        <button onclick="downloadDocumentReport('${docId}')" style="padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 12px; font-size: 14px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(102,126,234,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                            📥 보고서 다운로드
+                        </button>
+                    `}
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            @keyframes slideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// 📢 개별 문서 알림 발송
+function sendReminderForDoc(docId) {
+    const doc = documents.find(d => d.id === docId);
+    const docSigs = signatures.filter(s => s.documentId === docId);
+    const signedNames = docSigs.map(s => s.signerName);
+    const unsignedEmployees = employees.filter(emp => !signedNames.includes(emp));
+    
+    const baseUrl = 'https://mslcomp.github.io/msl-safety-system/';
+    const signUrl = `${baseUrl}?doc=${docId}`;
+    
+    let message = `📋 [MSL 안전교육 서명 요청]\n\n`;
+    message += `📄 ${doc.title}\n`;
+    message += `📊 완료율: ${docSigs.length}/${employees.length}명 (${Math.round((docSigs.length/employees.length)*100)}%)\n\n`;
+    message += `🔗 서명링크: ${signUrl}\n\n`;
+    message += `❌ 미서명자 (${unsignedEmployees.length}명):\n${unsignedEmployees.join(', ')}\n\n`;
+    message += `※ 링크 클릭하여 바로 서명 가능합니다.`;
+    
+    navigator.clipboard.writeText(message).then(() => {
+        alert('✅ 알림 메시지가 복사되었습니다!\n\n카카오톡 단체방에 붙여넣기 하세요.');
+    }).catch(() => {
+        alert('❌ 복사에 실패했습니다.');
+    });
+}
+</script>
+
+
+
 
     <style>
        * {
@@ -533,7 +684,21 @@ body {
         firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const storage = firebase.storage(); // Storage 추가
-        
+
+db.enablePersistence()
+    .catch((err) => {
+        if (err.code === 'failed-precondition') {
+            console.log('여러 탭이 열려있어 오프라인 캐싱을 사용할 수 없습니다.');
+        } else if (err.code === 'unimplemented') {
+            console.log('브라우저가 오프라인 캐싱을 지원하지 않습니다.');
+        } else {
+            console.log('오프라인 캐싱 실패:', err);
+        }
+    });
+
+
+
+
         
         let documents = [];
         let signatures = [];
@@ -606,6 +771,7 @@ const employees = [
             
             if (tabName === 'distribute') loadDistributedDocuments();
             if (tabName === 'sign') loadPendingDocuments();
+            if (tabName === 'manage') loadManageData();
         }
         
         function toggleAdmin() {
@@ -728,6 +894,17 @@ const employees = [
                 
 
 manageTab.innerHTML = `
+    <!-- 🏆 안전왕 리더보드 추가 -->
+    <div class="card" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border: none; margin-bottom: 20px;">
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="font-size: 60px; margin-bottom: 10px;">🏆</div>
+            <h2 style="color: white; margin: 0; font-size: 28px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">이번 달 안전왕</h2>
+            <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px; font-weight: 600;">서명 완료율 100% 달성자</p>
+        </div>
+    </div>
+    
+    <div id="safetyKingLeaderboard"></div>
+
     <div class="card">
         <h3>서명 현황 통계</h3>
         <div id="signatureStats"></div>
@@ -740,7 +917,7 @@ manageTab.innerHTML = `
         <button class="btn btn-primary" onclick="addEmployee()">직원 추가</button>
         <div id="employeeManagement"></div>
     </div>
-        `;
+`;
         
         loadManageData();
 
@@ -961,11 +1138,24 @@ function displayDistributedDocs(startDate, endDate) {
                 <p><strong>배포일:</strong> ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR') : '방금'}</p>
                 <p><strong>구분:</strong> ${getDocumentTypeName(doc.type)}</p>
                 <p><strong>서명현황:</strong> ${docSigs.length}명</p>
-                <button class="btn btn-primary" onclick="copyDocumentLink('${doc.id}')" style="width: auto;">링크 복사</button>
-                <button class="btn btn-success" onclick="viewSignatures('${doc.id}')" style="width: auto;">서명현황</button>
-                <button class="btn" onclick="downloadDocumentReport('${doc.id}')" style="width: auto; background: #17a2b8; color: white;">보고서</button>
-                <button class="btn" onclick="editDocument('${doc.id}')" style="width: auto; background: #ffc107; color: white;">수정</button>
-                <button class="btn" onclick="deleteDocument('${doc.id}')" style="width: auto; background: #6c757d; color: white;">삭제</button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+    <button onclick="copyDocumentLink('${doc.id}')" style="padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 10px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(102,126,234,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        🔗 링크 복사
+    </button>
+    <button onclick="viewSignatures('${doc.id}')" style="padding: 12px; background: linear-gradient(135deg, #00b894, #00cec9); border: none; border-radius: 10px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(0,184,148,0.3); transition: all 0.3s; display: flex; flex-direction: column; align-items: center; gap: 2px;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <span>📊 서명현황</span>
+        <span style="font-size: 11px; opacity: 0.95;">${docSigs.length}/${employees.length}명</span>
+    </button>
+    <button onclick="downloadDocumentReport('${doc.id}')" style="padding: 12px; background: linear-gradient(135deg, #17a2b8, #138496); border: none; border-radius: 10px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(23,162,184,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        📥 보고서
+    </button>
+    <button onclick="editDocument('${doc.id}')" style="padding: 12px; background: linear-gradient(135deg, #ffc107, #ffb300); border: none; border-radius: 10px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(255,193,7,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        ✏️ 수정
+    </button>
+    <button onclick="deleteDocument('${doc.id}')" style="padding: 12px; background: linear-gradient(135deg, #6c757d, #5a6268); border: none; border-radius: 10px; color: white; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(108,117,125,0.3); transition: all 0.3s; grid-column: 1 / -1;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        🗑️ 삭제
+    </button>
+</div>
             </div>
         `;
     }).join('');
@@ -1306,6 +1496,44 @@ async function editDocument(docId) {
     
     const userName = localStorage.getItem('mslUserName');
     let completedCount = 0;
+
+
+// ⭐ 역대 안전왕 TOP 3 계산 (실제 직원만) ⭐
+const firstSignatures = {};
+
+// ✅ 실제 직원 명단 (19명)
+const validEmployees = [
+    '유효빈', '노선자', '임정호', '지대준', '황명진', 
+    '양정모', '양희만', '이문우', '서갑술', '이완복', 
+    '김용진', '이명헌', '이승현', '한경아', '조점숙', 
+    '최현경', '윤다은', '박화영', '함재원'
+];
+
+signatures.forEach(sig => {
+    if (!sig.signedAt) return;
+    
+    // ✅ 실제 직원인지 확인
+    if (!validEmployees.includes(sig.signerName)) return;
+    
+    const signDate = sig.signedAt.toDate();
+    const name = sig.signerName;
+    const signTime = signDate.getTime();
+    if (!firstSignatures[name] || signTime < firstSignatures[name].time) {
+        firstSignatures[name] = {
+            name: name,
+            time: signTime,
+            date: signDate,
+            dept: sig.signerDept
+        };
+    }
+});
+
+// 빠른 순서대로 정렬하여 TOP 3 선정
+const topThree = Object.values(firstSignatures)
+    .sort((a, b) => a.time - b.time)
+    .slice(0, 3);
+
+
     
     // 이름이 없으면 입력 모달 표시
     if (!userName && documents.length > 0) {
@@ -1318,6 +1546,62 @@ async function editDocument(docId) {
         
         <!-- 뉴스 배너 -->
         <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
+
+
+<!-- ⭐ 이달의 안전왕 TOP 3 배너 추가 ⭐ -->
+${topThree.length > 0 ? `
+    <div style="margin: -20px -20px 20px -20px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 20px; box-shadow: 0 4px 20px rgba(255,215,0,0.4);">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🏆</div>
+            <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">엠에스엘콤프레서의 안전을 향한 실천 TOP 3</h3>
+            <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">가장 먼저 약속해 주신 분들 입니다</p>
+        </div>
+        
+        <div style="display: grid; gap: 10px;">
+            ${topThree.map((king, idx) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const colors = [
+                    'linear-gradient(135deg, #FFD700, #FFA500)',
+                    'linear-gradient(135deg, #C0C0C0, #A8A8A8)',
+                    'linear-gradient(135deg, #CD7F32, #B87333)'
+                ];
+                const bgColors = ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.85)'];
+                
+                // ✅ 실제 배포된 문서만 필터링
+                const activeDocs = documents.filter(doc => 
+                    doc.status === 'distributed' && doc.createdAt
+                );
+                const totalDocs = activeDocs.length;
+                
+                // ✅ 해당 직원의 실제 배포 문서에 대한 서명만 카운트
+                const userSigs = signatures.filter(sig => 
+                    sig.signerName === king.name &&
+                    activeDocs.some(doc => doc.id === sig.documentId)
+                );
+                
+                const completionRate = totalDocs > 0 
+                    ? Math.round((userSigs.length / totalDocs) * 100) 
+                    : 0;
+                
+                return `
+                    <div style="background: ${bgColors[idx]}; padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
+                        <div style="background: ${colors[idx]}; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
+                            ${medals[idx]}
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
+                            <div style="font-size: 13px; color: #666; font-weight: 600;">
+                                ✅ 전체 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    </div>
+` : ''}
+
+
         
         <!-- 안전보건 목표 이미지 배너 -->
         <div style="margin: -20px -20px 24px -20px; overflow: hidden;" class="safety-banner">
@@ -1369,71 +1653,118 @@ async function editDocument(docId) {
     ` : ''}
 </div>
             
-            <!-- 문서 목록 -->
-            <div>
-                ${documents.map(doc => {
+          <!-- 📌 최신 교육 (1개만 전체 표시) -->
+${documents.length > 0 ? `
+    <div style="margin-bottom: 24px;">
+        <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 12px 20px; border-radius: 12px 12px 0 0; margin: 0 -20px;">
+            <h3 style="margin: 0; color: white; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">📌</span> 최근 전달사항
+            </h3>
+        </div>
+        
+        ${(() => {
+            const latestDoc = documents[0];
+            const docSigs = signatures.filter(s => s.documentId === latestDoc.id);
+            const mySignature = userName ? docSigs.find(s => s.signerName === userName) : null;
+            const isCompleted = !!mySignature;
+            if (isCompleted) completedCount++;
+            
+            return `
+                <div style="background: white; border: 2px solid ${isCompleted ? '#00b894' : '#ff6b6b'}; border-top: none; border-radius: 0 0 20px 20px; padding: 24px; margin: 0 -20px 0 -20px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); position: relative;">
+                    
+                    ${isCompleted ? `
+                        <div style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 16px rgba(0,184,148,0.5); z-index: 2;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    ` : ''}
+                    
+                    <div style="padding-right: ${isCompleted ? '50px' : '0'};">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894, #00cec9)' : 'linear-gradient(135deg, #667eea, #764ba2)'}; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <span style="font-size: 22px;">📋</span>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="color: #2d3436; font-size: 17px; font-weight: 800; line-height: 1.3; margin-bottom: 4px;">
+                                    ${latestDoc.title}
+                                </div>
+                                <div style="font-size: 12px; color: #666;">
+                                    ${latestDoc.createdAt ? new Date(latestDoc.createdAt.toDate()).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '방금'} 배포
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 16px; border-radius: 12px; border-left: 4px solid ${isCompleted ? '#00b894' : '#667eea'}; margin-bottom: 16px;">
+                           <div style="color: #636e72; font-size: 14px; line-height: 1.6; text-align: center;">
+    ${latestDoc.content.substring(0, 120)}${latestDoc.content.length > 120 ? '...' : ''}
+</div>
+                        </div>
+                        
+${isCompleted ? `
+    <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 16px; border-radius: 12px; border-left: 4px solid #00b894; cursor: pointer; text-align: center;" onclick="showAlreadySignedAlert('${latestDoc.title.replace(/'/g, "\\'")}', '${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}')">
+        <div style="color: #00b894; font-size: 15px; font-weight: 700; margin-bottom: 4px;">✓ 서명 완료</div>
+        <div style="color: #00b894; font-size: 12px; font-weight: 600;">
+            ${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}
+        </div>
+    </div>
+` : `
+                            <button onclick="openSignatureModal('${latestDoc.id}')" style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 16px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(102,126,234,0.4); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.4)'">
+                                ✍️ 서명하러 가기
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        })()}
+    </div>
+` : ''}
+
+<!-- 📚 이전 교육 목록 -->
+${documents.length > 1 ? `
+    <div style="margin-bottom: 24px;">
+        <div style="background: #f8f9fa; padding: 12px 20px; border-radius: 12px 12px 0 0; margin: 0 -20px; border: 2px solid #e9ecef; border-bottom: none;">
+            <h3 style="margin: 0; color: #2d3436; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">📚</span> 이전 전달 목록 <span style="background: #667eea; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-left: 8px;">${documents.length - 1}개</span>
+            </h3>
+        </div>
+        
+        <div style="background: white; border: 2px solid #e9ecef; border-top: none; border-radius: 0 0 20px 20px; padding: 16px; margin: 0 -20px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+            <div style="display: grid; gap: 10px;">
+                ${documents.slice(1).map((doc, index) => {
                     const docSigs = signatures.filter(s => s.documentId === doc.id);
                     const mySignature = userName ? docSigs.find(s => s.signerName === userName) : null;
                     const isCompleted = !!mySignature;
                     if (isCompleted) completedCount++;
                     
                     return `
-                        <div style="background: white; border: 2px solid ${isCompleted ? '#00b894' : '#e9ecef'}; border-radius: 20px; padding: 0; margin: 0 -20px 20px -20px; cursor: pointer; position: relative; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); transition: all 0.3s;" onclick="${isCompleted ? `showAlreadySignedAlert('${doc.title.replace(/'/g, "\\'")}', '${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}')` : `openSignatureModal('${doc.id}')`}" onmouseover="this.style.transform='translateY(-6px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'">
-                            
-                            ${isCompleted ? `
-                                <div style="position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 16px rgba(0,184,148,0.5); z-index: 2;">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                            ` : ''}
-                            
-                            <div style="background: ${isCompleted ? 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}; padding: 20px; padding-right: 65px;">
-                     <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.3); flex-shrink: 0;">
-                                <span style="font-size: 22px;">📋</span>
-                           </div>
-                           <div style="color: white; font-size: 16px; font-weight: 800; line-height: 1.3; letter-spacing: -0.5px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-                               ${doc.title}
-                            </div>
-                     </div>
-                    </div>
-                            
-                            <div style="padding: 24px;">
-                                <div style="color: #636e72; font-size: 15px; line-height: 1.8; margin-bottom: 20px; font-weight: 500;">
-                                    ${doc.content.substring(0, 80)}${doc.content.length > 80 ? '...' : ''}
-                                </div>
-                                
-                                ${isCompleted ? `
-                                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 18px 20px; border-radius: 14px; border-left: 5px solid #00b894;">
-                                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                                            <div>
-                                                <div style="color: #00b894; font-size: 16px; font-weight: 800; margin-bottom: 6px;">✓ 서명 완료</div>
-                                                <div style="color: #00b894; font-size: 13px; font-weight: 600; opacity: 0.9;">
-                                                    ${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}
-                                                </div>
-                                            </div>
-                                            <div style="background: white; padding: 10px 18px; border-radius: 24px; font-size: 13px; font-weight: 800; color: #00b894;">완료</div>
+                        <div style="background: ${isCompleted ? '#f0f9f4' : '#fff5f5'}; padding: 14px 16px; border-radius: 12px; border: 2px solid ${isCompleted ? '#c8e6c9' : '#ffdddd'}; cursor: pointer; transition: all 0.3s;" onclick="${isCompleted ? `showAlreadySignedAlert('${doc.title.replace(/'/g, "\\'")}', '${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}')` : `openSignatureModal('${doc.id}')`}" onmouseover="this.style.transform='translateX(4px)'" onmouseout="this.style.transform='translateX(0)'">
+                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                                    <div style="font-size: 24px; flex-shrink: 0;">
+                                        ${isCompleted ? '✅' : '📋'}
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 14px; font-weight: 700; color: #2d3436; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            ${doc.title}
+                                        </div>
+                                        <div style="font-size: 11px; color: #666;">
+                                            ${doc.createdAt ? new Date(doc.createdAt.toDate()).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '방금'} · ${isCompleted ? '서명완료' : '서명필요'}
                                         </div>
                                     </div>
-                                ` : `
-                                    <div style="background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%); padding: 18px 20px; border-radius: 14px; border-left: 5px solid #ff6b6b;">
-                                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                                            <div style="color: #d63031; font-size: 16px; font-weight: 800;">서명 필요</div>
-                                            <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f); color: white; padding: 10px 20px; border-radius: 24px; font-size: 14px; font-weight: 800; box-shadow: 0 4px 12px rgba(255,107,107,0.4);">
-                                                서명하기 →
-                                            </div>
-                                        </div>
-                                    </div>
-                                `}
+                                </div>
+                                <div style="font-size: 18px; color: ${isCompleted ? '#00b894' : '#667eea'}; flex-shrink: 0;">
+                                    ▶
+                                </div>
                             </div>
                         </div>
                     `;
                 }).join('')}
             </div>
         </div>
-    `;
-    
+    </div>
+` : ''}
+    `; 
 // 완료 개수 업데이트
 document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
 
@@ -2429,9 +2760,167 @@ ${sig.checklistResults && sig.checklistResults.length > 0 ? `
 
 
 function loadManageData() {
+            loadSafetyKingLeaderboard();
             loadSignatureStats();
             loadEmployeeManagement();
         }
+
+// ========== 🏆 안전왕 리더보드 함수들 ==========
+
+async function loadSafetyKingLeaderboard() {
+    const container = document.getElementById('safetyKingLeaderboard');
+    if (!container) return;
+    
+    container.innerHTML = '<div class="loading">불러오는 중...</div>';
+    
+    await loadDocumentsFromFirebase();
+    await loadSignaturesFromFirebase();
+    
+    // 이번 달 기준 계산
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59);
+    
+    // 이번 달 배포된 문서 수
+    const thisMonthDocs = documents.filter(doc => {
+        if (!doc.createdAt) return false;
+        const createdDate = doc.createdAt.toDate();
+        return createdDate >= startOfMonth && createdDate <= endOfMonth;
+    });
+    
+    if (thisMonthDocs.length === 0) {
+        container.innerHTML = `
+            <div class="card" style="text-align: center; padding: 40px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                <p style="color: #999; font-size: 15px;">이번 달 배포된 교육이 없습니다.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // 직원별 완료율 계산
+    const employeeStats = employees.map(empName => {
+        const empSignatures = signatures.filter(sig => 
+            sig.signerName === empName &&
+            thisMonthDocs.some(doc => doc.id === sig.documentId)
+        );
+        
+        const completionRate = thisMonthDocs.length > 0 
+            ? (empSignatures.length / thisMonthDocs.length) * 100 
+            : 0;
+        
+        return {
+            name: empName,
+            completedCount: empSignatures.length,
+            totalCount: thisMonthDocs.length,
+            completionRate: completionRate,
+            isKing: completionRate === 100
+        };
+    });
+    
+    // 100% 달성자만 필터링 후 이름 순 정렬
+    const safetyKings = employeeStats
+        .filter(emp => emp.isKing)
+        .sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'));
+    
+    // 미달성자 (100% 미만)를 완료율 높은 순으로 정렬
+    const notYetKings = employeeStats
+        .filter(emp => !emp.isKing)
+        .sort((a, b) => b.completionRate - a.completionRate);
+    
+    container.innerHTML = `
+        <!-- 100% 달성자 섹션 -->
+        <div class="card" style="background: linear-gradient(135deg, #FFF9E6 0%, #FFE8A1 100%); border: 3px solid #FFD700; margin-bottom: 20px;">
+            <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #FFD700;">
+                <div style="font-size: 48px; margin-bottom: 12px;">👑</div>
+                <h3 style="margin: 0; color: #F39C12; font-size: 22px; font-weight: 800;">100% 완료자</h3>
+                <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">이번 달 전체 교육 완료 (${safetyKings.length}명)</p>
+            </div>
+            
+            ${safetyKings.length === 0 ? `
+                <div style="text-align: center; padding: 40px; color: #999;">
+                    <div style="font-size: 40px; margin-bottom: 12px;">😢</div>
+                    <p style="font-size: 15px;">아직 100% 달성자가 없습니다.<br>여러분이 첫 번째 안전왕이 되어보세요!</p>
+                </div>
+            ` : `
+                <div style="display: grid; gap: 12px; padding: 20px;">
+                    ${safetyKings.map((emp, idx) => `
+                        <div style="background: white; padding: 20px; border-radius: 16px; border: 2px solid #FFD700; box-shadow: 0 4px 12px rgba(243,156,18,0.2); display: flex; align-items: center; justify-content: space-between; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(243,156,18,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(243,156,18,0.2)'">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="background: linear-gradient(135deg, #FFD700, #FFA500); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 800; box-shadow: 0 4px 12px rgba(255,215,0,0.4);">
+                                    ${idx + 1}
+                                </div>
+                                <div>
+                                    <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 4px;">${emp.name}</div>
+                                    <div style="font-size: 13px; color: #666;">✅ ${emp.completedCount}/${emp.totalCount} 교육 완료</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="background: linear-gradient(135deg, #00B894, #00CEC9); color: white; padding: 8px 20px; border-radius: 24px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(0,184,148,0.3);">
+                                    100%
+                                </div>
+                                <div style="margin-top: 6px; font-size: 20px;">🏆</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
+        
+        <!-- 미달성자 섹션 -->
+        ${notYetKings.length > 0 ? `
+            <div class="card" style="background: #F8F9FA; border: 2px solid #E9ECEF;">
+                <div style="padding: 16px 20px; border-bottom: 2px solid #E9ECEF; background: white; border-radius: 14px 14px 0 0;">
+                    <h3 style="margin: 0; color: #666; font-size: 18px; font-weight: 700;">📊 나머지 직원 (${notYetKings.length}명)</h3>
+                    <p style="margin: 6px 0 0 0; color: #999; font-size: 13px;">완료율 순위</p>
+                </div>
+                
+                <div style="display: grid; gap: 10px; padding: 16px;">
+                    ${notYetKings.map((emp, idx) => `
+                        <div style="background: white; padding: 16px; border-radius: 12px; border: 2px solid ${emp.completionRate >= 80 ? '#00B894' : emp.completionRate >= 50 ? '#FFA500' : '#FF6B6B'}; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="background: ${emp.completionRate >= 80 ? 'linear-gradient(135deg, #00B894, #00CEC9)' : emp.completionRate >= 50 ? 'linear-gradient(135deg, #FFA500, #FF8C00)' : 'linear-gradient(135deg, #FF6B6B, #EE5A6F)'}; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 700;">
+                                    ${safetyKings.length + idx + 1}
+                                </div>
+                                <div>
+                                    <div style="font-size: 16px; font-weight: 700; color: #2D3436; margin-bottom: 4px;">${emp.name}</div>
+                                    <div style="font-size: 12px; color: #666;">📋 ${emp.completedCount}/${emp.totalCount} 교육 완료</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="background: ${emp.completionRate >= 80 ? '#E8F5E9' : emp.completionRate >= 50 ? '#FFF3E0' : '#FFEBEE'}; color: ${emp.completionRate >= 80 ? '#00B894' : emp.completionRate >= 50 ? '#FF8C00' : '#FF6B6B'}; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 15px;">
+                                    ${emp.completionRate.toFixed(0)}%
+                                </div>
+                                <div style="margin-top: 4px; font-size: 11px; color: #999;">
+                                    ${emp.totalCount - emp.completedCount}개 남음
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+        
+        <!-- 통계 요약 -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px;">
+            <div style="background: linear-gradient(135deg, #667EEA, #764BA2); padding: 20px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">이번 달 교육</div>
+                <div style="font-size: 28px; font-weight: 800;">${thisMonthDocs.length}</div>
+                <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">건</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #FFD700, #FFA500); padding: 20px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 12px rgba(255,215,0,0.3);">
+                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">👑 안전왕</div>
+                <div style="font-size: 28px; font-weight: 800;">${safetyKings.length}</div>
+                <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">명</div>
+            </div>
+            <div style="background: linear-gradient(135deg, #00B894, #00CEC9); padding: 20px; border-radius: 12px; text-align: center; color: white; box-shadow: 0 4px 12px rgba(0,184,148,0.3);">
+                <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">평균 완료율</div>
+                <div style="font-size: 28px; font-weight: 800;">${employeeStats.length > 0 ? (employeeStats.reduce((sum, emp) => sum + emp.completionRate, 0) / employeeStats.length).toFixed(0) : 0}%</div>
+                <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">전체</div>
+            </div>
+        </div>
+    `;
+}
 
        // ✅ 1. loadSignatureStats 함수 (메인)
 async function loadSignatureStats() {
@@ -2589,7 +3078,7 @@ const completionRate = employees.length > 0 ? ((uniqueSigners.size / employees.l
                 const percentage = (sigRate / maxSigs) * 100;
                 
                 return `
-                    <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 16px; border: 2px solid #e9ecef; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='#e9ecef'; this.style.transform='translateX(0)'" onclick="viewSignatures('${doc.id}')">
+                    <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 16px; border: 2px solid #e9ecef; transition: all 0.3s; cursor: pointer;" onclick="showSignatureDetail('${doc.id}')" onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='#e9ecef'; this.style.transform='translateX(0)'">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                             <div style="flex: 1;">
                                 <div style="font-size: 16px; font-weight: 700; color: #2d3436; margin-bottom: 6px;">${doc.title}</div>
