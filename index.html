@@ -702,46 +702,46 @@ body {
 
 </head>
 <body>
-    <body style="overflow-x: hidden; width: 100%; position: relative;"></body>
+    <body style="overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0;">
     <div class="container">
-<div class="header">
-    
-    
-    <div style="text-align: center; padding: 8px 0;">
-    <div style="text-align: center; padding: 8px 0;">
-        <!-- 로고 + 타이틀 통합 -->
-        <div style="display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 50px; border: 2px solid rgba(255,255,255,0.25); box-shadow: 0 8px 32px rgba(0,0,0,0.1); margin-bottom: 16px;">
-            <div style="background: white; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#667eea" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+        <div class="header">
+            <div style="text-align: center; padding: 8px 0;">
+                <!-- 로고 + 타이틀 통합 -->
+                <div style="display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 50px; border: 2px solid rgba(255,255,255,0.25); box-shadow: 0 8px 32px rgba(0,0,0,0.1); margin-bottom: 16px;">
+                    
+                    <!-- MSL 로고 (80x47) -->
+                    <div style="background: white; width: 50px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 3px; overflow: hidden; flex-shrink: 0;">
+                        <img src="https://raw.githubusercontent.com/mslcomp/msl-safety-system/main/msl_logo_small.jpg" 
+                             alt="MSL Logo" 
+                             style="width: 44px; height: 26px; object-fit: contain; display: block;">
+                    </div>
+                    
+                    <div style="text-align: left;">
+                        <div style="color: white; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;">MSL 안전보건 전자서명 플랫폼</div>
+                        <div style="color: rgba(255,255,255,0.85); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 2px;">MSL DIGITAL SAFETY PLATFORM</div>
+                    </div>
+                </div>
+                
+                <!-- 3개 뱃지를 2줄로 배치 -->
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px;">
+                    <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; min-width: 200px; text-align: center;">
+                        ㈜엠에스엘콤프레서
+                    </div>
+                    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 320px;">
+                        <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; white-space: nowrap;">
+                            중대재해 ZERO
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; white-space: nowrap;">
+                            안전교육이수 100%
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div style="text-align: left;">
-                <div style="color: white; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;">MSL 안전보건 전자서명 플랫폼</div>
-                <div style="color: rgba(255,255,255,0.85); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 2px;">DIGITAL SAFETY PLATFORM</div>
+            
+            <div class="admin-badge" id="adminBadge">
+                <span id="adminStatus">작업자 모드</span>
             </div>
         </div>
-        
-        <!-- 3개 뱃지를 2줄로 배치 -->
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px;">
-            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; min-width: 200px; text-align: center;">
-                ㈜엠에스엘콤프레서
-            </div>
-            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 320px;">
-                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; white-space: nowrap;">
-                    중대재해 ZERO
-                </div>
-                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1.5px solid rgba(255,255,255,0.3); letter-spacing: -0.3px; white-space: nowrap;">
-                    교육이수 100%
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="admin-badge" id="adminBadge">
-        <span id="adminStatus">작업자 모드</span>
-    </div>
-</div>
         
         <div class="nav-tabs">
             <button class="nav-tab disabled" data-tab="distribute" id="tabDistribute">자료배포</button>
