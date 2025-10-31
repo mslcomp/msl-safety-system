@@ -654,12 +654,47 @@ body {
         overflow-x: hidden !important;
         max-width: 100% !important;
     }
+
+    /* 버튼 펄스 효과 */
+@keyframes buttonPulse {
+    0% {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 0 rgba(102,126,234,0.7);
+    }
+    50% {
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3), 0 0 0 8px rgba(102,126,234,0);
+    }
+    100% {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 0 rgba(102,126,234,0);
+    }
+}
+
+/* 깜빡이는 테두리 */
+@keyframes borderGlow {
+    0%, 100% {
+        border-color: #667eea;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 15px rgba(102,126,234,0.5);
+    }
+    50% {
+        border-color: #764ba2;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.25), 0 0 25px rgba(118,75,162,0.6);
+    }
+}
+
+/* 반짝이는 빛 효과 */
+@keyframes shine {
+    0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+}
 </style>
 
 
 
 
-    </style>
+   
 
 
 
@@ -1856,7 +1891,14 @@ ${topThree.length > 0 ? `
         <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
             <span style="font-size: 16px;">📅</span>
         </div>
-        <div style="font-weight: 700; font-size: 12px; color: #2d3436; letter-spacing: -0.5px; line-height: 1.2;">${new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</div>
+        <div style="font-weight: 700; font-size: 12px; color: #2d3436; letter-spacing: -0.5px; line-height: 1.2;">${new Date().toLocaleDateString('ko-KR', { 
+    year: 'numeric',
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+})}</div>
     </div>
     <div style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; padding: 6px 12px; border-radius: 18px; font-weight: 700; font-size: 12px; box-shadow: 0 4px 12px rgba(0,184,148,0.3); white-space: nowrap; flex-shrink: 0;" id="checkCount">
         0/${documents.length}
@@ -1999,41 +2041,46 @@ ${documents.length > 0 ? `
                                 </div>
                             </div>
                             
-                            ${isLatest && isCompleted ? `
-                                <div style="
-                                    margin-top: 10px; 
-                                    padding-top: 10px; 
-                                    border-top: 1px solid rgba(255,255,255,0.2);
-                                    text-align: center;
-                                    color: rgba(255,255,255,0.9);
-                                    font-size: 10px;
-                                    font-weight: 600;
-                                ">
-                                    ${mySignature.signedAt ? new Date(mySignature.signedAt.toDate()).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'} 서명완료
-                                </div>
-                            ` : ''}
-                            
-                            ${isLatest && !isCompleted ? `
-                                <div style="
-                                    margin-top: 10px; 
-                                    padding-top: 10px; 
-                                    border-top: 1px solid rgba(255,255,255,0.2);
-                                ">
-                                    <div style="
-                                        background: rgba(255,255,255,0.2); 
-                                        backdrop-filter: blur(10px);
-                                        color: white; 
-                                        padding: 8px; 
-                                        border-radius: 8px; 
-                                        text-align: center; 
-                                        font-size: 12px; 
-                                        font-weight: 700;
-                                        border: 1px solid rgba(255,255,255,0.3);
-                                    ">
-                                        ✍️ 서명하기
-                                    </div>
-                                </div>
-                            ` : ''}
+         ${isLatest && !isCompleted ? `
+    <div style="
+        margin-top: 10px; 
+        padding-top: 10px; 
+        border-top: 1px solid rgba(255,255,255,0.2);
+    ">
+        <div style="
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85)); 
+            backdrop-filter: blur(10px);
+            color: #667eea; 
+            padding: 12px; 
+            border-radius: 10px; 
+            text-align: center; 
+            font-size: 15px; 
+            font-weight: 800;
+            border: 3px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: buttonPulse 2s infinite, borderGlow 1.5s infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        " 
+        onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.3)'"
+        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.2)'">
+            <span style="font-size: 18px; position: relative; z-index: 1; margin-right: 8px;">✍️</span>
+            <span style="position: relative; z-index: 1;">서명하기</span>
+            <div style="
+                position: absolute;
+                top: -50%;
+                left: -50%;
+                width: 200%;
+                height: 200%;
+                background: linear-gradient(45deg, transparent, rgba(102,126,234,0.2), transparent);
+                animation: shine 3s infinite;
+                pointer-events: none;
+            "></div>
+        </div>
+    </div>
+` : ''}
                         </div>
                     `;
                 }).join('')}
