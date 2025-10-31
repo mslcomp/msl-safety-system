@@ -248,7 +248,59 @@ function toggleEditAttachmentInput() {
 
 </script>
 
+<script>
 
+// TBM 체크리스트로 스크롤하는 함수
+function scrollToTBM() {
+    // 체크리스트가 모달 안에 있으므로 모달 내부에서 찾기
+    const checklistItems = document.querySelectorAll('#documentToSign input[type="checkbox"]');
+    
+    if (checklistItems.length > 0) {
+        // 첫 번째 체크박스로 스크롤
+        const firstCheckbox = checklistItems[0];
+        const checklistSection = firstCheckbox.closest('div[style*="background: #fff"]');
+        
+        if (checklistSection) {
+            checklistSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            // 체크 안 된 체크박스에 효과 추가
+            setTimeout(() => {
+                checklistItems.forEach((checkbox, index) => {
+                    if (!checkbox.checked) {
+                        setTimeout(() => {
+                            checkbox.style.animation = 'checkboxPulse 1.5s ease-in-out 3';
+                            checkbox.style.borderColor = '#FF6B6B';
+                            checkbox.style.borderWidth = '3px';
+                            
+                            const label = checkbox.closest('label');
+                            if (label) {
+                                label.style.background = '#FFF5F2';
+                                label.style.borderColor = '#FF6B6B';
+                                label.style.borderWidth = '2px';
+                            }
+                            
+                            // 3초 후 효과 제거
+                            setTimeout(() => {
+                                checkbox.style.animation = '';
+                                checkbox.style.borderColor = '#DDD';
+                                checkbox.style.borderWidth = '2.5px';
+                                if (label) {
+                                    label.style.background = '#F8F9FA';
+                                    label.style.borderColor = 'transparent';
+                                }
+                            }, 4500);
+                        }, index * 200);
+                    }
+                });
+            }, 300);
+        }
+    }
+}
+
+</script>
 
 
     <style>
@@ -694,7 +746,75 @@ body {
 
 
 
-   
+   <style>
+    /* 기존 스타일들... */
+    
+    /* ⬇️⬇️⬇️ 여기에 추가! ⬇️⬇️⬇️ */
+    
+    /* 체크박스 펄스 효과 */
+    @keyframes checkboxPulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+        }
+    }
+
+    .checkbox-pulse {
+        animation: checkboxPulse 1.5s infinite !important;
+        border-color: #FF6B6B !important;
+    }
+
+    /* 항목 강조 효과 */
+    @keyframes highlightItem {
+        0%, 100% {
+            background-color: white;
+        }
+        50% {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+    }
+
+    .highlight-item {
+        animation: highlightItem 1.5s ease-in-out 3;
+        border-left: 4px solid #FF6B6B !important;
+        padding-left: 12px !important;
+    }
+
+    /* 체크박스 기본 스타일 강화 */
+    .checklist-item input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+        cursor: pointer;
+        accent-color: #06D6A0;
+        transition: all 0.3s ease;
+    }
+
+    .checklist-item input[type="checkbox"]:hover {
+        transform: scale(1.1);
+    }
+
+    /* 체크박스 체크 안 된 상태 강조 */
+    .checklist-item input[type="checkbox"]:not(:checked) {
+        border: 2px solid #FF6B6B;
+        border-radius: 4px;
+    }
+    
+    /* 화살표 애니메이션 */
+    @keyframes bounceArrow {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+</style>
+
 
 
 
@@ -2740,7 +2860,7 @@ if (allChecklistItems.length > 0) {
                 </div>
                 
                 ${doc.attachment ? `
-                    <button onclick="window.open('${doc.attachment.url}', '_blank'); event.stopPropagation();" style="
+                    <button onclick="window.open('${doc.attachment.url}', '_blank'); scrollToTBM(); event.stopPropagation();" style="
                         width: 100%;
                         padding: 14px;
                         background: linear-gradient(135deg, #4285f4, #1a73e8);
