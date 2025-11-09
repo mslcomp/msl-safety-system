@@ -1970,45 +1970,45 @@ ${topThree.length > 0 ? `
         </div>
         
         <div style="display: grid; gap: 10px;">
+            
+            
             ${topThree.map((king, idx) => {
-                const medals = ['🥇', '🥈', '🥉'];
-                const colors = [
-                    'linear-gradient(135deg, #FFD700, #FFA500)',
-                    'linear-gradient(135deg, #C0C0C0, #A8A8A8)',
-                    'linear-gradient(135deg, #CD7F32, #B87333)'
-                ];
-                const bgColors = ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.85)'];
-                
-                // ✅ 실제 배포된 문서만 필터링
-                const activeDocs = documents.filter(doc => 
-                    doc.status === 'distributed' && doc.createdAt
-                );
-                const totalDocs = activeDocs.length;
-                
-                // ✅ 해당 직원의 실제 배포 문서에 대한 서명만 카운트
-                const userSigs = signatures.filter(sig => 
-                    sig.signerName === king.name &&
-                    activeDocs.some(doc => doc.id === sig.documentId)
-                );
-                
-                const completionRate = totalDocs > 0 
-                    ? Math.round((userSigs.length / totalDocs) * 100) 
-                    : 0;
-                
-                return `
-                    <div style="background: ${bgColors[idx]}; padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
-                        <div style="background: ${colors[idx]}; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
-                            ${medals[idx]}
-                        </div>
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
-                            <div style="font-size: 13px; color: #666; font-weight: 600;">
-                                ✅ 전체 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('')}
+    const medals = ['🥇', '🥈', '🥉'];
+    const colors = [
+        'linear-gradient(135deg, #FFD700, #FFA500)',
+        'linear-gradient(135deg, #C0C0C0, #A8A8A8)',
+        'linear-gradient(135deg, #CD7F32, #B87333)'
+    ];
+    const bgColors = ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.85)'];
+    
+    // ✅ 배포된 모든 문서
+    const activeDocs = documents.filter(doc => doc.createdAt);
+    const totalDocs = activeDocs.length;
+    
+    // ✅ 해당 직원의 서명 개수
+    const userSigs = signatures.filter(sig => 
+        sig.signerName === king.name &&
+        activeDocs.some(doc => doc.id === sig.documentId)
+    );
+    
+    const completionRate = totalDocs > 0 
+        ? Math.round((userSigs.length / totalDocs) * 100) 
+        : 0;
+    
+    return `
+        <div style="background: ${bgColors[idx]}; padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
+            <div style="background: ${colors[idx]}; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
+                ${medals[idx]}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
+                <div style="font-size: 13px; color: #666; font-weight: 600;">
+                    ✅ 전체 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
+                </div>
+            </div>
+        </div>
+    `;
+}).join('')}
         </div>
     </div>
 ` : ''}
@@ -2021,6 +2021,9 @@ ${topThree.length > 0 ? `
                  alt="산업재해 절벽방어" 
                  style="width: 100%; height: auto; display: block;">
         </div>
+
+
+        
             
         <!-- 날짜와 완료 개수 카드 -->
         <div style="background: white; border: 2px solid #e9ecef; border-radius: 16px; padding: 18px; margin: 0 -20px 20px -20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
@@ -2233,6 +2236,106 @@ ${documents.length > 0 ? `
     `; 
 // 완료 개수 업데이트
 document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
+
+// ✅ TOP 3 실시간 갱신 설정
+if (!window.top3IntervalSet) {
+    console.log('🔄 TOP 3 자동 갱신 시작 (30초마다)');
+    
+    setInterval(async () => {
+        console.log('🔄 TOP 3 갱신 중...');
+        
+        // 최신 데이터 로드
+        await loadDocumentsFromFirebase();
+        await loadSignaturesFromFirebase();
+        
+        // TOP 3 재계산
+        const userFirstSignature = {};
+        
+        signatures.forEach(sig => {
+            if (!sig.signedAt) return;
+            
+            const name = sig.signerName;
+            const signTime = sig.signedAt.toDate().getTime();
+            
+            if (!userFirstSignature[name]) {
+                userFirstSignature[name] = {
+                    name: name,
+                    firstSignTime: signTime,
+                    completed: 0
+                };
+            } else {
+                if (signTime < userFirstSignature[name].firstSignTime) {
+                    userFirstSignature[name].firstSignTime = signTime;
+                }
+            }
+            
+            userFirstSignature[name].completed++;
+        });
+        
+        const newTopThree = Object.values(userFirstSignature)
+            .sort((a, b) => a.firstSignTime - b.firstSignTime)
+            .slice(0, 3);
+        
+        // TOP 3 HTML 업데이트
+        const topThreeContainer = document.querySelector('[style*="엠에스엘콤프레서의 안전을 향한 실천 TOP 3"]')?.parentElement?.parentElement;
+        
+        if (topThreeContainer && newTopThree.length > 0) {
+            const medals = ['🥇', '🥈', '🥉'];
+            const colors = [
+                'linear-gradient(135deg, #FFD700, #FFA500)',
+                'linear-gradient(135deg, #C0C0C0, #A8A8A8)',
+                'linear-gradient(135deg, #CD7F32, #B87333)'
+            ];
+            const bgColors = ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.85)'];
+            
+            const activeDocs = documents.filter(doc => doc.createdAt);
+            const totalDocs = activeDocs.length;
+            
+            const newHTML = `
+                <div style="margin: -20px -20px 20px -20px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 20px; box-shadow: 0 4px 20px rgba(255,215,0,0.4);">
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <div style="font-size: 36px; margin-bottom: 8px;">🏆</div>
+                        <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">엠에스엘콤프레서의 안전을 향한 실천 TOP 3</h3>
+                        <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">가장 먼저 약속해 주신 분들 입니다</p>
+                    </div>
+                    
+                    <div style="display: grid; gap: 10px;">
+                        ${newTopThree.map((king, idx) => {
+                            const userSigs = signatures.filter(sig => 
+                                sig.signerName === king.name &&
+                                activeDocs.some(doc => doc.id === sig.documentId)
+                            );
+                            
+                            const completionRate = totalDocs > 0 
+                                ? Math.round((userSigs.length / totalDocs) * 100) 
+                                : 0;
+                            
+                            return `
+                                <div style="background: ${bgColors[idx]}; padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
+                                    <div style="background: ${colors[idx]}; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
+                                        ${medals[idx]}
+                                    </div>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
+                                        <div style="font-size: 13px; color: #666; font-weight: 600;">
+                                            ✅ 전체 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            
+            topThreeContainer.outerHTML = newHTML;
+            console.log('✅ TOP 3 갱신 완료:', newTopThree.map(u => u.name));
+        }
+        
+    }, 30000); // 30초마다
+    
+    window.top3IntervalSet = true;
+}
 
 // ⭐ 프로그레스 바 업데이트 추가 ⭐
 const percentage = documents.length > 0 ? Math.round((completedCount / documents.length) * 100) : 0;
@@ -3196,11 +3299,6 @@ ${sig.checklistResults && sig.checklistResults.length > 0 ? `
     });
 }
         
-
-
-
-
-
 
 
 
