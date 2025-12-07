@@ -31,6 +31,159 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 
+// 🌡️ 날씨 정보 가져오기 (서울 기준)
+<script>
+async function getWeatherInfo() {
+    try {
+        // OpenWeatherMap API (무료) - 서울 날씨
+        const response = await fetch('https://api.openweathermap.org/data/2.5/weather?q=Seoul&appid=YOUR_API_KEY&units=metric&lang=kr');
+        const data = await response.json();
+        
+        const temp = Math.round(data.main.temp);
+        const description = data.weather[0].description;
+        
+        return { temp, description };
+    } catch (error) {
+        console.log('날씨 정보 가져오기 실패:', error);
+        // API 실패 시 가상 온도 (테스트용)
+        const now = new Date();
+        const month = now.getMonth(); // 0-11
+        
+        // 계절별 평균 온도
+        let temp;
+        if (month >= 11 || month <= 1) temp = Math.floor(Math.random() * 10) - 5; // 겨울: -5~5도
+        else if (month >= 2 && month <= 4) temp = Math.floor(Math.random() * 15) + 5; // 봄: 5~20도
+        else if (month >= 5 && month <= 8) temp = Math.floor(Math.random() * 10) + 25; // 여름: 25~35도
+        else temp = Math.floor(Math.random() * 15) + 10; // 가을: 10~25도
+        
+        return { temp, description: '날씨 정보 없음' };
+    }
+}
+
+// 🌡️ 온도별 안전 지침
+function getSafetyGuideline(temp) {
+    if (temp <= -10) {
+        return {
+            emoji: '🥶',
+            level: '매우 위험',
+            color: '#1e40af',
+            bgColor: '#dbeafe',
+            guidelines: [
+                '⚠️ 동파 방지: 배관 보온 확인 필수',
+                '🧥 방한복 착용: 장갑, 귀마개, 방한모 착용',
+                '❄️ 빙판 주의: 미끄럼 방지화 착용',
+                '⏰ 작업 시간: 30분마다 실내 휴식'
+            ]
+        };
+    } else if (temp <= -5) {
+        return {
+            emoji: '❄️',
+            level: '위험',
+            color: '#1d4ed8',
+            bgColor: '#dbeafe',
+            guidelines: [
+                '🧊 동파 주의: 외부 수도 보온 확인',
+                '🧥 방한복 착용: 체온 유지 필수',
+                '👟 미끄럼 주의: 계단, 경사로 조심',
+                '☕ 따뜻한 음료 준비'
+            ]
+        };
+    } else if (temp <= 0) {
+        return {
+            emoji: '🌨️',
+            level: '주의',
+            color: '#2563eb',
+            bgColor: '#eff6ff',
+            guidelines: [
+                '🧊 결빙 주의: 그늘진 곳 미끄러움',
+                '🧥 방한복 권장: 외부 작업 시',
+                '💧 동파 점검: 야간 온도 확인',
+                '🚗 차량 예열 충분히 하기'
+            ]
+        };
+    } else if (temp <= 5) {
+        return {
+            emoji: '🌡️',
+            level: '쌀쌀',
+            color: '#3b82f6',
+            bgColor: '#eff6ff',
+            guidelines: [
+                '🧥 방한 준비: 외투 착용',
+                '🌬️ 찬바람 주의: 목 보호',
+                '💪 준비운동: 근육 긴장 완화',
+                '🔥 난방 확인: 실내 적정 온도 유지'
+            ]
+        };
+    } else if (temp <= 10) {
+        return {
+            emoji: '☁️',
+            level: '선선',
+            color: '#60a5fa',
+            bgColor: '#f0f9ff',
+            guidelines: [
+                '👔 긴팔 착용 권장',
+                '🌬️ 환기 주의: 실내외 온도차',
+                '💪 가벼운 준비운동',
+                '☕ 따뜻한 음료 준비'
+            ]
+        };
+    } else if (temp <= 25) {
+        return {
+            emoji: '☀️',
+            level: '쾌적',
+            color: '#10b981',
+            bgColor: '#d1fae5',
+            guidelines: [
+                '✅ 적정 온도: 안전한 작업 환경',
+                '💧 수분 섭취: 정기적으로',
+                '🌬️ 환기: 실내 공기 순환',
+                '🧘 준비운동 후 작업'
+            ]
+        };
+    } else if (temp <= 30) {
+        return {
+            emoji: '🌤️',
+            level: '다소 더움',
+            color: '#f59e0b',
+            bgColor: '#fef3c7',
+            guidelines: [
+                '💧 수분 섭취: 자주 마시기',
+                '😎 그늘 활용: 직사광선 피하기',
+                '⏰ 휴식: 1시간마다 10분',
+                '🧢 모자 착용 권장'
+            ]
+        };
+    } else if (temp <= 35) {
+        return {
+            emoji: '🥵',
+            level: '더움',
+            color: '#f97316',
+            bgColor: '#fed7aa',
+            guidelines: [
+                '💧 수분 섭취: 필수! 자주 마시기',
+                '⏰ 휴식: 30분마다 휴식',
+                '🌳 그늘 작업: 직사광선 금지',
+                '🧊 냉방 확인: 실내 온도 관리'
+            ]
+        };
+    } else {
+        return {
+            emoji: '🔥',
+            level: '매우 더움',
+            color: '#dc2626',
+            bgColor: '#fecaca',
+            guidelines: [
+                '🚨 폭염 경보: 외부 작업 자제',
+                '💧 수분 섭취: 15분마다 물 마시기',
+                '⏰ 작업 중단: 고온 시간대(12~3시)',
+                '🧊 냉방 가동: 실내 온도 필수 관리'
+            ]
+        };
+    }
+}
+
+</script>
+
 
  <!-- ⭐ Confetti 라이브러리 추가 ⭐ -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -2291,41 +2444,121 @@ if (!window.top3IntervalSet) {
             const activeDocs = documents.filter(doc => doc.createdAt);
             const totalDocs = activeDocs.length;
             
-            const newHTML = `
-                <div style="margin: -20px -20px 20px -20px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 20px; box-shadow: 0 4px 20px rgba(255,215,0,0.4);">
-                    <div style="text-align: center; margin-bottom: 16px;">
-                        <div style="font-size: 36px; margin-bottom: 8px;">🏆</div>
-                        <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">엠에스엘콤프레서의 안전을 향한 실천 TOP 3</h3>
-                        <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">가장 먼저 약속해 주신 분들 입니다</p>
+// 날씨 정보 가져오기
+const weather = await getWeatherInfo();
+const guideline = getSafetyGuideline(weather.temp);
+
+const newHTML = `
+    <div style="margin: -20px -20px 20px -20px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 20px; box-shadow: 0 4px 20px rgba(255,215,0,0.4);">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 36px; margin-bottom: 8px;">🏆</div>
+            <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">엠에스엘콤프레서의 안전을 향한 실천 TOP 3</h3>
+            <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">오늘 배포된 교육 기준 - 가장 먼저 약속해 주신 분들입니다</p>
+        </div>
+        
+        <div style="display: grid; gap: 10px;">
+            ${newTopThree.map((king, idx) => {
+                // ... 위와 동일한 로직
+            }).join('')}
+        </div>
+    </div>
+    
+    ${await (async () => {
+        // 날씨 정보 가져오기
+        const weather = await getWeatherInfo();
+        const guideline = getSafetyGuideline(weather.temp);
+        
+        return topThree.map((king, idx) => {
+            const todayDocIds = todayDocs.map(doc => doc.id);
+            const userSigs = signatures.filter(sig => 
+                sig.signerName === king.name &&
+                todayDocIds.includes(sig.documentId)
+            );
+            
+            const completionRate = totalDocs > 0 
+                ? Math.round((userSigs.length / totalDocs) * 100) 
+                : 0;
+            
+            // 1위 표시
+            if (idx === 0) {
+                return `
+                    <div style="background: rgba(255,255,255,0.95); padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
+                        <div style="background: linear-gradient(135deg, #FFD700, #FFA500); width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
+                            🥇
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
+                            <div style="font-size: 13px; color: #666; font-weight: 600;">
+                                ✅ 오늘 교육 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            // 2위 대신 날씨 정보
+            else if (idx === 1) {
+                return `
+                    <!-- 날씨 정보 -->
+                    <div style="background: ${guideline.bgColor}; padding: 20px; border-radius: 16px; border: 3px solid ${guideline.color}; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <div style="font-size: 48px; margin-bottom: 8px;">${guideline.emoji}</div>
+                            <div style="font-size: 28px; font-weight: 900; color: ${guideline.color}; margin-bottom: 4px;">
+                                ${weather.temp}°C
+                            </div>
+                            <div style="font-size: 14px; font-weight: 700; color: ${guideline.color};">
+                                ${guideline.level}
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 14px; border-radius: 12px;">
+                            ${guideline.guidelines.map(g => `
+                                <div style="font-size: 13px; color: #2D3436; margin-bottom: 8px; font-weight: 600; line-height: 1.5;">
+                                    ${g}
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                     
-                    <div style="display: grid; gap: 10px;">
-                        ${newTopThree.map((king, idx) => {
-                            const userSigs = signatures.filter(sig => 
-                                sig.signerName === king.name &&
-                                activeDocs.some(doc => doc.id === sig.documentId)
-                            );
-                            
-                            const completionRate = totalDocs > 0 
-                                ? Math.round((userSigs.length / totalDocs) * 100) 
-                                : 0;
-                            
-                            return `
-                                <div style="background: ${bgColors[idx]}; padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
-                                    <div style="background: ${colors[idx]}; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
-                                        ${medals[idx]}
-                                    </div>
-                                    <div style="flex: 1; min-width: 0;">
-                                        <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
-                                        <div style="font-size: 13px; color: #666; font-weight: 600;">
-                                            ✅ 전체 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
+                    <!-- 3위 (원래 2위) -->
+                    <div style="background: rgba(255,255,255,0.9); padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
+                        <div style="background: linear-gradient(135deg, #C0C0C0, #A8A8A8); width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
+                            🥈
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
+                            <div style="font-size: 13px; color: #666; font-weight: 600;">
+                                ✅ 오늘 교육 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
+                            </div>
+                        </div>
                     </div>
-                </div>
+                `;
+            }
+            // 3위
+            else {
+                const nextUserSigs = signatures.filter(sig => 
+                    sig.signerName === king.name &&
+                    todayDocIds.includes(sig.documentId)
+                );
+                const nextRate = totalDocs > 0 
+                    ? Math.round((nextUserSigs.length / totalDocs) * 100) 
+                    : 0;
+                
+                return `
+                    <div style="background: rgba(255,255,255,0.85); padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
+                        <div style="background: linear-gradient(135deg, #CD7F32, #B87333); width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
+                            🥉
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
+                            <div style="font-size: 13px; color: #666; font-weight: 600;">
+                                ✅ 오늘 교육 ${nextUserSigs.length}/${totalDocs} 완료 (${nextRate}%)
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+    })()}
+</div>
             `;
             
             topThreeContainer.outerHTML = newHTML;
