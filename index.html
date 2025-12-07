@@ -1910,40 +1910,7 @@ async function editDocument(docId) {
     let completedCount = 0;
 
 
-// ⭐ 역대 안전왕 TOP 3 계산 (실제 직원만) ⭐
-const firstSignatures = {};
 
-// ✅ 실제 직원 명단 (19명)
-const validEmployees = [
-    '유효빈', '노선자', '임정호', '지대준', '황명진', 
-    '양정모', '양희만', '이문우', '서갑술', '이완복', 
-    '김용진', '이명헌', '이승현', '한경아', '조점숙', 
-    '최현경', '윤다은', '박화영', '함재원'
-];
-
-signatures.forEach(sig => {
-    if (!sig.signedAt) return;
-    
-    // ✅ 실제 직원인지 확인
-    if (!validEmployees.includes(sig.signerName)) return;
-    
-    const signDate = sig.signedAt.toDate();
-    const name = sig.signerName;
-    const signTime = signDate.getTime();
-    if (!firstSignatures[name] || signTime < firstSignatures[name].time) {
-        firstSignatures[name] = {
-            name: name,
-            time: signTime,
-            date: signDate,
-            dept: sig.signerDept
-        };
-    }
-});
-
-// 빠른 순서대로 정렬하여 TOP 3 선정
-const topThree = Object.values(firstSignatures)
-    .sort((a, b) => a.time - b.time)
-    .slice(0, 3);
 
 
     
@@ -1959,59 +1926,11 @@ const topThree = Object.values(firstSignatures)
         <!-- 뉴스 배너 -->
         <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
 
-
-<!-- ⭐ 이달의 안전왕 TOP 3 배너 추가 ⭐ -->
-${topThree.length > 0 ? `
-    <div style="margin: -20px -20px 20px -20px; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 20px; box-shadow: 0 4px 20px rgba(255,215,0,0.4);">
-        <div style="text-align: center; margin-bottom: 16px;">
-            <div style="font-size: 36px; margin-bottom: 8px;">🏆</div>
-            <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">엠에스엘콤프레서의 안전을 향한 실천 TOP 3</h3>
-            <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">가장 먼저 약속해 주신 분들 입니다</p>
-        </div>
-        
-        <div style="display: grid; gap: 10px;">
-            
-            
-            ${topThree.map((king, idx) => {
-    const medals = ['🥇', '🥈', '🥉'];
-    const colors = [
-        'linear-gradient(135deg, #FFD700, #FFA500)',
-        'linear-gradient(135deg, #C0C0C0, #A8A8A8)',
-        'linear-gradient(135deg, #CD7F32, #B87333)'
-    ];
-    const bgColors = ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.9)', 'rgba(255,255,255,0.85)'];
+<!-- 🌡️ 온도계 (TOP 3 대신 표시) -->
+<div id="temperatureMonitor">
     
-    // ✅ 배포된 모든 문서
-    const activeDocs = documents.filter(doc => doc.createdAt);
-    const totalDocs = activeDocs.length;
     
-    // ✅ 해당 직원의 서명 개수
-    const userSigs = signatures.filter(sig => 
-        sig.signerName === king.name &&
-        activeDocs.some(doc => doc.id === sig.documentId)
-    );
-    
-    const completionRate = totalDocs > 0 
-        ? Math.round((userSigs.length / totalDocs) * 100) 
-        : 0;
-    
-    return `
-        <div style="background: ${bgColors[idx]}; padding: 18px 20px; border-radius: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.5);">
-            <div style="background: ${colors[idx]}; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); flex-shrink: 0;">
-                ${medals[idx]}
-            </div>
-            <div style="flex: 1; min-width: 0;">
-                <div style="font-size: 18px; font-weight: 800; color: #2D3436; margin-bottom: 8px;">${king.name}</div>
-                <div style="font-size: 13px; color: #666; font-weight: 600;">
-                    ✅ 전체 ${userSigs.length}/${totalDocs} 완료 (${completionRate}%)
-                </div>
-            </div>
-        </div>
-    `;
-}).join('')}
-        </div>
     </div>
-` : ''}
 
 
         
@@ -2234,6 +2153,8 @@ ${documents.length > 0 ? `
 
 
     `; 
+
+    
 // 완료 개수 업데이트
 document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
 
@@ -2356,6 +2277,27 @@ if (progressBar && progressPercent) {
     }, 300);
 }
 
+// ⭐ 온도계 초기화 (container.innerHTML 끝난 후에 실행) ⭐
+    setTimeout(() => {
+        fetchTemperature().then(temp => {
+            const tempContainer = document.getElementById('temperatureMonitor');
+            if (tempContainer) {
+                tempContainer.innerHTML = generateTemperatureHTML(temp);
+            }
+        });
+        
+        // 1분마다 자동 갱신
+        setInterval(() => {
+            fetchTemperature().then(temp => {
+                const tempContainer = document.getElementById('temperatureMonitor');
+                if (tempContainer) {
+                    tempContainer.innerHTML = generateTemperatureHTML(temp);
+                }
+            });
+        }, 60000);
+    }, 500); // DOM이 생성된 후 실행
+}
+
 
     
     // ⭐ 여기부터 추가 시작 ⭐
@@ -2384,7 +2326,6 @@ if (progressBar && progressPercent) {
         }
     }, 500);
     // ⭐ 여기까지 추가 끝 ⭐
-}
 
 
 
@@ -4051,6 +3992,415 @@ function copyReminderMessage(message) {
     });
 }
 
+
+
+// ========== 🌡️ 포천시 완전 자동 업데이트 날씨 시스템 ==========
+
+const KMA_API_KEY = '0c49f6997308d25cba132fa389234a006a802ccfbc96afa2f130ddea39914d95';
+
+// ⭐ 위경도 → 격자 좌표 변환 함수 (기상청 공식)
+function convertToGrid(lat, lon) {
+    const RE = 6371.00877;
+    const GRID = 5.0;
+    const SLAT1 = 30.0;
+    const SLAT2 = 60.0;
+    const OLON = 126.0;
+    const OLAT = 38.0;
+    const XO = 43;
+    const YO = 136;
+    
+    const DEGRAD = Math.PI / 180.0;
+    const re = RE / GRID;
+    const slat1 = SLAT1 * DEGRAD;
+    const slat2 = SLAT2 * DEGRAD;
+    const olon = OLON * DEGRAD;
+    const olat = OLAT * DEGRAD;
+    
+    let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+    sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
+    
+    let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+    sf = Math.pow(sf, sn) * Math.cos(slat1) / sn;
+    
+    let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
+    ro = re * sf / Math.pow(ro, sn);
+    
+    let ra = Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5);
+    ra = re * sf / Math.pow(ra, sn);
+    
+    let theta = lon * DEGRAD - olon;
+    if (theta > Math.PI) theta -= 2.0 * Math.PI;
+    if (theta < -Math.PI) theta += 2.0 * Math.PI;
+    theta *= sn;
+    
+    const x = Math.floor(ra * Math.sin(theta) + XO + 0.5);
+    const y = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
+    
+    return { nx: x, ny: y };
+}
+
+// ⭐ 일출/일몰 시간 계산 (포천시 기준)
+function getSunriseSunset() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    
+    const sunData = {
+        1:  { sunrise: '07:45', sunset: '17:30' },
+        2:  { sunrise: '07:25', sunset: '18:00' },
+        3:  { sunrise: '06:45', sunset: '18:30' },
+        4:  { sunrise: '06:00', sunset: '19:00' },
+        5:  { sunrise: '05:30', sunset: '19:30' },
+        6:  { sunrise: '05:15', sunset: '19:50' },
+        7:  { sunrise: '05:30', sunset: '19:45' },
+        8:  { sunrise: '05:50', sunset: '19:15' },
+        9:  { sunrise: '06:15', sunset: '18:30' },
+        10: { sunrise: '06:40', sunset: '17:45' },
+        11: { sunrise: '07:10', sunset: '17:15' },
+        12: { sunrise: '07:35', sunset: '17:10' }
+    };
+    
+    return sunData[month];
+}
+
+const POCHEON_LAT = 37.8951;
+const POCHEON_LON = 127.2008;
+const POCHEON_GRID = convertToGrid(POCHEON_LAT, POCHEON_LON);
+const POCHEON_NX = POCHEON_GRID.nx;
+const POCHEON_NY = POCHEON_GRID.ny;
+
+console.log('📍 포천시청 좌표:', POCHEON_LAT, POCHEON_LON);
+console.log('📍 격자 좌표: NX=' + POCHEON_NX + ', NY=' + POCHEON_NY);
+
+const CORS_PROXIES = [
+    'https://corsproxy.io/?',
+    'https://api.codetabs.com/v1/proxy?quest=',
+    ''
+];
+
+let currentTemperature = null;
+let currentHumidity = null;
+let currentWindSpeed = null;
+let currentRainfall = null;
+
+function getKMADateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    let hour = now.getHours();
+    let minute = now.getMinutes();
+    
+    if (minute < 40) {
+        hour = hour - 1;
+        if (hour < 0) {
+            hour = 23;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yYear = yesterday.getFullYear();
+            const yMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
+            const yDay = String(yesterday.getDate()).padStart(2, '0');
+            return {
+                baseDate: `${yYear}${yMonth}${yDay}`,
+                baseTime: '2300'
+            };
+        }
+    }
+    
+    const baseDate = `${year}${month}${day}`;
+    const baseTime = `${String(hour).padStart(2, '0')}00`;
+    
+    return { baseDate, baseTime };
+}
+
+async function fetchTemperatureWithProxy(proxyUrl, apiUrl) {
+    const url = proxyUrl ? proxyUrl + encodeURIComponent(apiUrl) : apiUrl;
+    const response = await fetch(url);
+    return await response.json();
+}
+
+async function fetchTemperature() {
+    const { baseDate, baseTime } = getKMADateTime();
+    
+    const API_URL = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst` +
+        `?serviceKey=${KMA_API_KEY}` +
+        `&numOfRows=10` +
+        `&pageNo=1` +
+        `&base_date=${baseDate}` +
+        `&base_time=${baseTime}` +
+        `&nx=${POCHEON_NX}` +
+        `&ny=${POCHEON_NY}` +
+        `&dataType=JSON`;
+    
+    console.log('🔍 기상청 API - 포천시 날씨 조회 중...');
+    console.log('📅 조회시각:', baseDate, baseTime);
+    
+    for (let i = 0; i < CORS_PROXIES.length; i++) {
+        try {
+            const proxyUrl = CORS_PROXIES[i];
+            console.log(`🔄 시도 ${i + 1}/${CORS_PROXIES.length}: ${proxyUrl ? proxyUrl : '직접 연결'}`);
+            
+            const data = await fetchTemperatureWithProxy(proxyUrl, API_URL);
+            
+            if (data.response && data.response.header.resultCode === '00') {
+                const items = data.response.body.items.item;
+                
+                const tempData = items.find(item => item.category === 'T1H');
+                const humidityData = items.find(item => item.category === 'REH');
+                const windSpeedData = items.find(item => item.category === 'WSD');
+                const rainfallData = items.find(item => item.category === 'RN1');
+                
+                if (tempData) {
+                    currentTemperature = parseFloat(tempData.obsrValue);
+                    currentHumidity = humidityData ? parseInt(humidityData.obsrValue) : 50;
+                    currentWindSpeed = windSpeedData ? parseFloat(windSpeedData.obsrValue) : 1.0;
+                    currentRainfall = rainfallData ? parseFloat(rainfallData.obsrValue) : 0;
+                    
+                    console.log('✅ 포천시 실제 온도:', currentTemperature + '°C');
+                    console.log('💧 습도:', currentHumidity + '%');
+                    console.log('💨 풍속:', currentWindSpeed + 'm/s');
+                    console.log('🌧️ 강수량:', currentRainfall + 'mm');
+                    
+                    return {
+                        temp: currentTemperature,
+                        humidity: currentHumidity,
+                        windSpeed: currentWindSpeed,
+                        rainfall: currentRainfall
+                    };
+                }
+            }
+        } catch (error) {
+            console.warn(`❌ 프록시 ${i + 1} 실패:`, error.message);
+            if (i < CORS_PROXIES.length - 1) continue;
+        }
+    }
+    
+    throw new Error('모든 프록시 시도 실패');
+}
+
+async function fetchTemperatureWithFallback() {
+    try {
+        return await fetchTemperature();
+    } catch (error) {
+        console.error('❌ 모든 날씨 조회 실패:', error.message);
+        console.log('🔧 시뮬레이션 모드로 전환합니다.');
+        
+        const now = new Date();
+        const hour = now.getHours();
+        
+        let baseTemp;
+        if (hour >= 0 && hour < 6) baseTemp = -4;
+        else if (hour >= 6 && hour < 9) baseTemp = -2;
+        else if (hour >= 9 && hour < 12) baseTemp = 2;
+        else if (hour >= 12 && hour < 15) baseTemp = 5;
+        else if (hour >= 15 && hour < 18) baseTemp = 2;
+        else if (hour >= 18 && hour < 21) baseTemp = -1;
+        else baseTemp = -3;
+        
+        currentTemperature = baseTemp + (Math.random() * 2 - 1);
+        currentTemperature = Math.round(currentTemperature * 10) / 10;
+        currentHumidity = Math.round(30 + Math.random() * 40);
+        currentWindSpeed = Math.round((Math.random() * 3) * 10) / 10;
+        currentRainfall = 0;
+        
+        return {
+            temp: currentTemperature,
+            humidity: currentHumidity,
+            windSpeed: currentWindSpeed,
+            rainfall: currentRainfall
+        };
+    }
+}
+
+function getSafetyGuide(temp) {
+    if (temp >= 30) {
+        return {
+            status: '위험',
+            statusColor: '#ff6b6b',
+            statusEmoji: '🔴',
+            message: '어제보다 높아요',
+            guides: [
+                '30분마다 10분 이상 그늘에서 휴식',
+                '충분한 수분 섭취 (1시간당 250ml 이상)',
+                '열사병 증상 발견 시 즉시 119 신고'
+            ]
+        };
+    } else if (temp >= 25) {
+        return {
+            status: '경고',
+            statusColor: '#ffa500',
+            statusEmoji: '🟠',
+            message: '어제보다 높아요',
+            guides: [
+                '1시간마다 5분 이상 휴식',
+                '충분한 수분 섭취',
+                '체력 소모가 큰 작업은 피하기'
+            ]
+        };
+    } else if (temp >= 15) {
+        return {
+            status: '보통',
+            statusColor: '#ffd93d',
+            statusEmoji: '🟡',
+            message: '작업하기 좋은 날씨예요',
+            guides: [
+                '정상적인 작업 가능',
+                '주기적인 수분 섭취',
+                '개인 보호구 착용'
+            ]
+        };
+    } else if (temp >= 5) {
+        return {
+            status: '저온 주의',
+            statusColor: '#00b894',
+            statusEmoji: '🟢',
+            message: '어제보다 5°C 높아요',
+            guides: [
+                '방한복 및 장갑 착용 필수',
+                '실내에서 주기적으로 몸 녹이기',
+                '저체온증 증상 주의'
+            ]
+        };
+    } else {
+        return {
+            status: '한파 주의',
+            statusColor: '#4facfe',
+            statusEmoji: '❄️',
+            message: '매우 추워요',
+            guides: [
+                '방한복 및 장갑 착용 필수',
+                '실내에서 주기적으로 몸 녹이기',
+                '저체온증 증상 주의'
+            ]
+        };
+    }
+}
+
+function generateTemperatureHTML(data) {
+    const guide = getSafetyGuide(data.temp);
+    const feelsLike = data.temp - 2;
+    const sunTimes = getSunriseSunset();
+    const now = new Date();
+    const updateTime = now.toLocaleString('ko-KR', { 
+        month: '2-digit', 
+        day: '2-digit', 
+        weekday: 'short',
+        hour: '2-digit', 
+        minute: '2-digit'
+    });
+    
+    return `
+<div style="margin: -20px -20px 24px -20px; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+    
+    <div style="padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">🌍</span>
+            <div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #333;">경기 포천시 설운동</h3>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">주요지명검색: 이마트 포천점</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button style="background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">⭐</button>
+            <button style="background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">?</button>
+        </div>
+    </div>
+    
+    <div style="padding: 12px 24px; background: #f8f9fa; text-align: right;">
+        <span style="font-size: 12px; color: #666;">🕐 ${updateTime} 현재</span>
+    </div>
+    
+    <div style="padding: 32px 24px; text-align: center; background: linear-gradient(180deg, #f8f9fa 0%, white 50%);">
+        <div style="font-size: 72px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 8px;">
+            ${data.temp.toFixed(1)}<span style="font-size: 32px; font-weight: 700;">°C</span>
+        </div>
+        <div style="font-size: 16px; color: #666; margin-bottom: 16px;">
+            체감 <span style="font-weight: 700; color: #ff6b6b;">${feelsLike.toFixed(1)}°C</span> 🌡️
+        </div>
+        <div style="display: inline-block; background: ${guide.statusColor}; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700;">
+            ${guide.statusEmoji} ${guide.message}
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #f0f0f0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">💧 습도</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">${data.humidity}%</div>
+        </div>
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">💨 바람</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">북 ${data.windSpeed}m/s</div>
+        </div>
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">🌧️ 1시간강수량</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">${data.rainfall === 0 ? '-' : data.rainfall} mm</div>
+        </div>
+    </div>
+    
+    <div style="padding: 20px 24px; background: white; display: flex; gap: 40px; justify-content: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🌅</span>
+            <div>
+                <div style="font-size: 11px; color: #888;">일출</div>
+                <div style="font-size: 14px; font-weight: 700; color: #333;">${sunTimes.sunrise}</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🌆</span>
+            <div>
+                <div style="font-size: 11px; color: #888;">일몰</div>
+                <div style="font-size: 14px; font-weight: 700; color: #333;">${sunTimes.sunset}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="padding: 24px; background: #f8f9fa; border-top: 8px solid #f0f0f0;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            <span style="font-size: 20px;">⚠️</span>
+            <h4 style="margin: 0; color: #333; font-size: 16px; font-weight: 800;">안전관리 지침</h4>
+        </div>
+        <div style="display: grid; gap: 12px;">
+            ${guide.guides.map((g, idx) => `
+                <div style="display: flex; align-items: start; gap: 10px; padding: 14px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                    <span style="color: ${guide.statusColor}; font-weight: 900; font-size: 16px; flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: ${guide.statusColor}15; border-radius: 50%;">✓</span>
+                    <span style="color: #333; font-size: 14px; line-height: 1.6; font-weight: 600;">${g}</span>
+                </div>
+            `).join('')}
+        </div>
+    </div>
+    
+    <div style="padding: 16px 24px; background: white; display: flex; gap: 12px;">
+        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
+            🗺️ 날씨해설 바로가기
+        </button>
+        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
+            📊 강수 제공정보
+        </button>
+    </div>
+</div>
+`;
+}
+
+// ========== 📌 초기화 코드 ==========
+/*
+setTimeout(() => {
+    fetchTemperatureWithFallback().then(data => {
+        const tempContainer = document.getElementById('temperatureMonitor');
+        if (tempContainer) {
+            tempContainer.innerHTML = generateTemperatureHTML(data);
+        }
+    });
+    
+    // 1분마다 자동 갱신
+    setInterval(() => {
+        fetchTemperatureWithFallback().then(data => {
+            const tempContainer = document.getElementById('temperatureMonitor');
+            if (tempContainer) {
+                tempContainer.innerHTML = generateTemperatureHTML(data);
+            }
+        });
+    }, 60000);
+}, 500);
+*/
 
     </script>
 </body>
