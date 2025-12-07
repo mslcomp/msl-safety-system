@@ -31,7 +31,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 
-// 🌡️ 날씨 정보 가져오기 (서울 기준)
+
 <script>
 async function getWeatherInfo() {
     try {
@@ -4284,6 +4284,214 @@ function copyReminderMessage(message) {
     });
 }
 
+// 🌡️ 날씨 정보 가져오기 (경기도 포천시 기준)
+async function getWeatherInfo() {
+    try {
+        // 포천시 날씨 (위도: 37.8949, 경도: 127.2002)
+        const response = await fetch('https://api.openweathermap.org/data/2.5/weather?lat=37.8949&lon=127.2002&appid=YOUR_API_KEY&units=metric&lang=kr');
+        
+        if (!response.ok) {
+            throw new Error('API 호출 실패');
+        }
+        
+        const data = await response.json();
+        const temp = Math.round(data.main.temp);
+        const description = data.weather[0].description;
+        
+        console.log('✅ 실제 날씨 API 사용:', temp + '°C');
+        return { temp, description };
+        
+    } catch (error) {
+        console.log('⚠️ 날씨 API 실패, 시뮬레이션 모드:', error.message);
+        
+        // API 실패 시 → 현재 시간과 계절 기반 시뮬레이션 (포천시 기준)
+        const now = new Date();
+        const month = now.getMonth(); // 0-11
+        const hour = now.getHours();
+        
+        let temp;
+        
+        // 🌡️ 12월 포천시 평균 기온: -5°C ~ 5°C
+        if (month === 11) { // 12월
+            // 시간대별 온도 변화
+            if (hour >= 6 && hour < 12) {
+                temp = Math.floor(Math.random() * 3) - 2; // -2°C ~ 1°C (아침)
+            } else if (hour >= 12 && hour < 18) {
+                temp = Math.floor(Math.random() * 5) + 0; // 0°C ~ 5°C (낮)
+            } else {
+                temp = Math.floor(Math.random() * 5) - 5; // -5°C ~ 0°C (밤)
+            }
+        }
+        // 1~2월 (겨울)
+        else if (month <= 1) {
+            temp = Math.floor(Math.random() * 10) - 5; // -5°C ~ 5°C
+        }
+        // 3~5월 (봄)
+        else if (month >= 2 && month <= 4) {
+            temp = Math.floor(Math.random() * 15) + 5; // 5°C ~ 20°C
+        }
+        // 6~8월 (여름)
+        else if (month >= 5 && month <= 7) {
+            temp = Math.floor(Math.random() * 10) + 25; // 25°C ~ 35°C
+        }
+        // 9~11월 (가을)
+        else {
+            temp = Math.floor(Math.random() * 15) + 10; // 10°C ~ 25°C
+        }
+        
+        console.log('🌡️ 시뮬레이션 온도:', temp + '°C (포천시 ' + (month + 1) + '월 기준)');
+        
+        return { 
+            temp, 
+            description: '포천시 날씨 (추정)'
+        };
+    }
+}
+
+// 🌡️ 온도별 안전 지침
+function getSafetyGuideline(temp) {
+    if (temp <= -10) {
+        return {
+            emoji: '🥶',
+            level: '매우 위험',
+            color: '#1e40af',
+            bgColor: '#dbeafe',
+            guidelines: [
+                '⚠️ 동파 방지: 배관 보온 확인 필수',
+                '🧥 방한복 착용: 장갑, 귀마개, 방한모 착용',
+                '❄️ 빙판 주의: 미끄럼 방지화 착용',
+                '⏰ 작업 시간: 30분마다 실내 휴식'
+            ]
+        };
+    } else if (temp <= -5) {
+        return {
+            emoji: '❄️',
+            level: '위험',
+            color: '#1d4ed8',
+            bgColor: '#dbeafe',
+            guidelines: [
+                '🧊 동파 주의: 외부 수도 보온 확인',
+                '🧥 방한복 착용: 체온 유지 필수',
+                '👟 미끄럼 주의: 계단, 경사로 조심',
+                '☕ 따뜻한 음료 준비'
+            ]
+        };
+    } else if (temp <= 0) {
+        return {
+            emoji: '🌨️',
+            level: '주의',
+            color: '#2563eb',
+            bgColor: '#eff6ff',
+            guidelines: [
+                '🧊 결빙 주의: 그늘진 곳 미끄러움',
+                '🧥 방한복 권장: 외부 작업 시',
+                '💧 동파 점검: 야간 온도 확인',
+                '🚗 차량 예열 충분히 하기'
+            ]
+        };
+    } else if (temp <= 5) {
+        return {
+            emoji: '🌡️',
+            level: '쌀쌀',
+            color: '#3b82f6',
+            bgColor: '#eff6ff',
+            guidelines: [
+                '🧥 방한 준비: 외투 착용',
+                '🌬️ 찬바람 주의: 목 보호',
+                '💪 준비운동: 근육 긴장 완화',
+                '🔥 난방 확인: 실내 적정 온도 유지'
+            ]
+        };
+    } else if (temp <= 10) {
+        return {
+            emoji: '☁️',
+            level: '선선',
+            color: '#60a5fa',
+            bgColor: '#f0f9ff',
+            guidelines: [
+                '👔 긴팔 착용 권장',
+                '🌬️ 환기 주의: 실내외 온도차',
+                '💪 가벼운 준비운동',
+                '☕ 따뜻한 음료 준비'
+            ]
+        };
+    } else if (temp <= 25) {
+        return {
+            emoji: '☀️',
+            level: '쾌적',
+            color: '#10b981',
+            bgColor: '#d1fae5',
+            guidelines: [
+                '✅ 적정 온도: 안전한 작업 환경',
+                '💧 수분 섭취: 정기적으로',
+                '🌬️ 환기: 실내 공기 순환',
+                '🧘 준비운동 후 작업'
+            ]
+        };
+    } else if (temp <= 30) {
+        return {
+            emoji: '🌤️',
+            level: '다소 더움',
+            color: '#f59e0b',
+            bgColor: '#fef3c7',
+            guidelines: [
+                '💧 수분 섭취: 자주 마시기',
+                '😎 그늘 활용: 직사광선 피하기',
+                '⏰ 휴식: 1시간마다 10분',
+                '🧢 모자 착용 권장'
+            ]
+        };
+    } else if (temp <= 35) {
+        return {
+            emoji: '🥵',
+            level: '더움',
+            color: '#f97316',
+            bgColor: '#fed7aa',
+            guidelines: [
+                '💧 수분 섭취: 필수! 자주 마시기',
+                '⏰ 휴식: 30분마다 휴식',
+                '🌳 그늘 작업: 직사광선 금지',
+                '🧊 냉방 확인: 실내 온도 관리'
+            ]
+        };
+    } else {
+        return {
+            emoji: '🔥',
+            level: '매우 더움',
+            color: '#dc2626',
+            bgColor: '#fecaca',
+            guidelines: [
+                '🚨 폭염 경보: 외부 작업 자제',
+                '💧 수분 섭취: 15분마다 물 마시기',
+                '⏰ 작업 중단: 고온 시간대(12~3시)',
+                '🧊 냉방 가동: 실내 온도 필수 관리'
+            ]
+        };
+    }
+}
+
+window.addEventListener('load', async function() {
+    try {
+        await loadNewsBanner();
+        console.log('✅ 뉴스 배너 로드 완료');
+    } catch (error) {
+        console.error('⚠️ 뉴스 배너 로드 실패:', error);
+        displayDefaultBanner();
+    }
+    
+    // Firebase 문서 로드
+    try {
+        await loadPendingDocuments();
+        console.log('✅ 문서 로드 완료');
+    } catch (error) {
+        console.error('❌ 문서 로드 실패:', error);
+    }
+    
+    const adminBadge = document.getElementById('adminBadge');
+    if (adminBadge) {
+        adminBadge.addEventListener('click', toggleAdmin);
+    }
+});
 
     </script>
 </body>
