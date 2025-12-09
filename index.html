@@ -1058,6 +1058,42 @@ html, body {
 }
 
 
+/* 온도계 모바일 중앙 정렬 강제 */
+@media (max-width: 768px) {
+    #temperatureMonitor {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    #temperatureMonitor > div {
+        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* 서명확인 탭도 동일 적용 */
+    #sign.tab-content.active {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* 전체 컨테이너 */
+    body {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    .container {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+
 </style>
 
 
