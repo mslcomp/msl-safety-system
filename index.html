@@ -1003,6 +1003,33 @@ html, body {
 }
 
 
+/* 중앙 정렬 강제 */
+.container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+#confirmation-content,
+#temperature-section {
+    width: 100% !important;
+    margin: 0 auto !important;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+
 
 </style>
 
@@ -4577,7 +4604,12 @@ function generateTemperatureHTML(data) {
     });
     
     return `
-<div style="margin: 0; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0; width: 100%;">
+
+
+<div style="margin: 0 auto; margin-left: auto !important; margin-right: auto !important; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0; width: 100%; max-width: 100%; display: block;">
+
+
+
     
     <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); background: ${background.gradient}; position: relative; overflow: hidden;">
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: ${background.pattern}; opacity: 0.8;"></div>
