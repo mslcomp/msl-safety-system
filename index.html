@@ -322,6 +322,61 @@ function scrollToTBM() {
 </script>
 
 
+
+<script>
+// ========== ❄️ 눈 내리는 효과 ==========
+function createSnowflakes() {
+    const snowflakesContainer = document.getElementById('snowflakes');
+    const snowflakeSymbols = ['❄', '❅', '❆', '✻', '✼', '❉'];
+    const numberOfSnowflakes = 50; // 눈송이 개수
+    
+    for (let i = 0; i < numberOfSnowflakes; i++) {
+        const snowflake = document.createElement('div');
+        snowflake.className = 'snowflake';
+        snowflake.textContent = snowflakeSymbols[Math.floor(Math.random() * snowflakeSymbols.length)];
+        
+        // 랜덤 위치
+        snowflake.style.left = Math.random() * 100 + '%';
+        
+        // 랜덤 크기
+        const size = Math.random() * 15 + 10; // 10px ~ 25px
+        snowflake.style.fontSize = size + 'px';
+        
+        // 랜덤 애니메이션 지속 시간 (5초 ~ 15초)
+        const duration = Math.random() * 10 + 5;
+        snowflake.style.animationDuration = duration + 's';
+        
+        // 랜덤 시작 지연
+        snowflake.style.animationDelay = Math.random() * 5 + 's';
+        
+        // 랜덤 투명도
+        snowflake.style.opacity = Math.random() * 0.6 + 0.4; // 0.4 ~ 1.0
+        
+        snowflakesContainer.appendChild(snowflake);
+    }
+}
+
+// 페이지 로드 시 눈송이 생성
+window.addEventListener('load', () => {
+    createSnowflakes();
+    console.log('🎄 Merry Christmas! 눈이 내립니다 ❄️');
+});
+
+// ========== 🎅 크리스마스 배너 자동 숨김 (선택사항) ==========
+// 5초 후 작게 접기 (원하면 주석 제거)
+/*
+setTimeout(() => {
+    const banner = document.getElementById('christmasBanner');
+    if (banner) {
+        banner.style.transition = 'all 0.5s ease';
+        banner.style.padding = '8px 16px';
+        banner.querySelector('span:nth-child(2)').style.fontSize = '14px';
+    }
+}, 5000);
+*/
+</script>
+
+
     <style>
        * {
     margin: 0;
@@ -832,6 +887,72 @@ body {
             transform: translateY(-10px);
         }
     }
+
+    /* 🎄 크리스마스 배너 애니메이션 */
+@keyframes bannerSlideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* ❄️ 눈송이 애니메이션 */
+@keyframes snowfall {
+    0% {
+        transform: translateY(-10vh) translateX(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(110vh) translateX(50px) rotate(360deg);
+        opacity: 0.3;
+    }
+}
+
+.snowflake {
+    position: absolute;
+    color: white;
+    font-size: 20px;
+    user-select: none;
+    pointer-events: none;
+    text-shadow: 0 0 5px rgba(255,255,255,0.8);
+    animation: snowfall linear infinite;
+}
+
+/* 배너 때문에 본문 밀림 방지 */
+body {
+    padding-top: 60px !important;
+}
+
+.container {
+    margin-top: 0 !important;
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+    #christmasBanner {
+        padding: 10px 16px;
+    }
+    #christmasBanner span:nth-child(2) {
+        font-size: 15px;
+    }
+    #christmasBanner span:first-child,
+    #christmasBanner span:last-child {
+        font-size: 20px;
+    }
+}
 </style>
 
 
@@ -840,8 +961,35 @@ body {
 
 
 </head>
+
 <body>
-    <body style="overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0;">
+    
+    <body style="overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0;">       
+        <!-- 🎄 크리스마스 배너 -->
+<div id="christmasBanner" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    background: linear-gradient(135deg, #c41e3a 0%, #165b33 50%, #c41e3a 100%);
+    padding: 12px 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: bannerSlideDown 0.8s ease-out;
+">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <span style="font-size: 24px; animation: bounce 1s infinite;">🎅</span>
+        <span style="color: white; font-size: 18px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+            Merry Christmas! 🎄 안전한 연말 보내세요!
+        </span>
+        <span style="font-size: 24px; animation: bounce 1s infinite 0.5s;">🎁</span>
+    </div>
+</div>
+
+<!-- ❄️ 눈송이 컨테이너 -->
+<div id="snowflakes" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden;"></div>
+ 
     <div class="container">
         <div class="header">
             <div style="text-align: center; padding: 8px 0;">
@@ -941,6 +1089,10 @@ body {
             messagingSenderId: "601750720539",
             appId: "1:601750720539:web:1d0839177beb893265268be"
         };
+        
+
+
+
         
         firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -3994,11 +4146,11 @@ function copyReminderMessage(message) {
 
 
 
-// ========== 🌡️ 포천시 완전 자동 업데이트 날씨 시스템 ==========
+// ========== 🌡️❄️🌫️ 온도+공기질 동적 배경 날씨 시스템 ==========
 
 const KMA_API_KEY = '0c49f6997308d25cba132fa389234a006a802ccfbc96afa2f130ddea39914d95';
 
-// ⭐ 위경도 → 격자 좌표 변환 함수 (기상청 공식)
+// 위경도 → 격자 좌표 변환
 function convertToGrid(lat, lon) {
     const RE = 6371.00877;
     const GRID = 5.0;
@@ -4039,37 +4191,11 @@ function convertToGrid(lat, lon) {
     return { nx: x, ny: y };
 }
 
-// ⭐ 일출/일몰 시간 계산 (포천시 기준)
-function getSunriseSunset() {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    
-    const sunData = {
-        1:  { sunrise: '07:45', sunset: '17:30' },
-        2:  { sunrise: '07:25', sunset: '18:00' },
-        3:  { sunrise: '06:45', sunset: '18:30' },
-        4:  { sunrise: '06:00', sunset: '19:00' },
-        5:  { sunrise: '05:30', sunset: '19:30' },
-        6:  { sunrise: '05:15', sunset: '19:50' },
-        7:  { sunrise: '05:30', sunset: '19:45' },
-        8:  { sunrise: '05:50', sunset: '19:15' },
-        9:  { sunrise: '06:15', sunset: '18:30' },
-        10: { sunrise: '06:40', sunset: '17:45' },
-        11: { sunrise: '07:10', sunset: '17:15' },
-        12: { sunrise: '07:35', sunset: '17:10' }
-    };
-    
-    return sunData[month];
-}
-
 const POCHEON_LAT = 37.8951;
 const POCHEON_LON = 127.2008;
 const POCHEON_GRID = convertToGrid(POCHEON_LAT, POCHEON_LON);
 const POCHEON_NX = POCHEON_GRID.nx;
 const POCHEON_NY = POCHEON_GRID.ny;
-
-console.log('📍 포천시청 좌표:', POCHEON_LAT, POCHEON_LON);
-console.log('📍 격자 좌표: NX=' + POCHEON_NX + ', NY=' + POCHEON_NY);
 
 const CORS_PROXIES = [
     'https://corsproxy.io/?',
@@ -4082,6 +4208,128 @@ let currentHumidity = null;
 let currentWindSpeed = null;
 let currentRainfall = null;
 
+// ⭐ 미세먼지 데이터 (실제로는 API에서 받아옴)
+let currentAirQuality = {
+    pm10: 45,  // 미세먼지
+    pm25: 25,  // 초미세먼지
+    grade: '보통'
+};
+
+// ========== 🎨 온도별 배경 설정 ==========
+function getTemperatureBackground(temp) {
+    if (temp >= 30) {
+        // 🔥 폭염
+        return {
+            gradient: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
+            pattern: 'radial-gradient(circle at 20% 50%, rgba(255, 200, 0, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 100, 0, 0.2) 0%, transparent 50%)',
+            emoji: '🔥',
+            textColor: 'white'
+        };
+    } else if (temp >= 20) {
+        // 🌤️ 따뜻함
+        return {
+            gradient: 'linear-gradient(135deg, #ffa500 0%, #ffcc00 100%)',
+            pattern: 'radial-gradient(circle at 30% 30%, rgba(255, 220, 100, 0.3) 0%, transparent 50%)',
+            emoji: '🌤️',
+            textColor: 'white'
+        };
+    } else if (temp >= 10) {
+        // ☁️ 선선함
+        return {
+            gradient: 'linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)',
+            pattern: 'radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
+            emoji: '☁️',
+            textColor: 'white'
+        };
+    } else if (temp >= 0) {
+        // 🌨️ 추움
+        return {
+            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            pattern: 'radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 40%), radial-gradient(circle at 80% 60%, rgba(200, 220, 255, 0.1) 0%, transparent 50%)',
+            emoji: '🌨️',
+            textColor: 'white'
+        };
+    } else {
+        // ❄️ 한파 (눈송이 패턴)
+        return {
+            gradient: 'linear-gradient(135deg, #2d3561 0%, #1a1f3a 100%)',
+            pattern: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10 L30 20 M30 40 L30 50 M10 30 L20 30 M40 30 L50 30 M18 18 L24 24 M36 36 L42 42 M42 18 L36 24 M24 36 L18 42' stroke='rgba(255,255,255,0.3)' stroke-width='2' fill='none'/%3E%3C/svg%3E")`,
+            emoji: '❄️',
+            textColor: 'white'
+        };
+    }
+}
+
+// ========== 🌫️ 미세먼지 등급 설정 ==========
+function getAirQualityInfo(pm10) {
+    if (pm10 <= 30) {
+        return {
+            emoji: '😊',
+            status: '좋음',
+            color: '#00b894',
+            bgColor: 'rgba(0, 184, 148, 0.1)'
+        };
+    } else if (pm10 <= 80) {
+        return {
+            emoji: '😐',
+            status: '보통',
+            color: '#ffa500',
+            bgColor: 'rgba(255, 165, 0, 0.1)'
+        };
+    } else if (pm10 <= 150) {
+        return {
+            emoji: '😷',
+            status: '나쁨',
+            color: '#ff6b6b',
+            bgColor: 'rgba(255, 107, 107, 0.1)'
+        };
+    } else {
+        return {
+            emoji: '😱',
+            status: '매우나쁨',
+            color: '#d63031',
+            bgColor: 'rgba(214, 48, 49, 0.1)'
+        };
+    }
+}
+
+// ========== 🎭 온도+공기질 조합 배경 ==========
+function getCombinedBackground(temp, pm10) {
+    const tempBg = getTemperatureBackground(temp);
+    const airInfo = getAirQualityInfo(pm10);
+    
+    // 특수 조합 1: 한파 + 미세먼지 나쁨
+    if (temp < 5 && pm10 > 80) {
+        return {
+            gradient: 'linear-gradient(135deg, #485563 0%, #29323c 100%)',
+            pattern: 'radial-gradient(circle at 40% 60%, rgba(150, 150, 150, 0.4) 0%, transparent 50%)',
+            emoji: '❄️😷',
+            description: '한파 • 미세먼지 ' + airInfo.status,
+            textColor: 'white',
+            airInfo: airInfo
+        };
+    }
+    
+    // 특수 조합 2: 폭염 + 미세먼지 나쁨
+    if (temp > 25 && pm10 > 80) {
+        return {
+            gradient: 'linear-gradient(135deg, #f2709c 0%, #ff9472 100%)',
+            pattern: 'radial-gradient(circle at 50% 50%, rgba(255, 200, 150, 0.3) 0%, transparent 50%)',
+            emoji: '🔥😷',
+            description: '폭염 • 미세먼지 ' + airInfo.status,
+            textColor: 'white',
+            airInfo: airInfo
+        };
+    }
+    
+    // 일반 조합: 온도 배경 + 공기질 정보
+    return {
+        ...tempBg,
+        airInfo: airInfo
+    };
+}
+
+// 기상청 API 관련 함수들 (동일)
 function getKMADateTime() {
     const now = new Date();
     const year = now.getFullYear();
@@ -4099,16 +4347,12 @@ function getKMADateTime() {
             const yYear = yesterday.getFullYear();
             const yMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
             const yDay = String(yesterday.getDate()).padStart(2, '0');
-            return {
-                baseDate: `${yYear}${yMonth}${yDay}`,
-                baseTime: '2300'
-            };
+            return { baseDate: `${yYear}${yMonth}${yDay}`, baseTime: '2300' };
         }
     }
     
     const baseDate = `${year}${month}${day}`;
     const baseTime = `${String(hour).padStart(2, '0')}00`;
-    
     return { baseDate, baseTime };
 }
 
@@ -4131,14 +4375,9 @@ async function fetchTemperature() {
         `&ny=${POCHEON_NY}` +
         `&dataType=JSON`;
     
-    console.log('🔍 기상청 API - 포천시 날씨 조회 중...');
-    console.log('📅 조회시각:', baseDate, baseTime);
-    
     for (let i = 0; i < CORS_PROXIES.length; i++) {
         try {
             const proxyUrl = CORS_PROXIES[i];
-            console.log(`🔄 시도 ${i + 1}/${CORS_PROXIES.length}: ${proxyUrl ? proxyUrl : '직접 연결'}`);
-            
             const data = await fetchTemperatureWithProxy(proxyUrl, API_URL);
             
             if (data.response && data.response.header.resultCode === '00') {
@@ -4155,11 +4394,6 @@ async function fetchTemperature() {
                     currentWindSpeed = windSpeedData ? parseFloat(windSpeedData.obsrValue) : 1.0;
                     currentRainfall = rainfallData ? parseFloat(rainfallData.obsrValue) : 0;
                     
-                    console.log('✅ 포천시 실제 온도:', currentTemperature + '°C');
-                    console.log('💧 습도:', currentHumidity + '%');
-                    console.log('💨 풍속:', currentWindSpeed + 'm/s');
-                    console.log('🌧️ 강수량:', currentRainfall + 'mm');
-                    
                     return {
                         temp: currentTemperature,
                         humidity: currentHumidity,
@@ -4169,21 +4403,16 @@ async function fetchTemperature() {
                 }
             }
         } catch (error) {
-            console.warn(`❌ 프록시 ${i + 1} 실패:`, error.message);
             if (i < CORS_PROXIES.length - 1) continue;
         }
     }
-    
-    throw new Error('모든 프록시 시도 실패');
+    throw new Error('API 조회 실패');
 }
 
 async function fetchTemperatureWithFallback() {
     try {
         return await fetchTemperature();
     } catch (error) {
-        console.error('❌ 모든 날씨 조회 실패:', error.message);
-        console.log('🔧 시뮬레이션 모드로 전환합니다.');
-        
         const now = new Date();
         const hour = now.getHours();
         
@@ -4275,10 +4504,14 @@ function getSafetyGuide(temp) {
     }
 }
 
+// ========== 🎨 HTML 생성 (동적 배경 적용) ==========
 function generateTemperatureHTML(data) {
     const guide = getSafetyGuide(data.temp);
     const feelsLike = data.temp - 2;
-    const sunTimes = getSunriseSunset();
+    
+    // ⭐ 온도 + 공기질 조합 배경
+    const background = getCombinedBackground(data.temp, currentAirQuality.pm10);
+    
     const now = new Date();
     const updateTime = now.toLocaleString('ko-KR', { 
         month: '2-digit', 
@@ -4289,19 +4522,33 @@ function generateTemperatureHTML(data) {
     });
     
     return `
-<div style="margin: -20px -20px 24px -20px; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+<div style="margin: 0; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 12px;">
     
-    <div style="padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 24px;">🌍</span>
+    <!-- 🎨 동적 배경 헤더 -->
+    <div style="padding: 24px 24px 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.2); background: ${background.gradient}; position: relative; overflow: hidden;">
+        <!-- 배경 패턴 -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: ${background.pattern}; opacity: 0.8;"></div>
+        
+        <!-- 큰 이모지 장식 -->
+        <div style="position: absolute; top: 10px; right: 20px; font-size: 60px; opacity: 0.2; z-index: 0;">${background.emoji}</div>
+        
+        <div style="display: flex; align-items: center; gap: 12px; position: relative; z-index: 1;">
+            <span style="font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌍</span>
             <div>
-                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #333;">경기 포천시 설운동</h3>
-                <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">주요지명검색: 이마트 포천점</p>
+                <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: ${background.textColor}; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">경기 포천시 설운동</h2>
+                <p style="margin: 6px 0 0 0; font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                    주요지명검색: 이마트 포천점
+                    ${background.description ? ' • ' + background.description : ''}
+                </p>
             </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <button style="background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">⭐</button>
-            <button style="background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">?</button>
+        
+        <!-- 🌫️ 미세먼지 표시 (오른쪽 하단) -->
+        <div style="position: absolute; bottom: 10px; right: 20px; z-index: 1;">
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3);">
+                <span style="font-size: 16px;">${background.airInfo.emoji}</span>
+                <span style="font-size: 11px; color: white; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">미세먼지 ${background.airInfo.status}</span>
+            </div>
         </div>
     </div>
     
@@ -4321,7 +4568,12 @@ function generateTemperatureHTML(data) {
         </div>
     </div>
     
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #f0f0f0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+    <!-- 🌫️ 공기질 + 날씨 정보 -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #f0f0f0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">🌫️ 미세먼지</div>
+            <div style="font-size: 20px; font-weight: 700; color: ${background.airInfo.color};">${currentAirQuality.pm10}</div>
+        </div>
         <div style="background: white; padding: 20px; text-align: center;">
             <div style="font-size: 12px; color: #888; margin-bottom: 8px;">💧 습도</div>
             <div style="font-size: 20px; font-weight: 700; color: #333;">${data.humidity}%</div>
@@ -4331,50 +4583,25 @@ function generateTemperatureHTML(data) {
             <div style="font-size: 20px; font-weight: 700; color: #333;">북 ${data.windSpeed}m/s</div>
         </div>
         <div style="background: white; padding: 20px; text-align: center;">
-            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">🌧️ 1시간강수량</div>
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">🌧️ 강수량</div>
             <div style="font-size: 20px; font-weight: 700; color: #333;">${data.rainfall === 0 ? '-' : data.rainfall} mm</div>
         </div>
     </div>
     
-    <div style="padding: 20px 24px; background: white; display: flex; gap: 40px; justify-content: center;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">🌅</span>
-            <div>
-                <div style="font-size: 11px; color: #888;">일출</div>
-                <div style="font-size: 14px; font-weight: 700; color: #333;">${sunTimes.sunrise}</div>
-            </div>
+    <!-- ⚠️ 안전관리 지침 (강조 + 여백 대폭 증가) -->
+    <div style="padding: 28px 24px 48px 24px; background: linear-gradient(180deg, #fff5f5 0%, #fff 100%); border-top: 3px solid ${guide.statusColor}; margin-bottom: 1px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid ${guide.statusColor};">
+            <span style="font-size: 28px;">⚠️</span>
+            <h3 style="margin: 0; color: #222; font-size: 20px; font-weight: 900; letter-spacing: -0.5px;">안전관리 지침</h3>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 20px;">🌆</span>
-            <div>
-                <div style="font-size: 11px; color: #888;">일몰</div>
-                <div style="font-size: 14px; font-weight: 700; color: #333;">${sunTimes.sunset}</div>
-            </div>
-        </div>
-    </div>
-    
-    <div style="padding: 24px; background: #f8f9fa; border-top: 8px solid #f0f0f0;">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-            <span style="font-size: 20px;">⚠️</span>
-            <h4 style="margin: 0; color: #333; font-size: 16px; font-weight: 800;">안전관리 지침</h4>
-        </div>
-        <div style="display: grid; gap: 12px;">
+        <div style="display: grid; gap: 14px;">
             ${guide.guides.map((g, idx) => `
-                <div style="display: flex; align-items: start; gap: 10px; padding: 14px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                    <span style="color: ${guide.statusColor}; font-weight: 900; font-size: 16px; flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: ${guide.statusColor}15; border-radius: 50%;">✓</span>
-                    <span style="color: #333; font-size: 14px; line-height: 1.6; font-weight: 600;">${g}</span>
+                <div style="display: flex; align-items: start; gap: 12px; padding: 18px; background: white; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); border: 2px solid ${guide.statusColor}20; transition: all 0.3s;">
+                    <span style="color: white; background: ${guide.statusColor}; font-weight: 900; font-size: 18px; flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">✓</span>
+                    <span style="color: #222; font-size: 16px; line-height: 1.7; font-weight: 700;">${g}</span>
                 </div>
             `).join('')}
         </div>
-    </div>
-    
-    <div style="padding: 16px 24px; background: white; display: flex; gap: 12px;">
-        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
-            🗺️ 날씨해설 바로가기
-        </button>
-        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
-            📊 강수 제공정보
-        </button>
     </div>
 </div>
 `;
@@ -4400,6 +4627,21 @@ setTimeout(() => {
         });
     }, 60000);
 }, 500);
+*/
+
+// ========== 🎨 배경 조합 예시 ==========
+/*
+현재 4.3°C + 미세먼지 45 (보통)
+→ 배경: 🌨️ 보라-파랑 그라데이션
+→ 뱃지: 😐 미세먼지 보통
+
+-5°C + 미세먼지 100 (나쁨)
+→ 배경: ❄️😷 회색-파랑 (탁한 느낌)
+→ 뱃지: 😷 미세먼지 나쁨
+
+32°C + 미세먼지 90 (나쁨)
+→ 배경: 🔥😷 핑크-주황 (답답한 느낌)
+→ 뱃지: 😷 미세먼지 나쁨
 */
 
     </script>
