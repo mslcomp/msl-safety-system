@@ -969,6 +969,41 @@ html, body {
     box-sizing: border-box;
     max-width: 100%;
 }
+
+
+/* 중앙 정렬 및 크기 최적화 */
+.container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+}
+
+.tab-content {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+@media (max-width: 480px) {
+    body {
+        padding-top: 42px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    .container {
+        width: 100% !important;
+    }
+}
+
+html, body {
+    overflow-x: hidden !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+
 </style>
 
 
@@ -4530,7 +4565,6 @@ function generateTemperatureHTML(data) {
     const guide = getSafetyGuide(data.temp);
     const feelsLike = data.temp - 2;
     
-    // 온도 + 공기질 조합 배경
     const background = getCombinedBackground(data.temp, currentAirQuality.pm10);
     
     const now = new Date();
@@ -4543,83 +4577,75 @@ function generateTemperatureHTML(data) {
     });
     
     return `
-<div style="margin: 0 -20px; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0;">
+<div style="margin: 0; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0; width: 100%;">
     
-    <!-- 🎨 동적 배경 헤더 (모바일 최적화) -->
-    <div style="padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.2); background: ${background.gradient}; position: relative; overflow: hidden;">
-        <!-- 배경 패턴 -->
+    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); background: ${background.gradient}; position: relative; overflow: hidden;">
         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: ${background.pattern}; opacity: 0.8;"></div>
-        
-        <!-- 큰 이모지 장식 -->
-        <div style="position: absolute; top: 0; right: 8px; font-size: 35px; opacity: 0.2; z-index: 0;">${background.emoji}</div>
+        <div style="position: absolute; top: -5px; right: 15px; font-size: 50px; opacity: 0.2; z-index: 0;">${background.emoji}</div>
         
         <div style="position: relative; z-index: 1;">
-            <!-- ⭐ 1줄: 지역명 + 이모지 -->
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-                <span style="font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌍</span>
-                <h2 style="margin: 0; font-size: 15px; font-weight: 800; color: ${background.textColor}; letter-spacing: -0.3px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">경기 포천시 설운동</h2>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌍</span>
+                <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: ${background.textColor}; letter-spacing: -0.3px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">경기 포천시 설운동</h2>
             </div>
             
-            <!-- ⭐ 2줄: 주요지명 + 미세먼지 (한 줄로) -->
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                <p style="margin: 0; font-size: 11px; color: rgba(255,255,255,0.95); font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.95); font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
                     주요지명: 이마트 포천점
                 </p>
-                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); padding: 3px 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.3); flex-shrink: 0;">
-                    <span style="font-size: 12px;">${background.airInfo.emoji}</span>
-                    <span style="font-size: 10px; color: white; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">미세먼지 ${background.airInfo.status}</span>
+                <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); flex-shrink: 0;">
+                    <span style="font-size: 16px;">${background.airInfo.emoji}</span>
+                    <span style="font-size: 12px; color: white; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">미세먼지 ${background.airInfo.status}</span>
                 </div>
             </div>
         </div>
     </div>
     
-    <div style="padding: 6px 14px; background: #f8f9fa; text-align: right;">
-        <span style="font-size: 10px; color: #666;">🕐 ${updateTime} 현재</span>
+    <div style="padding: 10px 20px; background: #f8f9fa; text-align: right;">
+        <span style="font-size: 13px; color: #666;">🕐 ${updateTime} 현재</span>
     </div>
     
-    <div style="padding: 20px 14px; text-align: center; background: linear-gradient(180deg, #f8f9fa 0%, white 50%);">
-        <div style="font-size: 52px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 6px;">
-            ${data.temp.toFixed(1)}<span style="font-size: 22px; font-weight: 700;">°C</span>
+    <div style="padding: 30px 20px; text-align: center; background: linear-gradient(180deg, #f8f9fa 0%, white 50%);">
+        <div style="font-size: 72px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 10px;">
+            ${data.temp.toFixed(1)}<span style="font-size: 32px; font-weight: 700;">°C</span>
         </div>
-        <div style="font-size: 13px; color: #666; margin-bottom: 10px;">
+        <div style="font-size: 16px; color: #666; margin-bottom: 14px;">
             체감 <span style="font-weight: 700; color: #ff6b6b;">${feelsLike.toFixed(1)}°C</span> 🌡️
         </div>
-        <div style="display: inline-block; background: ${guide.statusColor}; color: white; padding: 5px 12px; border-radius: 14px; font-size: 12px; font-weight: 700;">
+        <div style="display: inline-block; background: ${guide.statusColor}; color: white; padding: 8px 18px; border-radius: 20px; font-size: 15px; font-weight: 700;">
             ${guide.statusEmoji} ${guide.message}
         </div>
     </div>
     
-    <!-- 🌫️ 공기질 + 날씨 정보 (4열 그리드) -->
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #f0f0f0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
-        <div style="background: white; padding: 10px 6px; text-align: center;">
-            <div style="font-size: 10px; color: #888; margin-bottom: 3px; white-space: nowrap;">🌫️ 미세먼지</div>
-            <div style="font-size: 15px; font-weight: 700; color: ${background.airInfo.color};">${currentAirQuality.pm10}</div>
+        <div style="background: white; padding: 16px 10px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">🌫️ 미세먼지</div>
+            <div style="font-size: 20px; font-weight: 700; color: ${background.airInfo.color};">${currentAirQuality.pm10}</div>
         </div>
-        <div style="background: white; padding: 10px 6px; text-align: center;">
-            <div style="font-size: 10px; color: #888; margin-bottom: 3px; white-space: nowrap;">💧 습도</div>
-            <div style="font-size: 15px; font-weight: 700; color: #333;">${data.humidity}%</div>
+        <div style="background: white; padding: 16px 10px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">💧 습도</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">${data.humidity}%</div>
         </div>
-        <div style="background: white; padding: 10px 6px; text-align: center;">
-            <div style="font-size: 10px; color: #888; margin-bottom: 3px; white-space: nowrap;">💨 바람</div>
-            <div style="font-size: 15px; font-weight: 700; color: #333;">북${data.windSpeed}</div>
+        <div style="background: white; padding: 16px 10px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">💨 바람</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">북${data.windSpeed}</div>
         </div>
-        <div style="background: white; padding: 10px 6px; text-align: center;">
-            <div style="font-size: 10px; color: #888; margin-bottom: 3px; white-space: nowrap;">🌧️ 강수</div>
-            <div style="font-size: 15px; font-weight: 700; color: #333;">${data.rainfall === 0 ? '-' : data.rainfall}mm</div>
+        <div style="background: white; padding: 16px 10px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">🌧️ 강수</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">${data.rainfall === 0 ? '-' : data.rainfall}mm</div>
         </div>
     </div>
     
-    <!-- ⚠️ 안전관리 지침 (간결화) -->
-    <div style="padding: 16px 14px 80px 14px; background: linear-gradient(180deg, #fff5f5 0%, #fff 100%); border-top: 3px solid ${guide.statusColor};">
-        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
-            <span style="font-size: 16px;">⚠️</span>
-            <h4 style="margin: 0; color: #333; font-size: 14px; font-weight: 800;">안전관리 지침</h4>
+    <div style="padding: 24px 20px 100px 20px; background: linear-gradient(180deg, #fff5f5 0%, #fff 100%); border-top: 3px solid ${guide.statusColor};">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <span style="font-size: 22px;">⚠️</span>
+            <h4 style="margin: 0; color: #333; font-size: 18px; font-weight: 800;">안전관리 지침</h4>
         </div>
-        <div style="display: grid; gap: 8px;">
+        <div style="display: grid; gap: 12px;">
             ${guide.guides.map((g, idx) => `
-                <div style="display: flex; align-items: start; gap: 8px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                    <span style="color: ${guide.statusColor}; font-weight: 900; font-size: 13px; flex-shrink: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; background: ${guide.statusColor}15; border-radius: 50%;">✓</span>
-                    <span style="color: #333; font-size: 12px; line-height: 1.5; font-weight: 600; word-break: keep-all;">${g}</span>
+                <div style="display: flex; align-items: start; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <span style="color: ${guide.statusColor}; font-weight: 900; font-size: 16px; flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: ${guide.statusColor}15; border-radius: 50%;">✓</span>
+                    <span style="color: #333; font-size: 15px; line-height: 1.6; font-weight: 600; word-break: keep-all;">${g}</span>
                 </div>
             `).join('')}
         </div>
