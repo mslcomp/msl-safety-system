@@ -842,6 +842,24 @@ body {
         padding: 0 !important;
     }
 }
+
+@keyframes emergencyPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 8px 24px rgba(255,107,107,0.5);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(255,107,107,0.8), 0 0 0 0 rgba(255,107,107,0.4);
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: rotate(-5deg); }
+    20%, 40%, 60%, 80% { transform: rotate(5deg); }
+}
+
 </style>
 
 
@@ -1969,6 +1987,27 @@ async function editDocument(docId) {
  container.innerHTML = `
     <div style="background: white; margin: -20px; padding: 20px;">
         
+<!-- 🚨 긴급 신고 버튼 (모든 직원용) -->
+<div style="position: fixed; bottom: 80px; right: 20px; z-index: 9998;">
+    <button onclick="openEmergencyReport()" style="
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        border: none;
+        box-shadow: 0 8px 24px rgba(255,107,107,0.5);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        transition: all 0.3s;
+        animation: emergencyPulse 2s infinite;
+    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        🚨
+    </button>
+</div>
+
         <!-- 뉴스 배너 -->
         <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
 
@@ -2812,7 +2851,7 @@ function closeNameInputModal() {
     const modals = document.querySelectorAll('.modal.show');
     modals.forEach(modal => modal.remove());
     
-    // 익명 사용자로 문서 목록 표시
+    // 익명 사용자로 문서 목록 표시ㄹ
     window.currentUserName = '익명';
     
     const container = document.getElementById('pendingDocuments');
@@ -2821,6 +2860,30 @@ function closeNameInputModal() {
     
     container.innerHTML = `
     <div style="background: white; margin: -20px; padding: 20px;">
+
+<!-- 🚨 긴급 신고 버튼 (모든 직원용) -->
+        <div style="position: fixed; bottom: 80px; right: 20px; z-index: 9998;">
+            <button onclick="openEmergencyReport()" style="
+                width: 70px;
+                height: 70px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+                border: none;
+                box-shadow: 0 8px 24px rgba(255,107,107,0.5);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 32px;
+                transition: all 0.3s;
+                animation: emergencyPulse 2s infinite;
+            " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                🚨
+            </button>
+        </div>
+
+
+        
         
         <!-- 뉴스 배너 -->
         <div id="newsBanner" style="margin: -20px -20px 20px -20px;"></div>
@@ -2871,7 +2934,325 @@ function closeNameInputModal() {
     
     document.getElementById('checkCount').textContent = `0/${documents.length}개`;
 }
+// ========== 🚨 직원용 긴급 신고 시스템 ==========
 
+// 긴급 신고 모달 열기
+function openEmergencyReport() {
+    const modal = document.createElement('div');
+    modal.id = 'emergencyReportModal';
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 24px; width: 90%; max-width: 500px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
+            <!-- 헤더 -->
+            <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); padding: 24px; text-align: center; position: relative;">
+                <button onclick="closeEmergencyReport()" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.3); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold; backdrop-filter: blur(10px);">&times;</button>
+                
+                <div style="font-size: 48px; margin-bottom: 12px; animation: shake 0.5s;">🚨</div>
+                <h3 style="margin: 0 0 8px 0; color: white; font-size: 24px; font-weight: 900;">긴급 신고</h3>
+                <p style="margin: 0; color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 600;">위험 상황 발생 시 즉시 신고해주세요</p>
+            </div>
+            
+            <!-- 본문 -->
+            <form id="emergencyReportForm" style="padding: 24px;">
+                <div style="background: linear-gradient(135deg, #fff5f5, #ffe8e8); padding: 16px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #ff6b6b;">
+                    <div style="font-size: 14px; color: #d63031; font-weight: 700; margin-bottom: 8px;">⚠️ 주의사항</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #666; line-height: 1.8;">
+                        <li>허위 신고 시 징계 대상입니다</li>
+                        <li>생명이 위급한 경우 119 먼저 연락</li>
+                        <li>신고 후 안전한 장소로 대피</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 700; color: #2d3436;">신고자 이름 *</label>
+                    <input type="text" id="reporterName" class="form-input" placeholder="이름 입력" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;" value="${localStorage.getItem('mslUserName') || ''}">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 700; color: #2d3436;">긴급 상황 종류 *</label>
+                    <select id="emergencyType" class="form-select" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;">
+                        <option value="">선택하세요</option>
+                        <option value="🔥 화재">🔥 화재</option>
+                        <option value="⚡ 감전">⚡ 감전</option>
+                        <option value="🩸 부상">🩸 부상</option>
+                        <option value="💥 붕괴">💥 붕괴/낙하</option>
+                        <option value="🧪 화학물질 누출">🧪 화학물질 누출</option>
+                        <option value="⚠️ 기타 위험">⚠️ 기타 위험</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 700; color: #2d3436;">발생 장소 *</label>
+                    <input type="text" id="location" class="form-input" placeholder="예: 1층 작업장, 주차장 등" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 700; color: #2d3436;">상세 내용 *</label>
+                    <textarea id="description" class="form-textarea" rows="4" placeholder="상황을 자세히 설명해주세요" required style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 10px; font-size: 15px; resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 700; color: #2d3436;">📷 현장 사진 (선택)</label>
+                    <input type="file" id="emergencyPhoto" accept="image/*" capture="environment" style="width: 100%; padding: 12px; border: 2px dashed #e9ecef; border-radius: 10px; font-size: 14px;">
+                    <div style="font-size: 12px; color: #999; margin-top: 6px;">* 최대 5MB, JPG/PNG/HEIC</div>
+                </div>
+                
+                <button type="submit" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); border: none; border-radius: 12px; color: white; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(255,107,107,0.4); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    🚨 긴급 신고 제출
+                </button>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    document.getElementById('emergencyReportForm').addEventListener('submit', handleEmergencyReport);
+}
+
+// 긴급 신고 제출
+async function handleEmergencyReport(e) {
+    e.preventDefault();
+    
+    const reporterName = document.getElementById('reporterName').value.trim();
+    const emergencyType = document.getElementById('emergencyType').value;
+    const location = document.getElementById('location').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const photoFile = document.getElementById('emergencyPhoto').files[0];
+    
+    if (!reporterName || !emergencyType || !location || !description) {
+        alert('❌ 필수 항목을 모두 입력해주세요.');
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.textContent = '📤 신고 중...';
+    submitBtn.disabled = true;
+    
+    try {
+        let photoURL = null;
+        
+        // 사진 업로드
+        if (photoFile) {
+            if (photoFile.size > 5 * 1024 * 1024) {
+                alert('❌ 사진 크기는 5MB 이하만 가능합니다.');
+                submitBtn.textContent = '🚨 긴급 신고 제출';
+                submitBtn.disabled = false;
+                return;
+            }
+            
+            const storageRef = storage.ref(`emergency-reports/${Date.now()}_${photoFile.name}`);
+            await storageRef.put(photoFile);
+            photoURL = await storageRef.getDownloadURL();
+        }
+        
+        // Firestore에 저장
+        await db.collection('emergencyReports').add({
+            reporterName: reporterName,
+            emergencyType: emergencyType,
+            location: location,
+            description: description,
+            photoURL: photoURL,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        closeEmergencyReport();
+
+// 카카오톡 공유 메시지 생성
+const kakaoMessage = `🚨🚨🚨 긴급 신고 🚨🚨🚨
+
+⚠️ ${emergencyType}
+📍 장소: ${location}
+👤 신고자: ${reporterName}
+
+📝 상세 내용:
+${description}
+
+⏰ ${new Date().toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+})}
+
+🔗 https://mslcomp.github.io/msl-safety-system/
+
+⚠️ 모든 직원은 안전한 장소로 대피하고 관리자 지시를 따라주세요.`;
+
+// 성공 모달 표시
+showEmergencySuccessModal(kakaoMessage, photoURL);
+
+// 긴급 신고 모달 닫기
+function closeEmergencyReport() {
+    const modal = document.getElementById('emergencyReportModal');
+    if (modal) modal.remove();
+}
+
+// 관리자용: 긴급 신고 목록 로드
+async function loadEmergencyReports() {
+    try {
+        const snapshot = await db.collection('emergencyReports')
+            .where('status', '==', 'pending')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        const reports = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        return reports;
+    } catch (error) {
+        console.error('신고 목록 로드 실패:', error);
+        return [];
+    }
+}
+
+// 관리자용: 신고 승인 (공지 전환)
+async function approveEmergencyReport(reportId) {
+    if (!confirm('이 신고를 승인하고 전체 공지로 전환하시겠습니까?')) return;
+    
+    try {
+        const reportDoc = await db.collection('emergencyReports').doc(reportId).get();
+        const report = reportDoc.data();
+        
+        // 공지사항으로 전환
+        await db.collection('emergencyAlerts').add({
+            title: `🚨 ${report.emergencyType} 발생`,
+            location: report.location,
+            description: report.description,
+            reporterName: report.reporterName,
+            photoURL: report.photoURL,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            readBy: []
+        });
+        
+        // 신고 상태 변경
+        await db.collection('emergencyReports').doc(reportId).update({
+            status: 'approved',
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert('✅ 승인 완료! 전체 공지로 전환되었습니다.');
+        loadManageData();
+        
+    } catch (error) {
+        console.error('승인 실패:', error);
+        alert('❌ 승인에 실패했습니다: ' + error.message);
+    }
+}
+
+// 관리자용: 신고 반려
+async function rejectEmergencyReport(reportId) {
+    const reason = prompt('반려 사유를 입력하세요:');
+    if (!reason) return;
+    
+    try {
+        await db.collection('emergencyReports').doc(reportId).update({
+            status: 'rejected',
+            rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            rejectionReason: reason
+        });
+        
+        alert('✅ 신고가 반려되었습니다.');
+        loadManageData();
+        
+    } catch (error) {
+        console.error('반려 실패:', error);
+        alert('❌ 반려에 실패했습니다: ' + error.message);
+    }
+}
+
+// 관리 탭 로드 시 신고 목록도 로드
+const originalLoadManageData2 = loadManageData;
+loadManageData = function() {
+    originalLoadManageData2();
+    
+    // 긴급 신고 관리 UI 추가
+    setTimeout(async () => {
+        const manageTab = document.getElementById('manage');
+        if (!manageTab || !isAdmin) return;
+        
+        const reports = await loadEmergencyReports();
+        
+        const reportCard = document.createElement('div');
+        reportCard.className = 'card';
+        reportCard.style.cssText = 'background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border: none; margin-bottom: 20px;';
+        
+        reportCard.innerHTML = `
+            <div style="color: white;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 32px;">🚨</span>
+                        <div>
+                            <h3 style="margin: 0 0 4px 0; color: white; font-size: 20px; font-weight: 800;">긴급 신고 관리</h3>
+                            <p style="margin: 0; font-size: 13px; opacity: 0.95;">대기 중인 신고: ${reports.length}건</p>
+                        </div>
+                    </div>
+                    ${reports.length > 0 ? `
+                        <div style="background: rgba(255,255,255,0.3); padding: 8px 16px; border-radius: 20px; font-weight: 700; animation: emergencyPulse 2s infinite;">
+                            ${reports.length}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                ${reports.length === 0 ? `
+                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 12px; text-align: center;">
+                        <div style="font-size: 14px; opacity: 0.95;">대기 중인 긴급 신고가 없습니다.</div>
+                    </div>
+                ` : `
+                    <div style="display: grid; gap: 12px;">
+                        ${reports.map(report => `
+                            <div style="background: white; padding: 20px; border-radius: 12px; color: #333;">
+                                <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 12px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 18px; font-weight: 800; color: #ff6b6b; margin-bottom: 8px;">
+                                            ${report.emergencyType}
+                                        </div>
+                                        <div style="font-size: 13px; color: #666; margin-bottom: 4px;">
+                                            📍 ${report.location}
+                                        </div>
+                                        <div style="font-size: 13px; color: #666;">
+                                            👤 ${report.reporterName} • ${report.createdAt ? new Date(report.createdAt.toDate()).toLocaleString('ko-KR') : '방금'}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #ff6b6b;">
+                                    <div style="font-size: 14px; line-height: 1.6; white-space: pre-line;">${report.description}</div>
+                                </div>
+                                
+                                ${report.photoURL ? `
+                                    <div style="margin-bottom: 12px;">
+                                        <img src="${report.photoURL}" style="width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open('${report.photoURL}', '_blank')">
+                                    </div>
+                                ` : ''}
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                    <button onclick="approveEmergencyReport('${report.id}')" style="padding: 12px; background: linear-gradient(135deg, #00b894, #00cec9); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer;">
+                                        ✅ 승인 및 공지
+                                    </button>
+                                    <button onclick="rejectEmergencyReport('${report.id}')" style="padding: 12px; background: #6c757d; border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer;">
+                                        ❌ 반려
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+        
+        const firstCard = manageTab.querySelector('.card');
+        if (firstCard) {
+            manageTab.insertBefore(reportCard, firstCard);
+        }
+        
+    }, 500);
+};
      
 function openSignatureModal(documentId) {
     currentDocumentId = documentId;
@@ -4531,6 +4912,229 @@ setTimeout(() => {
 → 배경: 🔥😷 핑크-주황 (답답한 느낌)
 → 뱃지: 😷 미세먼지 나쁨
 */
+
+// ========== 📱 카카오톡 자동 공유 시스템 ==========
+
+function showEmergencySuccessModal(message, photoURL) {
+    const modal = document.createElement('div');
+    modal.id = 'emergencySuccessModal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10001; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 24px; max-width: 500px; width: 90%; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: slideUp 0.3s ease-out;">
+            
+            <!-- 헤더 -->
+            <div style="background: linear-gradient(135deg, #00b894 0%, #00a383 100%); padding: 32px 24px; text-align: center;">
+                <div style="font-size: 64px; margin-bottom: 16px; animation: bounce 1s infinite;">✅</div>
+                <h2 style="margin: 0 0 8px 0; color: white; font-size: 26px; font-weight: 900;">신고 완료!</h2>
+                <p style="margin: 0; color: rgba(255,255,255,0.95); font-size: 15px; font-weight: 600;">관리자가 확인 후 조치하겠습니다</p>
+            </div>
+            
+            <!-- 본문 -->
+            <div style="padding: 24px;">
+                
+                <!-- 중요 안내 -->
+                <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%); padding: 20px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <span style="font-size: 32px; flex-shrink: 0;">⚠️</span>
+                        <div>
+                            <div style="font-weight: 800; color: #856404; font-size: 16px; margin-bottom: 8px;">긴급 상황입니다!</div>
+                            <div style="font-size: 14px; color: #856404; line-height: 1.6;">
+                                <strong>전 직원에게 알림을 보내야 합니다.</strong><br>
+                                아래 버튼을 눌러 카카오톡으로 공유해주세요.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 버튼 그룹 -->
+                <div style="display: grid; gap: 12px; margin-bottom: 16px;">
+                    
+                    <!-- 1. 카카오톡 공유 버튼 (제일 크게) -->
+                    <button onclick="shareToKakao()" style="
+                        padding: 20px;
+                        background: #FEE500;
+                        border: none;
+                        border-radius: 16px;
+                        color: #3c1e1e;
+                        font-size: 18px;
+                        font-weight: 900;
+                        cursor: pointer;
+                        box-shadow: 0 6px 20px rgba(254,229,0,0.4);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 12px;
+                        transition: all 0.3s;
+                        animation: buttonPulse 2s infinite;
+                    " onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3C6.48 3 2 6.58 2 11C2 13.5 3.5 15.72 5.82 17.12L5 21L9.23 18.93C10.07 19.12 10.95 19.23 11.88 19.23C17.4 19.23 21.88 15.65 21.88 11.13C21.88 6.61 17.4 3 12 3Z"/>
+                        </svg>
+                        <span>카카오톡으로 전체 공유하기</span>
+                    </button>
+                    
+                    <!-- 2. 메시지 복사 버튼 -->
+                    <button onclick="copyToClipboard()" style="
+                        padding: 16px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border: none;
+                        border-radius: 12px;
+                        color: white;
+                        font-size: 15px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+                        transition: all 0.3s;
+                    " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        📋 메시지 복사 (수동 전송용)
+                    </button>
+                    
+                    <!-- 3. 닫기 버튼 -->
+                    <button onclick="closeSuccessModal()" style="
+                        padding: 14px;
+                        background: #f1f3f5;
+                        border: none;
+                        border-radius: 12px;
+                        color: #495057;
+                        font-size: 14px;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    " onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f1f3f5'">
+                        나중에 하기
+                    </button>
+                    
+                </div>
+                
+                <!-- 안내 문구 -->
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 12px; border: 2px solid #e9ecef;">
+                    <div style="font-size: 13px; color: #666; line-height: 1.8;">
+                        <div style="font-weight: 700; color: #333; margin-bottom: 8px;">📱 사용 방법</div>
+                        <div style="padding-left: 4px;">
+                        1️⃣ "<strong>카카오톡으로 전체 공유하기</strong>" 클릭<br>
+                        2️⃣ 직원 단체방 선택<br>
+                        3️⃣ 전송 버튼 클릭<br>
+                        <br>
+                        또는<br>
+                        <br>
+                        1️⃣ "<strong>메시지 복사</strong>" 클릭<br>
+                        2️⃣ 카카오톡 단체방 열기<br>
+                        3️⃣ 입력창에 길게 눌러 붙여넣기<br>
+                        4️⃣ 전송
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <style>
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(50px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+            
+            @keyframes buttonPulse {
+                0%, 100% { 
+                    box-shadow: 0 6px 20px rgba(254,229,0,0.4);
+                }
+                50% { 
+                    box-shadow: 0 8px 30px rgba(254,229,0,0.6);
+                }
+            }
+        </style>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 전역 변수에 메시지 저장
+    window.emergencyMessageToShare = message;
+    window.emergencyPhotoURL = photoURL;
+}
+
+// 카카오톡 공유하기
+function shareToKakao() {
+    const message = window.emergencyMessageToShare;
+    
+    // 모바일: 카카오톡 앱으로 공유
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        // 1. URL 스킴 시도
+        const kakaoScheme = `kakaotalk://send?text=${encodeURIComponent(message)}`;
+        window.location.href = kakaoScheme;
+        
+        // 2. 실패 시 복사 후 카카오톡 열기
+        setTimeout(() => {
+            navigator.clipboard.writeText(message).then(() => {
+                alert('📋 메시지가 복사되었습니다!\n\n카카오톡을 여시고 단체방에 붙여넣기 해주세요.');
+                // 카카오톡 앱 열기 시도
+                window.location.href = 'kakaotalk://';
+            });
+        }, 500);
+        
+    } else {
+        // PC: 자동 복사 후 카카오톡PC 안내
+        navigator.clipboard.writeText(message).then(() => {
+            alert('✅ 메시지가 복사되었습니다!\n\n카카오톡PC를 여시고 직원 단체방에 붙여넣기(Ctrl+V) 해주세요.');
+            
+            // 카카오톡PC 실행 시도 (설치된 경우)
+            window.location.href = 'kakaotalk://';
+        }).catch(() => {
+            alert('❌ 자동 복사에 실패했습니다.\n\n아래 "메시지 복사" 버튼을 눌러주세요.');
+        });
+    }
+}
+
+// 메시지 복사
+function copyToClipboard() {
+    const message = window.emergencyMessageToShare;
+    
+    navigator.clipboard.writeText(message).then(() => {
+        // 성공 알림
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ 복사 완료!';
+        btn.style.background = 'linear-gradient(135deg, #00b894, #00cec9)';
+        
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+        }, 2000);
+        
+        // 카카오톡 열기 안내
+        if (confirm('✅ 복사 완료!\n\n카카오톡을 바로 여시겠습니까?')) {
+            window.location.href = 'kakaotalk://';
+        }
+        
+    }).catch(() => {
+        alert('❌ 복사 실패. 수동으로 복사해주세요.');
+    });
+}
+
+// 모달 닫기
+function closeSuccessModal() {
+    const modal = document.getElementById('emergencySuccessModal');
+    if (modal) {
+        if (confirm('⚠️ 아직 전 직원에게 알림을 보내지 않았습니다.\n\n정말 닫으시겠습니까?')) {
+            modal.remove();
+        }
+    }
+}
+
+// 모달 외부 클릭 시 닫기 방지
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('emergencySuccessModal');
+    if (modal && e.target === modal) {
+        if (confirm('⚠️ 아직 전 직원에게 알림을 보내지 않았습니다.\n\n정말 닫으시겠습니까?')) {
+            modal.remove();
+        }
+    }
+});
 
     </script>
 </body>
