@@ -2,7 +2,7 @@
   "name": "MSL 안전보건 전자서명 플랫폼",
   "short_name": "MSL 안전",
   "description": "㈜엠에스엘콤프레서 안전보건 시스템",
-  "start_url": "./",
+  "start_url": "/msl-safety-system/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#4A90E2",
