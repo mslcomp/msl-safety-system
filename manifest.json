@@ -10,37 +10,20 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/msl-safety-system/msl_logo_small.jpg",
-      "sizes": "180x57",
-      "type": "image/jpeg",
+      "src": "/msl-safety-system/msl_logo_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/msl-safety-system/msl_logo_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
-  "categories": ["business", "productivity"],
-  "shortcuts": [
-    {
-      "name": "서명확인",
-      "short_name": "서명",
-      "description": "미서명 문서 확인",
-      "url": "/msl-safety-system/?tab=sign",
-      "icons": [
-        {
-          "src": "/msl-safety-system/msl_logo_small.jpg",
-          "sizes": "180x57"
-        }
-      ]
-    },
-    {
-      "name": "긴급신고",
-      "short_name": "신고",
-      "description": "긴급 상황 신고",
-      "url": "/msl-safety-system/?emergency=true",
-      "icons": [
-        {
-          "src": "/msl-safety-system/msl_logo_small.jpg",
-          "sizes": "180x57"
-        }
-      ]
-    }
-  ]
+  "categories": ["business", "productivity"]
 }
+
+
+
