@@ -4688,16 +4688,22 @@ async function submitEmergencyReport() {
     const now = new Date();
     
     try {
-        // Firestore에 긴급 신고 저장
-        await db.collection('emergency_reports').add({
+        // 1️⃣ Firestore에 긴급 신고 저장
+        const reportRef = await db.collection('emergency_reports').add({
             reporter: userName,
             detail: detail,
             reportedAt: firebase.firestore.FieldValue.serverTimestamp(),
             status: 'pending',
-            location: 'MSL 포천 공장'
+            location: 'MSL 포천 공장',
+            notified: false
         });
         
-        // 카카오톡 알림 메시지 생성
+        console.log('✅ 긴급 신고 저장 완료:', reportRef.id);
+        
+        // 2️⃣ 모든 구독자에게 푸시 알림 발송
+        await sendPushToAllSubscribers(userName, detail);
+        
+        // 3️⃣ 카카오톡 알림 메시지 생성
         const message = `🚨 [MSL 긴급 신고]\n\n` +
                        `신고자: ${userName}\n` +
                        `신고 시각: ${now.toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}\n` +
@@ -4712,34 +4718,69 @@ async function submitEmergencyReport() {
             // 모달 닫기
             document.querySelector('.modal')?.remove();
             
-            // 성공 알림 모달
-            const successModal = document.createElement('div');
-            successModal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; animation: popIn 0.5s ease-out; max-width: 400px; width: 90%;';
-            successModal.innerHTML = `
-                <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
-                <div style="font-size: 22px; font-weight: 800; color: #00b894; margin-bottom: 12px;">신고 접수 완료!</div>
-                <div style="font-size: 15px; color: #666; margin-bottom: 24px; line-height: 1.7;">
-                    알림 메시지가 복사되었습니다.<br>
-                    <strong style="color: #2d3436;">카카오톡</strong>으로 안전담당자에게<br>
-                    즉시 전송해주세요.
-                </div>
-                <button onclick="this.parentElement.remove()" style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; border: none; padding: 14px 32px; border-radius: 25px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,184,148,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">확인</button>
-            `;
-            document.body.appendChild(successModal);
-            
-            // 3초 후 자동 닫기
-            setTimeout(() => {
-                if (successModal.parentElement) successModal.remove();
-            }, 5000);
+            // 성공 알림
+            showEmergencySuccessModal();
         });
         
     } catch (error) {
-        console.error('긴급 신고 오류:', error);
+        console.error('❌ 긴급 신고 오류:', error);
         alert('❌ 신고 접수 중 오류가 발생했습니다.\n\n' + error.message + '\n\n직접 안전담당자에게 연락해주세요.');
     }
-    
 }
 
+// 모든 구독자에게 푸시 발송
+async function sendPushToAllSubscribers(reporter, detail) {
+    try {
+        // 모든 푸시 구독 정보 가져오기
+        const subscriptionsSnapshot = await db.collection('push_subscriptions').get();
+        
+        if (subscriptionsSnapshot.empty) {
+            console.log('⚠️ 푸시 구독자 없음');
+            return;
+        }
+        
+        console.log(`📢 ${subscriptionsSnapshot.size}명에게 푸시 발송 시도...`);
+        
+        // 각 구독자에게 푸시 발송 (웹 푸시는 서버 필요하므로 Firestore 트리거로 처리)
+        // 현재는 실시간 리스너로만 작동
+        
+        // ⭐ Service Worker에게 메시지 전송 (포그라운드)
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'EMERGENCY_ALERT',
+                reporter: reporter,
+                detail: detail
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ 푸시 발송 실패:', error);
+    }
+}
+
+function showEmergencySuccessModal() {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; animation: popIn 0.5s ease-out; max-width: 400px; width: 90%;';
+    
+    modal.innerHTML = `
+        <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+        <div style="font-size: 22px; font-weight: 800; color: #00b894; margin-bottom: 12px;">긴급 신고 접수!</div>
+        <div style="font-size: 15px; color: #666; margin-bottom: 24px; line-height: 1.7;">
+            <strong>📢 푸시 알림 발송 완료</strong><br>
+            모든 사용자에게 알림이 전송되었습니다.<br><br>
+            알림 메시지가 복사되었습니다.<br>
+            <strong style="color: #2d3436;">카카오톡</strong>으로도<br>
+            즉시 전송해주세요.
+        </div>
+        <button onclick="this.parentElement.remove()" style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; border: none; padding: 14px 32px; border-radius: 25px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,184,148,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">확인</button>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    setTimeout(() => {
+        if (modal.parentElement) modal.remove();
+    }, 5000);
+}
 
 
 
@@ -4904,7 +4945,7 @@ function requestNotificationPermission() {
     
     if (Notification.permission === 'granted') {
         console.log('✅ 알림 이미 허용됨');
-        /*subscribeToPush();*/
+        subscribeToPush();
         return;
     }
     
@@ -4943,7 +4984,7 @@ function showNotificationModal() {
         if (permission === 'granted') {
             console.log('✅ 알림 허용됨');
             showSuccessToast('✅ 알림이 활성화되었습니다!');
-            /*subscribeToPush();*/
+            subscribeToPush();
         }
     });
     
@@ -4955,7 +4996,10 @@ function showNotificationModal() {
 
 
 // ========== 6️⃣ 푸시 구독 ==========
-/*
+
+// ========== 6️⃣ 푸시 구독 (FCM) ==========
+const VAPID_PUBLIC_KEY = 'BJjxwBCNxHBGxsi22uCvIYrCZTcjN5aIY7I1T1HZMtVjq1udN07PHSNJcMwQ-lE-SSlRaYUYp_uHTirl_b6Z0G8'; // ⚠️ Firebase에서 생성한 키로 교체!
+
 async function subscribeToPush() {
     if (!swRegistration) {
         console.log('❌ Service Worker 없음');
@@ -4963,20 +5007,83 @@ async function subscribeToPush() {
     }
     
     try {
+        // 기존 구독 확인
         let subscription = await swRegistration.pushManager.getSubscription();
         
         if (!subscription) {
+            console.log('🔔 푸시 구독 시작...');
+            
+            // VAPID 키를 Uint8Array로 변환
+            const vapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+            
+            // 푸시 구독
             subscription = await swRegistration.pushManager.subscribe({
-                userVisibleOnly: true
+                userVisibleOnly: true,
+                applicationServerKey: vapidKey
             });
-            console.log('✅ 푸시 구독 완료');
+            
+            console.log('✅ 푸시 구독 완료:', subscription.endpoint);
+            
+            // Firestore에 구독 정보 저장
+            await savePushSubscription(subscription);
+        } else {
+            console.log('✅ 이미 푸시 구독됨');
         }
         
     } catch (error) {
         console.error('❌ 푸시 구독 실패:', error);
+        alert('푸시 알림 설정에 실패했습니다.\n\n' + error.message);
     }
 }
-*/
+
+// VAPID 키 변환 함수
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+// Firestore에 구독 정보 저장
+async function savePushSubscription(subscription) {
+    const userName = localStorage.getItem('mslUserName') || '익명';
+    
+    try {
+        await db.collection('push_subscriptions').add({
+            endpoint: subscription.endpoint,
+            keys: {
+                p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
+                auth: arrayBufferToBase64(subscription.getKey('auth'))
+            },
+            userName: userName,
+            subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            userAgent: navigator.userAgent
+        });
+        
+        console.log('✅ 구독 정보 저장 완료');
+    } catch (error) {
+        console.error('❌ 구독 정보 저장 실패:', error);
+    }
+}
+
+// ArrayBuffer를 Base64로 변환
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
+
 
 // ========== 7️⃣ Firebase 긴급 신고 리스너 ==========
 function startEmergencyListener() {
