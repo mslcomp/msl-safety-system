@@ -4904,7 +4904,7 @@ function requestNotificationPermission() {
     
     if (Notification.permission === 'granted') {
         console.log('✅ 알림 이미 허용됨');
-        subscribeToPush();
+        /*subscribeToPush();*/
         return;
     }
     
@@ -4943,7 +4943,7 @@ function showNotificationModal() {
         if (permission === 'granted') {
             console.log('✅ 알림 허용됨');
             showSuccessToast('✅ 알림이 활성화되었습니다!');
-            subscribeToPush();
+            /*subscribeToPush();*/
         }
     });
     
@@ -4953,7 +4953,9 @@ function showNotificationModal() {
     });
 }
 
+
 // ========== 6️⃣ 푸시 구독 ==========
+/*
 async function subscribeToPush() {
     if (!swRegistration) {
         console.log('❌ Service Worker 없음');
@@ -4974,6 +4976,7 @@ async function subscribeToPush() {
         console.error('❌ 푸시 구독 실패:', error);
     }
 }
+*/
 
 // ========== 7️⃣ Firebase 긴급 신고 리스너 ==========
 function startEmergencyListener() {
