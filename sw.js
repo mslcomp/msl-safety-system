@@ -1,53 +1,161 @@
-const CACHE_NAME = 'msl-safety-v1';
+// Service Worker - MSL 안전 시스템
+const CACHE_NAME = 'msl-safety-v2';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/styles.css'
+];
 
-self.addEventListener('install', (event) => {
-    console.log('Service Worker 설치됨');
-    self.skipWaiting();
+// 설치 이벤트
+self.addEventListener('install', event => {
+  console.log('[SW] 설치 중...');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[SW] 캐시 열림');
+        return cache.addAll(urlsToCache);
+      })
+      .catch(err => {
+        console.error('[SW] 캐시 추가 실패:', err);
+      })
+  );
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker 활성화됨');
-    event.waitUntil(clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
+// 활성화 이벤트
+self.addEventListener('activate', event => {
+  console.log('[SW] 활성화 중...');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] 오래된 캐시 삭제:', cacheName);
+            return caches.delete(cacheName);
+          }
         })
-    );
+      );
+    })
+  );
+  return self.clients.claim();
 });
 
-self.addEventListener('push', (event) => {
-    const data = event.data ? event.data.json() : {};
-    const title = data.title || '긴급 알림';
-    const options = {
-        body: data.body || '긴급 상황이 발생했습니다!',
-        icon: '/msl-safety-system/msl_logo_small.jpg',
-        badge: '/msl-safety-system/msl_logo_small.jpg',
-        vibrate: [200, 100, 200],
-        requireInteraction: true
+// Fetch 이벤트
+self.addEventListener('fetch', event => {
+  // Firebase 관련 요청은 캐시하지 않음
+  if (event.request.url.includes('firebasestorage') || 
+      event.request.url.includes('firebase') ||
+      event.request.url.includes('googleapis')) {
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      })
+      .catch(err => {
+        console.error('[SW] Fetch 실패:', err);
+      })
+  );
+});
+
+// Firebase 메시징 설정 (FCM)
+let messaging = null;
+
+// Firebase SDK 동적 로드
+async function initializeFirebase() {
+  try {
+    // Firebase SDK import
+    importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+    importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
+
+    // Firebase 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxAustemE5X0pJa8wT37HrYlw3NpuztOs",
+      authDomain: "msl-safety-system-7b8b2.firebaseapp.com",
+      projectId: "msl-safety-system-7b8b2",
+      storageBucket: "msl-safety-system-7b8b2.firebasestorage.app",
+      messagingSenderId: "663726913730",
+      appId: "1:663726913730:web:bc3e5f69f2c7f5e0e1c7e6"
     };
 
-    event.waitUntil(
-        self.registration.showNotification(title, options)
-    );
+    // Firebase 초기화
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    messaging = firebase.messaging();
+    console.log('[SW] Firebase 초기화 완료');
+
+    // 백그라운드 메시지 수신
+    messaging.onBackgroundMessage((payload) => {
+      console.log('[SW] 백그라운드 메시지 수신:', payload);
+
+      const notificationTitle = payload.notification?.title || '긴급 알림';
+      const notificationOptions = {
+        body: payload.notification?.body || '새로운 알림이 있습니다.',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        tag: 'msl-notification',
+        requireInteraction: true,
+        data: payload.data
+      };
+
+      // 알림 표시
+      self.registration.showNotification(notificationTitle, notificationOptions);
+
+      // 배지 업데이트 (클라이언트에게 메시지 전송)
+      self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'REFRESH_BADGE',
+            payload: payload
+          });
+        });
+      });
+    });
+
+  } catch (error) {
+    console.error('[SW] Firebase 초기화 실패:', error);
+  }
+}
+
+// Firebase 초기화 시도
+initializeFirebase().catch(err => {
+  console.error('[SW] Firebase 초기화 오류:', err);
 });
 
-self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    event.waitUntil(
-        clients.openWindow('https://mslcomp.github.io/msl-safety-system/')
-    );
+// 알림 클릭 이벤트
+self.addEventListener('notificationclick', event => {
+  console.log('[SW] 알림 클릭:', event.notification.tag);
+  event.notification.close();
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clientList => {
+        // 이미 열린 창이 있으면 포커스
+        for (let client of clientList) {
+          if (client.url.includes('msl-safety-system') && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // 없으면 새 창 열기
+        if (self.clients.openWindow) {
+          return self.clients.openWindow('/');
+        }
+      })
+  );
 });
-```
 
----
+// 메시지 수신 (클라이언트로부터)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
-## 🎯 **테스트 절차**
-
-1. **3개 파일 수정 완료 후 Commit**
-2. **2~3분 대기 (배포)**
-3. **시크릿 모드로 접속**
-4. **F12 → Console 확인:**
-```
+console.log('[SW] Service Worker 로드 완료');
