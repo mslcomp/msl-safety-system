@@ -1,9 +1,9 @@
 {
   "name": "MSL 안전보건 전자서명 플랫폼",
   "short_name": "MSL 안전",
-  "description": "㈜엠에스엘콤프레서 안전보건 시스템",
+  "description": "(주)엠에스엘콤프레서 안전보건 시스템",
   "start_url": "/msl-safety-system/",
-  "scope": "./",
+  "scope": "/msl-safety-system/",
   "display": "standalone",
   "background_color": "#4A90E2",
   "theme_color": "#4A90E2",
@@ -22,6 +22,7 @@
       "purpose": "any maskable"
     }
   ],
+  "gcm_sender_id": "103953800507",
   "categories": ["business", "productivity"],
   "shortcuts": [
     {
