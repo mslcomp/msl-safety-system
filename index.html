@@ -5233,33 +5233,49 @@ async function updateAppBadge(count) {
 // 읽지 않은 문서 개수 계산
 async function calculateUnreadCount() {
     const userName = localStorage.getItem('mslUserName');
-    if (!userName) return 0;
+    if (!userName) {
+        console.log('⚠️ 사용자 이름 없음');
+        return 0;
+    }
     
     try {
-        // 1️⃣ 미서명 안전 문서 개수
-        const unsignedDocs = await db.collection('safety_documents')
-            .where('signatures', 'array-contains', userName)
-            .get();
+        // 1️⃣ 전체 문서와 서명 데이터 로드
+        await loadDocumentsFromFirebase();
+        await loadSignaturesFromFirebase();
         
-        const unsignedCount = unsignedDocs.docs.filter(doc => {
-            const signatures = doc.data().signatures || [];
-            return !signatures.includes(userName);
-        }).length;
+        // 2️⃣ 미서명 문서 개수 계산
+        let unsignedCount = 0;
         
-        // 2️⃣ 읽지 않은 긴급 신고 개수
-        const lastCheckedTime = localStorage.getItem('lastEmergencyCheck') || '2000-01-01';
-        const emergencyDocs = await db.collection('emergency_reports')
+        documents.forEach(doc => {
+            const docSigs = signatures.filter(s => s.documentId === doc.id);
+            const mySignature = docSigs.find(s => s.signerName === userName);
+            
+            if (!mySignature) {
+                unsignedCount++;
+            }
+        });
+        
+        // 3️⃣ 읽지 않은 긴급 신고 개수
+        const lastCheckedTime = localStorage.getItem('lastEmergencyCheck') || '2000-01-01T00:00:00Z';
+        
+        const emergencySnapshot = await db.collection('emergency_reports')
             .where('status', '==', 'pending')
-            .orderBy('reportedAt', 'desc')
             .get();
         
-        const unreadEmergencies = emergencyDocs.docs.filter(doc => {
-            const reportedAt = doc.data().reportedAt?.toDate();
-            return reportedAt && reportedAt > new Date(lastCheckedTime);
-        }).length;
+        let unreadEmergencies = 0;
+        
+        emergencySnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.reportedAt) {
+                const reportedAt = data.reportedAt.toDate();
+                if (reportedAt > new Date(lastCheckedTime)) {
+                    unreadEmergencies++;
+                }
+            }
+        });
         
         const totalUnread = unsignedCount + unreadEmergencies;
-        console.log(`📊 미서명: ${unsignedCount}, 미확인 긴급신고: ${unreadEmergencies}`);
+        console.log(`📊 미서명: ${unsignedCount}, 미확인 긴급신고: ${unreadEmergencies}, 총: ${totalUnread}`);
         
         return totalUnread;
         
@@ -5268,6 +5284,7 @@ async function calculateUnreadCount() {
         return 0;
     }
 }
+
 
 // 배지 새로고침
 async function refreshBadge() {
