@@ -16,7 +16,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/msl-safety-system/msl_logo_192.png",
+      "src": "/msl-safety-system/msl_logo_512.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
