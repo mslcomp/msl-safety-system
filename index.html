@@ -3230,6 +3230,7 @@ if (allChecklistItems.length > 0) {
     showSuccessMessage(signerName);
     
     loadPendingDocuments();
+    setTimeout(refreshBadge, 1000);
                 if (isAdmin) {
                     await loadSignaturesFromFirebase();
                     loadDistributedDocuments();
@@ -5098,6 +5099,9 @@ function startEmergencyListener() {
                     console.log('🚨 긴급 신고:', data);
                     showEmergencyAlert(data);
                     change.doc.ref.update({ notified: true });
+                     // ⭐ 배지 업데이트 추가
+                    setTimeout(refreshBadge, 500);
+
                 }
             });
         });
@@ -5120,15 +5124,16 @@ function showEmergencyAlert(data) {
         animation: shake 0.5s;
     `;
     
-    alert.innerHTML = `
+       alert.innerHTML = `
         <div style="text-align: center; color: white;">
             <div style="font-size: 80px; margin-bottom: 20px;">🚨</div>
-            <h2 style="margin: 0 0 16px 0; font-size: 28px; font-weight: 900;">긴급 신고 발생!</h2>
-            <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-                <div style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">신고자: ${data.reporter}</div>
-                <div style="font-size: 14px; line-height: 1.7;">${data.detail}</div>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" style="background: white; color: #ff6b6b; border: none; padding: 16px 32px; border-radius: 30px; font-size: 16px; font-weight: 800; cursor: pointer;">확인</button>
+            <h2>긴급 신고 발생!</h2>
+            <!-- ... -->
+            <button onclick="
+                localStorage.setItem('lastEmergencyCheck', new Date().toISOString());
+                this.parentElement.parentElement.remove();
+                refreshBadge();
+            " style="...">확인</button>
         </div>
     `;
     
@@ -5200,6 +5205,88 @@ setTimeout(() => {
         console.log('  2. 또는 주소창 끝의 ⊕ 아이콘 클릭');
     }
 }, 5000);
+
+// ========== 🔔 앱 배지 알림 시스템 ==========
+
+let unreadCount = 0; // 전역 변수
+
+// 배지 업데이트 함수
+async function updateAppBadge(count) {
+    if (!('setAppBadge' in navigator)) {
+        console.log('⚠️ 배지 API 미지원 (데스크탑 또는 구버전)');
+        return;
+    }
+    
+    try {
+        if (count > 0) {
+            await navigator.setAppBadge(count);
+            console.log(`🔔 앱 배지 업데이트: ${count}`);
+        } else {
+            await navigator.clearAppBadge();
+            console.log('✅ 앱 배지 제거');
+        }
+    } catch (error) {
+        console.error('❌ 배지 업데이트 실패:', error);
+    }
+}
+
+// 읽지 않은 문서 개수 계산
+async function calculateUnreadCount() {
+    const userName = localStorage.getItem('mslUserName');
+    if (!userName) return 0;
+    
+    try {
+        // 1️⃣ 미서명 안전 문서 개수
+        const unsignedDocs = await db.collection('safety_documents')
+            .where('signatures', 'array-contains', userName)
+            .get();
+        
+        const unsignedCount = unsignedDocs.docs.filter(doc => {
+            const signatures = doc.data().signatures || [];
+            return !signatures.includes(userName);
+        }).length;
+        
+        // 2️⃣ 읽지 않은 긴급 신고 개수
+        const lastCheckedTime = localStorage.getItem('lastEmergencyCheck') || '2000-01-01';
+        const emergencyDocs = await db.collection('emergency_reports')
+            .where('status', '==', 'pending')
+            .orderBy('reportedAt', 'desc')
+            .get();
+        
+        const unreadEmergencies = emergencyDocs.docs.filter(doc => {
+            const reportedAt = doc.data().reportedAt?.toDate();
+            return reportedAt && reportedAt > new Date(lastCheckedTime);
+        }).length;
+        
+        const totalUnread = unsignedCount + unreadEmergencies;
+        console.log(`📊 미서명: ${unsignedCount}, 미확인 긴급신고: ${unreadEmergencies}`);
+        
+        return totalUnread;
+        
+    } catch (error) {
+        console.error('❌ 읽지 않은 개수 계산 실패:', error);
+        return 0;
+    }
+}
+
+// 배지 새로고침
+async function refreshBadge() {
+    unreadCount = await calculateUnreadCount();
+    await updateAppBadge(unreadCount);
+}
+
+// 앱 포커스 시 배지 새로고침
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        console.log('👀 앱 활성화 - 배지 새로고침');
+        refreshBadge();
+    }
+});
+
+// 페이지 로드 시 배지 업데이트
+window.addEventListener('load', () => {
+    setTimeout(refreshBadge, 2000); // 2초 후 실행
+});
 
 </script>
 </body>
