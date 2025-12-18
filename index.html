@@ -24,15 +24,6 @@
     <!-- 파비콘 -->
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/mslcomp/msl-safety-system/main/msl_logo_small.jpg">
 
-    <!-- PWA 설정 -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#4A90E2">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MSL 안전">
-<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/mslcomp/msl-safety-system/main/msl_logo_small.jpg">
-
     
     <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -274,25 +265,6 @@ function toggleEditAttachmentInput() {
     }
 }
 
-// ⭐ 생성 모달의 첨부 타입 전환 함수 (누락된 함수!)
-function toggleAttachmentInput() {
-    const type = document.getElementById('attachmentType')?.value;
-    if (!type) return;
-    
-    const gdriveInput = document.getElementById('gdriveInput');
-    const linkInput = document.getElementById('linkInput');
-    
-    if (gdriveInput) gdriveInput.style.display = type === 'gdrive' ? 'block' : 'none';
-    if (linkInput) linkInput.style.display = type === 'link' ? 'block' : 'none';
-    
-    if (type === 'none') {
-        const gdriveLink = document.getElementById('gdriveLink');
-        const externalLink = document.getElementById('externalLink');
-        if (gdriveLink) gdriveLink.value = '';
-        if (externalLink) externalLink.value = '';
-    }
-}
-
 </script>
 
 <script>
@@ -350,98 +322,30 @@ function scrollToTBM() {
 </script>
 
 
-
-<script>
-// ========== ❄️ 눈 내리는 효과 ==========
-function createSnowflakes() {
-    const snowflakesContainer = document.getElementById('snowflakes');
-    const snowflakeSymbols = ['❄', '❅', '❆', '✻', '✼', '❉'];
-    const numberOfSnowflakes = 50; // 눈송이 개수
-    
-    for (let i = 0; i < numberOfSnowflakes; i++) {
-        const snowflake = document.createElement('div');
-        snowflake.className = 'snowflake';
-        snowflake.textContent = snowflakeSymbols[Math.floor(Math.random() * snowflakeSymbols.length)];
-        
-        // 랜덤 위치
-        snowflake.style.left = Math.random() * 100 + '%';
-        
-        // 랜덤 크기
-        const size = Math.random() * 15 + 10; // 10px ~ 25px
-        snowflake.style.fontSize = size + 'px';
-        
-        // 랜덤 애니메이션 지속 시간 (5초 ~ 15초)
-        const duration = Math.random() * 10 + 5;
-        snowflake.style.animationDuration = duration + 's';
-        
-        // 랜덤 시작 지연
-        snowflake.style.animationDelay = Math.random() * 5 + 's';
-        
-        // 랜덤 투명도
-        snowflake.style.opacity = Math.random() * 0.6 + 0.4; // 0.4 ~ 1.0
-        
-        snowflakesContainer.appendChild(snowflake);
-    }
-}
-
-// 페이지 로드 시 눈송이 생성
-window.addEventListener('load', () => {
-    createSnowflakes();
-    console.log('🎄 Merry Christmas! 눈이 내립니다 ❄️');
-});
-
-// ========== 🎅 크리스마스 배너 자동 숨김 (선택사항) ==========
-// 5초 후 작게 접기 (원하면 주석 제거)
-/*
-setTimeout(() => {
-    const banner = document.getElementById('christmasBanner');
-    if (banner) {
-        banner.style.transition = 'all 0.5s ease';
-        banner.style.padding = '8px 16px';
-        banner.querySelector('span:nth-child(2)').style.fontSize = '14px';
-    }
-}, 5000);
-*/
-</script>
-
-
     <style>
-/* ========== 1. 기본 리셋 ========== */
-* {
+       * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
-    margin: 0;
-    padding: 0;
-}
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
     background: linear-gradient(180deg, #F7F9FC 0%, #EDF2F7 100%);
     min-height: 100vh;
-    padding-top: 45px;
+    padding: 0;
 }
 
-/* ========== 2. 컨테이너 (중앙 정렬) ========== */
 .container {
-    width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 0;
     background: transparent;
     border-radius: 0;
     box-shadow: none;
     overflow: visible;
 }
 
-/* ========== 3. 헤더 ========== */
 .header {
     background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
     color: white;
@@ -484,7 +388,6 @@ body {
     transform: scale(1.05);
 }
 
-/* ========== 4. 네비게이션 탭 ========== */
 .nav-tabs {
     display: flex;
     background: white;
@@ -527,7 +430,6 @@ body {
     pointer-events: none;
 }
 
-/* ========== 5. 탭 콘텐츠 ========== */
 .tab-content {
     display: none;
     padding: 20px 16px;
@@ -538,7 +440,6 @@ body {
     display: block;
 }
 
-/* ========== 6. 카드 ========== */
 .card {
     background: white;
     border-radius: 16px;
@@ -555,7 +456,6 @@ body {
     font-weight: 700;
 }
 
-/* ========== 7. 폼 요소 ========== */
 .form-group {
     margin-bottom: 16px;
 }
@@ -585,7 +485,6 @@ body {
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
-/* ========== 8. 버튼 ========== */
 .btn {
     padding: 14px 20px;
     border: none;
@@ -624,7 +523,6 @@ body {
     transform: translateY(0);
 }
 
-/* ========== 9. 문서 카드 ========== */
 .document-card {
     border: 1px solid #E2E8F0;
     border-radius: 16px;
@@ -654,7 +552,6 @@ body {
     line-height: 1.6;
 }
 
-/* ========== 10. 서명 패드 ========== */
 .signature-pad {
     border: 2px dashed #CBD5E0;
     width: 100%;
@@ -666,7 +563,6 @@ body {
     touch-action: none;
 }
 
-/* ========== 11. 모달 ========== */
 .modal {
     display: none;
     position: fixed;
@@ -725,14 +621,33 @@ body {
     transform: scale(1.1);
 }
 
-/* ========== 12. 로딩 ========== */
 .loading {
     text-align: center;
     padding: 40px;
     color: #718096;
 }
 
-/* ========== 13. 애니메이션 ========== */
+@media (max-width: 480px) {
+    .header {
+        padding: 24px 16px 20px 16px;
+    }
+    
+    .container {
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    .nav-tab {
+        font-size: 13px;
+        padding: 14px 8px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 12px;
+    }
+}
+
 @keyframes highlight {
     0%, 100% {
         transform: scale(1);
@@ -756,28 +671,62 @@ body {
     }
 }
 
-@keyframes checkboxPulse {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
-    }
-    50% {
-        transform: scale(1.1);
-        box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
-    }
-}
 
-@keyframes snowfall {
-    0% {
-        transform: translateY(-10vh) translateX(0) rotate(0deg);
-        opacity: 1;
+    /* 가로 스크롤 방지 */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
     }
-    100% {
-        transform: translateY(110vh) translateX(50px) rotate(360deg);
-        opacity: 0.3;
+    
+    /* 모달도 고정 */
+    .modal {
+        overflow-x: hidden;
+        width: 100%;
     }
-}
+    
+    /* 기존 스타일들... */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
+
+
+    * {
+        box-sizing: border-box;
+    }
+    
+    html, body {
+        overflow-x: hidden;
+        max-width: 100vw;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        position: relative;
+    }
+    
+    body {
+        overflow-x: hidden !important;
+    }
+    
+    /* 모든 직접 자식 요소 제한 */
+    body > * {
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+    
+    /* 모달 특별 처리 */
+    .modal,
+    .modal > *,
+    #signatureSection,
+    #documentToSign {
+        overflow-x: hidden !important;
+        max-width: 100% !important;
+    }
+
+    /* 버튼 펄스 효과 */
 @keyframes buttonPulse {
     0% {
         box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 0 rgba(102,126,234,0.7);
@@ -790,6 +739,7 @@ body {
     }
 }
 
+/* 깜빡이는 테두리 */
 @keyframes borderGlow {
     0%, 100% {
         border-color: #667eea;
@@ -801,6 +751,7 @@ body {
     }
 }
 
+/* 반짝이는 빛 효과 */
 @keyframes shine {
     0% {
         transform: translateX(-100%) translateY(-100%) rotate(45deg);
@@ -809,67 +760,78 @@ body {
         transform: translateX(100%) translateY(100%) rotate(45deg);
     }
 }
+</style>
 
-.snowflake {
-    position: absolute;
-    color: white;
-    font-size: 20px;
-    user-select: none;
-    pointer-events: none;
-    text-shadow: 0 0 5px rgba(255,255,255,0.8);
-    animation: snowfall linear infinite;
-}
 
-/* ========== 14. 모바일 최적화 ========== */
-@media (max-width: 768px) {
-    body {
-        padding-top: 42px;
+
+
+   <style>
+    /* 기존 스타일들... */
+    
+    /* ⬇️⬇️⬇️ 여기에 추가! ⬇️⬇️⬇️ */
+    
+    /* 체크박스 펄스 효과 */
+    @keyframes checkboxPulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+        }
+        50% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+        }
+    }
+
+    .checkbox-pulse {
+        animation: checkboxPulse 1.5s infinite !important;
+        border-color: #FF6B6B !important;
+    }
+
+    /* 항목 강조 효과 */
+    @keyframes highlightItem {
+        0%, 100% {
+            background-color: white;
+        }
+        50% {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+    }
+
+    .highlight-item {
+        animation: highlightItem 1.5s ease-in-out 3;
+        border-left: 4px solid #FF6B6B !important;
+        padding-left: 12px !important;
+    }
+
+    /* 체크박스 기본 스타일 강화 */
+    .checklist-item input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+        cursor: pointer;
+        accent-color: #06D6A0;
+        transition: all 0.3s ease;
+    }
+
+    .checklist-item input[type="checkbox"]:hover {
+        transform: scale(1.1);
+    }
+
+    /* 체크박스 체크 안 된 상태 강조 */
+    .checklist-item input[type="checkbox"]:not(:checked) {
+        border: 2px solid #FF6B6B;
+        border-radius: 4px;
     }
     
-    .container {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 0;
-        margin: 0 auto;
+    /* 화살표 애니메이션 */
+    @keyframes bounceArrow {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
     }
-    
-    .header {
-        padding: 24px 16px 20px 16px;
-        border-radius: 0;
-    }
-    
-    .nav-tab {
-        font-size: 13px;
-        padding: 14px 8px;
-    }
-    
-    .tab-content {
-        padding: 0;
-    }
-    
-    .card {
-        margin-left: 16px;
-        margin-right: 16px;
-        margin-bottom: 16px;
-    }
-    
-    .modal-content {
-        width: 95%;
-        margin: 12px;
-    }
-    
-    #temperatureMonitor,
-    #temperatureMonitor > div {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    #sign.tab-content.active {
-        padding: 0 !important;
-    }
-}
 </style>
 
 
@@ -877,41 +839,9 @@ body {
 
 
 
-
 </head>
-
 <body>
-    
-    <body style="overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0;">       
-        <!-- 🎄 크리스마스 배너 -->
-
-
-        <div id="christmasBanner" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(90deg, #c41e3a 0%, #165b33 50%, #c41e3a 100%);
-    color: white;
-    text-align: center;
-    padding: 8px 10px;
-    font-weight: bold;
-    z-index: 9999;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    animation: slideDown 0.8s ease-out;
-">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; letter-spacing: 0.5px;">
-        <span style="font-size: 16px;">🎅</span>
-        <span style="white-space: nowrap;">Merry Christmas!</span>
-        <span style="font-size: 16px;">🎄</span>
-        <span style="white-space: nowrap;">안전한 연말 보내세요!</span>
-        <span style="font-size: 16px;">🎁</span>
-    </div>
-</div>
-
-<!-- ❄️ 눈송이 컨테이너 -->
-<div id="snowflakes" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden;"></div>
- 
+    <body style="overflow-x: hidden; width: 100%; position: relative; margin: 0; padding: 0;">
     <div class="container">
         <div class="header">
             <div style="text-align: center; padding: 8px 0;">
@@ -1011,10 +941,6 @@ body {
             messagingSenderId: "601750720539",
             appId: "1:601750720539:web:1d0839177beb893265268be"
         };
-        
-
-
-
         
         firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -3230,7 +3156,6 @@ if (allChecklistItems.length > 0) {
     showSuccessMessage(signerName);
     
     loadPendingDocuments();
-    setTimeout(refreshBadge, 1000);
                 if (isAdmin) {
                     await loadSignaturesFromFirebase();
                     loadDistributedDocuments();
@@ -4069,11 +3994,11 @@ function copyReminderMessage(message) {
 
 
 
-// ========== 🌡️❄️🌫️ 온도+공기질 동적 배경 날씨 시스템 ==========
+// ========== 🌡️ 포천시 완전 자동 업데이트 날씨 시스템 ==========
 
 const KMA_API_KEY = '0c49f6997308d25cba132fa389234a006a802ccfbc96afa2f130ddea39914d95';
 
-// 위경도 → 격자 좌표 변환
+// ⭐ 위경도 → 격자 좌표 변환 함수 (기상청 공식)
 function convertToGrid(lat, lon) {
     const RE = 6371.00877;
     const GRID = 5.0;
@@ -4114,11 +4039,37 @@ function convertToGrid(lat, lon) {
     return { nx: x, ny: y };
 }
 
+// ⭐ 일출/일몰 시간 계산 (포천시 기준)
+function getSunriseSunset() {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    
+    const sunData = {
+        1:  { sunrise: '07:45', sunset: '17:30' },
+        2:  { sunrise: '07:25', sunset: '18:00' },
+        3:  { sunrise: '06:45', sunset: '18:30' },
+        4:  { sunrise: '06:00', sunset: '19:00' },
+        5:  { sunrise: '05:30', sunset: '19:30' },
+        6:  { sunrise: '05:15', sunset: '19:50' },
+        7:  { sunrise: '05:30', sunset: '19:45' },
+        8:  { sunrise: '05:50', sunset: '19:15' },
+        9:  { sunrise: '06:15', sunset: '18:30' },
+        10: { sunrise: '06:40', sunset: '17:45' },
+        11: { sunrise: '07:10', sunset: '17:15' },
+        12: { sunrise: '07:35', sunset: '17:10' }
+    };
+    
+    return sunData[month];
+}
+
 const POCHEON_LAT = 37.8951;
 const POCHEON_LON = 127.2008;
 const POCHEON_GRID = convertToGrid(POCHEON_LAT, POCHEON_LON);
 const POCHEON_NX = POCHEON_GRID.nx;
 const POCHEON_NY = POCHEON_GRID.ny;
+
+console.log('📍 포천시청 좌표:', POCHEON_LAT, POCHEON_LON);
+console.log('📍 격자 좌표: NX=' + POCHEON_NX + ', NY=' + POCHEON_NY);
 
 const CORS_PROXIES = [
     'https://corsproxy.io/?',
@@ -4131,128 +4082,6 @@ let currentHumidity = null;
 let currentWindSpeed = null;
 let currentRainfall = null;
 
-// ⭐ 미세먼지 데이터 (실제로는 API에서 받아옴)
-let currentAirQuality = {
-    pm10: 45,  // 미세먼지
-    pm25: 25,  // 초미세먼지
-    grade: '보통'
-};
-
-// ========== 🎨 온도별 배경 설정 ==========
-function getTemperatureBackground(temp) {
-    if (temp >= 30) {
-        // 🔥 폭염
-        return {
-            gradient: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)',
-            pattern: 'radial-gradient(circle at 20% 50%, rgba(255, 200, 0, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 100, 0, 0.2) 0%, transparent 50%)',
-            emoji: '🔥',
-            textColor: 'white'
-        };
-    } else if (temp >= 20) {
-        // 🌤️ 따뜻함
-        return {
-            gradient: 'linear-gradient(135deg, #ffa500 0%, #ffcc00 100%)',
-            pattern: 'radial-gradient(circle at 30% 30%, rgba(255, 220, 100, 0.3) 0%, transparent 50%)',
-            emoji: '🌤️',
-            textColor: 'white'
-        };
-    } else if (temp >= 10) {
-        // ☁️ 선선함
-        return {
-            gradient: 'linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%)',
-            pattern: 'radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
-            emoji: '☁️',
-            textColor: 'white'
-        };
-    } else if (temp >= 0) {
-        // 🌨️ 추움
-        return {
-            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            pattern: 'radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 40%), radial-gradient(circle at 80% 60%, rgba(200, 220, 255, 0.1) 0%, transparent 50%)',
-            emoji: '🌨️',
-            textColor: 'white'
-        };
-    } else {
-        // ❄️ 한파 (눈송이 패턴)
-        return {
-            gradient: 'linear-gradient(135deg, #2d3561 0%, #1a1f3a 100%)',
-            pattern: `url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 10 L30 20 M30 40 L30 50 M10 30 L20 30 M40 30 L50 30 M18 18 L24 24 M36 36 L42 42 M42 18 L36 24 M24 36 L18 42' stroke='rgba(255,255,255,0.3)' stroke-width='2' fill='none'/%3E%3C/svg%3E")`,
-            emoji: '❄️',
-            textColor: 'white'
-        };
-    }
-}
-
-// ========== 🌫️ 미세먼지 등급 설정 ==========
-function getAirQualityInfo(pm10) {
-    if (pm10 <= 30) {
-        return {
-            emoji: '😊',
-            status: '좋음',
-            color: '#00b894',
-            bgColor: 'rgba(0, 184, 148, 0.1)'
-        };
-    } else if (pm10 <= 80) {
-        return {
-            emoji: '😐',
-            status: '보통',
-            color: '#ffa500',
-            bgColor: 'rgba(255, 165, 0, 0.1)'
-        };
-    } else if (pm10 <= 150) {
-        return {
-            emoji: '😷',
-            status: '나쁨',
-            color: '#ff6b6b',
-            bgColor: 'rgba(255, 107, 107, 0.1)'
-        };
-    } else {
-        return {
-            emoji: '😱',
-            status: '매우나쁨',
-            color: '#d63031',
-            bgColor: 'rgba(214, 48, 49, 0.1)'
-        };
-    }
-}
-
-// ========== 🎭 온도+공기질 조합 배경 ==========
-function getCombinedBackground(temp, pm10) {
-    const tempBg = getTemperatureBackground(temp);
-    const airInfo = getAirQualityInfo(pm10);
-    
-    // 특수 조합 1: 한파 + 미세먼지 나쁨
-    if (temp < 5 && pm10 > 80) {
-        return {
-            gradient: 'linear-gradient(135deg, #485563 0%, #29323c 100%)',
-            pattern: 'radial-gradient(circle at 40% 60%, rgba(150, 150, 150, 0.4) 0%, transparent 50%)',
-            emoji: '❄️😷',
-            description: '한파 • 미세먼지 ' + airInfo.status,
-            textColor: 'white',
-            airInfo: airInfo
-        };
-    }
-    
-    // 특수 조합 2: 폭염 + 미세먼지 나쁨
-    if (temp > 25 && pm10 > 80) {
-        return {
-            gradient: 'linear-gradient(135deg, #f2709c 0%, #ff9472 100%)',
-            pattern: 'radial-gradient(circle at 50% 50%, rgba(255, 200, 150, 0.3) 0%, transparent 50%)',
-            emoji: '🔥😷',
-            description: '폭염 • 미세먼지 ' + airInfo.status,
-            textColor: 'white',
-            airInfo: airInfo
-        };
-    }
-    
-    // 일반 조합: 온도 배경 + 공기질 정보
-    return {
-        ...tempBg,
-        airInfo: airInfo
-    };
-}
-
-// 기상청 API 관련 함수들 (동일)
 function getKMADateTime() {
     const now = new Date();
     const year = now.getFullYear();
@@ -4270,12 +4099,16 @@ function getKMADateTime() {
             const yYear = yesterday.getFullYear();
             const yMonth = String(yesterday.getMonth() + 1).padStart(2, '0');
             const yDay = String(yesterday.getDate()).padStart(2, '0');
-            return { baseDate: `${yYear}${yMonth}${yDay}`, baseTime: '2300' };
+            return {
+                baseDate: `${yYear}${yMonth}${yDay}`,
+                baseTime: '2300'
+            };
         }
     }
     
     const baseDate = `${year}${month}${day}`;
     const baseTime = `${String(hour).padStart(2, '0')}00`;
+    
     return { baseDate, baseTime };
 }
 
@@ -4298,9 +4131,14 @@ async function fetchTemperature() {
         `&ny=${POCHEON_NY}` +
         `&dataType=JSON`;
     
+    console.log('🔍 기상청 API - 포천시 날씨 조회 중...');
+    console.log('📅 조회시각:', baseDate, baseTime);
+    
     for (let i = 0; i < CORS_PROXIES.length; i++) {
         try {
             const proxyUrl = CORS_PROXIES[i];
+            console.log(`🔄 시도 ${i + 1}/${CORS_PROXIES.length}: ${proxyUrl ? proxyUrl : '직접 연결'}`);
+            
             const data = await fetchTemperatureWithProxy(proxyUrl, API_URL);
             
             if (data.response && data.response.header.resultCode === '00') {
@@ -4317,6 +4155,11 @@ async function fetchTemperature() {
                     currentWindSpeed = windSpeedData ? parseFloat(windSpeedData.obsrValue) : 1.0;
                     currentRainfall = rainfallData ? parseFloat(rainfallData.obsrValue) : 0;
                     
+                    console.log('✅ 포천시 실제 온도:', currentTemperature + '°C');
+                    console.log('💧 습도:', currentHumidity + '%');
+                    console.log('💨 풍속:', currentWindSpeed + 'm/s');
+                    console.log('🌧️ 강수량:', currentRainfall + 'mm');
+                    
                     return {
                         temp: currentTemperature,
                         humidity: currentHumidity,
@@ -4326,16 +4169,21 @@ async function fetchTemperature() {
                 }
             }
         } catch (error) {
+            console.warn(`❌ 프록시 ${i + 1} 실패:`, error.message);
             if (i < CORS_PROXIES.length - 1) continue;
         }
     }
-    throw new Error('API 조회 실패');
+    
+    throw new Error('모든 프록시 시도 실패');
 }
 
 async function fetchTemperatureWithFallback() {
     try {
         return await fetchTemperature();
     } catch (error) {
+        console.error('❌ 모든 날씨 조회 실패:', error.message);
+        console.log('🔧 시뮬레이션 모드로 전환합니다.');
+        
         const now = new Date();
         const hour = now.getHours();
         
@@ -4427,13 +4275,10 @@ function getSafetyGuide(temp) {
     }
 }
 
-// ========== 🎨 HTML 생성 (동적 배경 적용) ==========
 function generateTemperatureHTML(data) {
     const guide = getSafetyGuide(data.temp);
     const feelsLike = data.temp - 2;
-    
-    const background = getCombinedBackground(data.temp, currentAirQuality.pm10);
-    
+    const sunTimes = getSunriseSunset();
     const now = new Date();
     const updateTime = now.toLocaleString('ko-KR', { 
         month: '2-digit', 
@@ -4443,82 +4288,93 @@ function generateTemperatureHTML(data) {
         minute: '2-digit'
     });
     
-   return `
-<div style="background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0;">
-
-
-
+    return `
+<div style="margin: -20px -20px 24px -20px; background: white; padding: 0; position: relative; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
     
-    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.2); background: ${background.gradient}; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: ${background.pattern}; opacity: 0.8;"></div>
-        <div style="position: absolute; top: -5px; right: 15px; font-size: 50px; opacity: 0.2; z-index: 0;">${background.emoji}</div>
-        
-        <div style="position: relative; z-index: 1;">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span style="font-size: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">🌍</span>
-                <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: ${background.textColor}; letter-spacing: -0.3px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">경기 포천시 설운동</h2>
+    <div style="padding: 20px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">🌍</span>
+            <div>
+                <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #333;">경기 포천시 설운동</h3>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #888;">주요지명검색: 이마트 포천점</p>
             </div>
-            
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.95); font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
-                    주요지명: 이마트 포천점
-                </p>
-                <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.3); flex-shrink: 0;">
-                    <span style="font-size: 16px;">${background.airInfo.emoji}</span>
-                    <span style="font-size: 12px; color: white; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">미세먼지 ${background.airInfo.status}</span>
-                </div>
-            </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button style="background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">⭐</button>
+            <button style="background: #f5f5f5; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;">?</button>
         </div>
     </div>
     
-    <div style="padding: 10px 20px; background: #f8f9fa; text-align: right;">
-        <span style="font-size: 13px; color: #666;">🕐 ${updateTime} 현재</span>
+    <div style="padding: 12px 24px; background: #f8f9fa; text-align: right;">
+        <span style="font-size: 12px; color: #666;">🕐 ${updateTime} 현재</span>
     </div>
     
-    <div style="padding: 30px 20px; text-align: center; background: linear-gradient(180deg, #f8f9fa 0%, white 50%);">
-        <div style="font-size: 72px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 10px;">
+    <div style="padding: 32px 24px; text-align: center; background: linear-gradient(180deg, #f8f9fa 0%, white 50%);">
+        <div style="font-size: 72px; font-weight: 900; color: #333; line-height: 1; margin-bottom: 8px;">
             ${data.temp.toFixed(1)}<span style="font-size: 32px; font-weight: 700;">°C</span>
         </div>
-        <div style="font-size: 16px; color: #666; margin-bottom: 14px;">
+        <div style="font-size: 16px; color: #666; margin-bottom: 16px;">
             체감 <span style="font-weight: 700; color: #ff6b6b;">${feelsLike.toFixed(1)}°C</span> 🌡️
         </div>
-        <div style="display: inline-block; background: ${guide.statusColor}; color: white; padding: 8px 18px; border-radius: 20px; font-size: 15px; font-weight: 700;">
+        <div style="display: inline-block; background: ${guide.statusColor}; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700;">
             ${guide.statusEmoji} ${guide.message}
         </div>
     </div>
     
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #f0f0f0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
-        <div style="background: white; padding: 16px 10px; text-align: center;">
-            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">🌫️ 미세먼지</div>
-            <div style="font-size: 20px; font-weight: 700; color: ${background.airInfo.color};">${currentAirQuality.pm10}</div>
-        </div>
-        <div style="background: white; padding: 16px 10px; text-align: center;">
-            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">💧 습도</div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #f0f0f0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;">
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">💧 습도</div>
             <div style="font-size: 20px; font-weight: 700; color: #333;">${data.humidity}%</div>
         </div>
-        <div style="background: white; padding: 16px 10px; text-align: center;">
-            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">💨 바람</div>
-            <div style="font-size: 20px; font-weight: 700; color: #333;">북${data.windSpeed}</div>
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">💨 바람</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">북 ${data.windSpeed}m/s</div>
         </div>
-        <div style="background: white; padding: 16px 10px; text-align: center;">
-            <div style="font-size: 12px; color: #888; margin-bottom: 6px; white-space: nowrap;">🌧️ 강수</div>
-            <div style="font-size: 20px; font-weight: 700; color: #333;">${data.rainfall === 0 ? '-' : data.rainfall}mm</div>
+        <div style="background: white; padding: 20px; text-align: center;">
+            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">🌧️ 1시간강수량</div>
+            <div style="font-size: 20px; font-weight: 700; color: #333;">${data.rainfall === 0 ? '-' : data.rainfall} mm</div>
         </div>
     </div>
     
-    <div style="padding: 24px 20px 100px 20px; background: linear-gradient(180deg, #fff5f5 0%, #fff 100%); border-top: 3px solid ${guide.statusColor};">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-            <span style="font-size: 22px;">⚠️</span>
-            <h4 style="margin: 0; color: #333; font-size: 18px; font-weight: 800;">안전관리 지침</h4>
+    <div style="padding: 20px 24px; background: white; display: flex; gap: 40px; justify-content: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🌅</span>
+            <div>
+                <div style="font-size: 11px; color: #888;">일출</div>
+                <div style="font-size: 14px; font-weight: 700; color: #333;">${sunTimes.sunrise}</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🌆</span>
+            <div>
+                <div style="font-size: 11px; color: #888;">일몰</div>
+                <div style="font-size: 14px; font-weight: 700; color: #333;">${sunTimes.sunset}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="padding: 24px; background: #f8f9fa; border-top: 8px solid #f0f0f0;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            <span style="font-size: 20px;">⚠️</span>
+            <h4 style="margin: 0; color: #333; font-size: 16px; font-weight: 800;">안전관리 지침</h4>
         </div>
         <div style="display: grid; gap: 12px;">
             ${guide.guides.map((g, idx) => `
-                <div style="display: flex; align-items: start; gap: 12px; padding: 16px; background: white; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                    <span style="color: ${guide.statusColor}; font-weight: 900; font-size: 16px; flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: ${guide.statusColor}15; border-radius: 50%;">✓</span>
-                    <span style="color: #333; font-size: 15px; line-height: 1.6; font-weight: 600; word-break: keep-all;">${g}</span>
+                <div style="display: flex; align-items: start; gap: 10px; padding: 14px; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                    <span style="color: ${guide.statusColor}; font-weight: 900; font-size: 16px; flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: ${guide.statusColor}15; border-radius: 50%;">✓</span>
+                    <span style="color: #333; font-size: 14px; line-height: 1.6; font-weight: 600;">${g}</span>
                 </div>
             `).join('')}
         </div>
+    </div>
+    
+    <div style="padding: 16px 24px; background: white; display: flex; gap: 12px;">
+        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
+            🗺️ 날씨해설 바로가기
+        </button>
+        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
+            📊 강수 제공정보
+        </button>
     </div>
 </div>
 `;
@@ -4546,765 +4402,6 @@ setTimeout(() => {
 }, 500);
 */
 
-// ========== 🎨 배경 조합 예시 ==========
-/*
-현재 4.3°C + 미세먼지 45 (보통)
-→ 배경: 🌨️ 보라-파랑 그라데이션
-→ 뱃지: 😐 미세먼지 보통
-
--5°C + 미세먼지 100 (나쁨)
-→ 배경: ❄️😷 회색-파랑 (탁한 느낌)
-→ 뱃지: 😷 미세먼지 나쁨
-
-32°C + 미세먼지 90 (나쁨)
-→ 배경: 🔥😷 핑크-주황 (답답한 느낌)
-→ 뱃지: 😷 미세먼지 나쁨
-*/
-
     </script>
-    <!-- 🚨 긴급 신고 플로팅 버튼 -->
-<div style="position: fixed; bottom: 20px; right: 20px; z-index: 9998;">
-    <button onclick="reportEmergency()" style="
-        background: linear-gradient(135deg, #ff6b6b, #ee5a6f); 
-        color: white; 
-        border: none; 
-        width: 70px; 
-        height: 70px; 
-        border-radius: 50%; 
-        font-size: 28px; 
-        cursor: pointer; 
-        box-shadow: 0 8px 24px rgba(255,107,107,0.5); 
-        animation: emergencyPulse 2s infinite;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s;
-    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-        🚨
-    </button>
-</div>
-
-<style>
-@keyframes emergencyPulse {
-    0%, 100% { 
-        transform: scale(1); 
-        box-shadow: 0 8px 24px rgba(255,107,107,0.5); 
-    }
-    50% { 
-        transform: scale(1.05); 
-        box-shadow: 0 12px 32px rgba(255,107,107,0.7); 
-    }
-}
-</style>
-
-
-
-
-
-<script>
-function reportEmergency() {
-    const modal = document.createElement('div');
-    modal.className = 'modal show';
-    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
-    
-    modal.innerHTML = `
-        <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.3s ease-out;">
-            <div style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f); padding: 30px 24px; text-align: center; position: relative;">
-                <div style="font-size: 60px; margin-bottom: 12px; animation: shake 0.5s;">🚨</div>
-                <h2 style="margin: 0; color: white; font-size: 24px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">긴급 신고</h2>
-                <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.95); font-size: 14px; font-weight: 600;">Emergency Report</p>
-            </div>
-            
-            <div style="padding: 24px;">
-                <div style="background: linear-gradient(135deg, #fff3cd, #ffe8a1); padding: 16px; border-radius: 12px; border-left: 4px solid #ffc107; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(255,193,7,0.2);">
-                    <div style="display: flex; align-items: start; gap: 10px;">
-                        <span style="font-size: 20px; flex-shrink: 0;">⚠️</span>
-                        <div style="font-size: 13px; color: #856404; line-height: 1.7; font-weight: 600;">
-                            긴급 상황 발생 시 즉시 신고하세요.<br>
-                            안전담당자에게 자동으로 알림이 전송됩니다.
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 14px; font-weight: 700; color: #2d3436; margin-bottom: 8px;">
-                        📝 긴급 상황 내용
-                    </label>
-                    <textarea id="emergencyDetail" 
-                              placeholder="예) 작업 중 부상 발생, 화재 발생, 설비 고장 등..." 
-                              style="width: 100%; min-height: 120px; padding: 16px; border: 2px solid #e9ecef; border-radius: 12px; font-size: 14px; resize: vertical; transition: all 0.3s; font-family: 'Malgun Gothic', sans-serif;"
-                              onfocus="this.style.borderColor='#ff6b6b'; this.style.boxShadow='0 0 0 3px rgba(255,107,107,0.1)'"
-                              onblur="this.style.borderColor='#e9ecef'; this.style.boxShadow='none'"></textarea>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" 
-                            style="padding: 16px; background: #f1f3f5; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; color: #495057; cursor: pointer; transition: all 0.3s;"
-                            onmouseover="this.style.background='#e9ecef'"
-                            onmouseout="this.style.background='#f1f3f5'">
-                        취소
-                    </button>
-                    <button onclick="submitEmergencyReport()" 
-                            style="padding: 16px; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); border: none; border-radius: 12px; font-size: 15px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 15px rgba(255,107,107,0.4); transition: all 0.3s;"
-                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255,107,107,0.5)'"
-                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255,107,107,0.4)'">
-                        🚨 신고하기
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <style>
-            @keyframes shake {
-                0%, 100% { transform: rotate(0deg); }
-                25% { transform: rotate(-10deg); }
-                75% { transform: rotate(10deg); }
-            }
-        </style>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // 모달 외부 클릭 시 닫기
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) modal.remove();
-    });
-    
-    // textarea 자동 포커스
-    setTimeout(() => {
-        document.getElementById('emergencyDetail')?.focus();
-    }, 300);
-}
-
-async function submitEmergencyReport() {
-    const detail = document.getElementById('emergencyDetail').value.trim();
-    
-    if (!detail) {
-        alert('긴급 상황을 입력해주세요.');
-        document.getElementById('emergencyDetail').focus();
-        return;
-    }
-    
-    const userName = localStorage.getItem('mslUserName') || '익명';
-    const now = new Date();
-    
-    try {
-        // 1️⃣ Firestore에 긴급 신고 저장
-        const reportRef = await db.collection('emergency_reports').add({
-            reporter: userName,
-            detail: detail,
-            reportedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'pending',
-            location: 'MSL 포천 공장',
-            notified: false
-        });
-        
-        console.log('✅ 긴급 신고 저장 완료:', reportRef.id);
-        
-        // 2️⃣ 모든 구독자에게 푸시 알림 발송
-        await sendPushToAllSubscribers(userName, detail);
-        
-        // 3️⃣ 카카오톡 알림 메시지 생성
-        const message = `🚨 [MSL 긴급 신고]\n\n` +
-                       `신고자: ${userName}\n` +
-                       `신고 시각: ${now.toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}\n` +
-                       `위치: MSL 포천 공장\n\n` +
-                       `━━━━━━━━━━━━━━━━\n\n` +
-                       `📋 상황 내용:\n${detail}\n\n` +
-                       `━━━━━━━━━━━━━━━━\n\n` +
-                       `※ 즉시 현장 확인 바랍니다.\n` +
-                       `※ 119 신고가 필요한 경우 즉시 연락하세요.`;
-        
-        navigator.clipboard.writeText(message).then(() => {
-            // 모달 닫기
-            document.querySelector('.modal')?.remove();
-            
-            // 성공 알림
-            showEmergencySuccessModal();
-        });
-        
-    } catch (error) {
-        console.error('❌ 긴급 신고 오류:', error);
-        alert('❌ 신고 접수 중 오류가 발생했습니다.\n\n' + error.message + '\n\n직접 안전담당자에게 연락해주세요.');
-    }
-}
-
-// 모든 구독자에게 푸시 발송
-async function sendPushToAllSubscribers(reporter, detail) {
-    try {
-        // 모든 푸시 구독 정보 가져오기
-        const subscriptionsSnapshot = await db.collection('push_subscriptions').get();
-        
-        if (subscriptionsSnapshot.empty) {
-            console.log('⚠️ 푸시 구독자 없음');
-            return;
-        }
-        
-        console.log(`📢 ${subscriptionsSnapshot.size}명에게 푸시 발송 시도...`);
-        
-        // 각 구독자에게 푸시 발송 (웹 푸시는 서버 필요하므로 Firestore 트리거로 처리)
-        // 현재는 실시간 리스너로만 작동
-        
-        // ⭐ Service Worker에게 메시지 전송 (포그라운드)
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-                type: 'EMERGENCY_ALERT',
-                reporter: reporter,
-                detail: detail
-            });
-        }
-        
-    } catch (error) {
-        console.error('❌ 푸시 발송 실패:', error);
-    }
-}
-
-function showEmergencySuccessModal() {
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; animation: popIn 0.5s ease-out; max-width: 400px; width: 90%;';
-    
-    modal.innerHTML = `
-        <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
-        <div style="font-size: 22px; font-weight: 800; color: #00b894; margin-bottom: 12px;">긴급 신고 접수!</div>
-        <div style="font-size: 15px; color: #666; margin-bottom: 24px; line-height: 1.7;">
-            <strong>📢 푸시 알림 발송 완료</strong><br>
-            모든 사용자에게 알림이 전송되었습니다.<br><br>
-            알림 메시지가 복사되었습니다.<br>
-            <strong style="color: #2d3436;">카카오톡</strong>으로도<br>
-            즉시 전송해주세요.
-        </div>
-        <button onclick="this.parentElement.remove()" style="background: linear-gradient(135deg, #00b894, #00cec9); color: white; border: none; padding: 14px 32px; border-radius: 25px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,184,148,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">확인</button>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    setTimeout(() => {
-        if (modal.parentElement) modal.remove();
-    }, 5000);
-}
-
-
-
-
-
-
-
-
-
-
-
-</script>
-
-<!-- 🚀 PWA 설치 및 알림 시스템 -->
-<script>
-console.log('🚀 PWA 초기화 시작...');
-
-let deferredPrompt = null;
-let swRegistration = null;
-
-// ========== 1️⃣ Service Worker 등록 (페이지 로드 즉시) ==========
-if ('serviceWorker' in navigator) {
-    console.log('✅ Service Worker 지원됨');
-    
-    navigator.serviceWorker.register('/msl-safety-system/sw.js')
-        .then(registration => {
-            swRegistration = registration;
-            console.log('✅ Service Worker 등록 성공:', registration.scope);
-            
-            // 5초 후 알림 권한 요청
-            setTimeout(() => {
-                if (Notification.permission === 'default') {
-                    console.log('📢 알림 권한 요청 준비...');
-                    requestNotificationPermission();
-                } else {
-                    console.log('ℹ️ 알림 권한 상태:', Notification.permission);
-                }
-            }, 5000);
-        })
-        .catch(error => {
-            console.error('❌ Service Worker 등록 실패:', error);
-        });
-} else {
-    console.log('❌ Service Worker 미지원 브라우저');
-}
-
-// ========== 2️⃣ PWA 설치 프롬프트 감지 ==========
-window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('🎯 PWA 설치 가능!');
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // 설치 배너 표시 (3초 후)
-    setTimeout(() => {
-        console.log('📱 설치 배너 표시');
-        showInstallBanner();
-    }, 3000);
-});
-
-// 설치 완료 감지
-window.addEventListener('appinstalled', () => {
-    console.log('🎉 PWA 설치 완료!');
-    deferredPrompt = null;
-});
-
-// ========== 3️⃣ 설치 배너 ==========
-function showInstallBanner() {
-    // 이미 표시했으면 무시
-    if (document.getElementById('installBanner')) {
-        console.log('ℹ️ 배너 이미 표시됨');
-        return;
-    }
-    
-    const banner = document.createElement('div');
-    banner.id = 'installBanner';
-    banner.style.cssText = `
-        position: fixed;
-        bottom: 90px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 16px 24px;
-        border-radius: 30px;
-        box-shadow: 0 8px 24px rgba(102,126,234,0.5);
-        z-index: 9997;
-        animation: slideUp 0.5s ease-out;
-        max-width: 90%;
-    `;
-    
-    banner.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;">
-            <span style="font-size: 24px;">📱</span>
-            <span style="font-size: 14px; font-weight: 700; white-space: nowrap;">앱처럼 사용하기</span>
-            <button id="installBtn" style="background: white; color: #667eea; border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                설치
-            </button>
-            <button id="closeBannerBtn" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;">
-                나중에
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(banner);
-    
-    // 설치 버튼
-    document.getElementById('installBtn').addEventListener('click', installPWA);
-    
-    // 닫기 버튼
-    document.getElementById('closeBannerBtn').addEventListener('click', () => {
-        console.log('❌ 배너 닫기');
-        banner.remove();
-    });
-    
-    // 10초 후 자동 닫기
-    setTimeout(() => {
-        if (banner.parentElement) {
-            console.log('⏱️ 배너 자동 닫기');
-            banner.remove();
-        }
-    }, 10000);
-}
-
-// ========== 4️⃣ PWA 설치 실행 ==========
-async function installPWA() {
-    console.log('🔽 설치 시도...');
-    
-    if (!deferredPrompt) {
-        console.log('❌ deferredPrompt 없음');
-        alert('설치할 수 없습니다. 브라우저 메뉴(⋮)에서 "홈 화면에 추가"를 선택해주세요.');
-        return;
-    }
-    
-    try {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        console.log('📊 설치 결과:', outcome);
-        
-        if (outcome === 'accepted') {
-            console.log('✅ 사용자가 설치 수락');
-            showSuccessToast('✅ 설치 완료! 홈 화면에서 확인하세요.');
-        } else {
-            console.log('❌ 사용자가 설치 거부');
-        }
-        
-        deferredPrompt = null;
-        document.getElementById('installBanner')?.remove();
-        
-    } catch (error) {
-        console.error('❌ 설치 오류:', error);
-        alert('설치 중 오류가 발생했습니다.');
-    }
-}
-
-// ========== 5️⃣ 알림 권한 요청 ==========
-function requestNotificationPermission() {
-    if (!('Notification' in window)) {
-        console.log('❌ 알림 미지원');
-        return;
-    }
-    
-    if (Notification.permission === 'granted') {
-        console.log('✅ 알림 이미 허용됨');
-        subscribeToPush();
-        return;
-    }
-    
-    if (Notification.permission === 'denied') {
-        console.log('❌ 알림 거부됨');
-        return;
-    }
-    
-    showNotificationModal();
-}
-
-function showNotificationModal() {
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;';
-    
-    modal.innerHTML = `
-        <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <div style="background: linear-gradient(135deg, #00b894, #00cec9); padding: 30px; text-align: center;">
-                <div style="font-size: 60px; margin-bottom: 12px;">🔔</div>
-                <h2 style="margin: 0; color: white; font-size: 24px; font-weight: 800;">긴급 알림 받기</h2>
-                <p style="margin: 8px 0 0 0; color: white; font-size: 14px;">실시간 긴급 신고 알림을 받으시겠습니까?</p>
-            </div>
-            <div style="padding: 24px;">
-                <button id="allowBtn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #00b894, #00cec9); border: none; border-radius: 12px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 12px;">허용</button>
-                <button id="denyBtn" style="width: 100%; padding: 16px; background: #f1f3f5; border: none; border-radius: 12px; color: #666; font-size: 15px; font-weight: 600; cursor: pointer;">나중에</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    document.getElementById('allowBtn').addEventListener('click', async () => {
-        const permission = await Notification.requestPermission();
-        modal.remove();
-        
-        if (permission === 'granted') {
-            console.log('✅ 알림 허용됨');
-            showSuccessToast('✅ 알림이 활성화되었습니다!');
-            subscribeToPush();
-        }
-    });
-    
-    document.getElementById('denyBtn').addEventListener('click', () => {
-        console.log('❌ 알림 거부');
-        modal.remove();
-    });
-}
-
-
-// ========== 6️⃣ 푸시 구독 ==========
-
-// ========== 6️⃣ 푸시 구독 (FCM) ==========
-const VAPID_PUBLIC_KEY = 'BJjxwBCNxHBGxsi22uCvIYrCZTcjN5aIY7I1T1HZMtVjq1udN07PHSNJcMwQ-lE-SSlRaYUYp_uHTirl_b6Z0G8'; // ⚠️ Firebase에서 생성한 키로 교체!
-
-async function subscribeToPush() {
-    if (!swRegistration) {
-        console.log('❌ Service Worker 없음');
-        return;
-    }
-    
-    try {
-        // 기존 구독 확인
-        let subscription = await swRegistration.pushManager.getSubscription();
-        
-        if (!subscription) {
-            console.log('🔔 푸시 구독 시작...');
-            
-            // VAPID 키를 Uint8Array로 변환
-            const vapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-            
-            // 푸시 구독
-            subscription = await swRegistration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: vapidKey
-            });
-            
-            console.log('✅ 푸시 구독 완료:', subscription.endpoint);
-            
-            // Firestore에 구독 정보 저장
-            await savePushSubscription(subscription);
-        } else {
-            console.log('✅ 이미 푸시 구독됨');
-        }
-        
-    } catch (error) {
-        console.error('❌ 푸시 구독 실패:', error);
-        alert('푸시 알림 설정에 실패했습니다.\n\n' + error.message);
-    }
-}
-
-// VAPID 키 변환 함수
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
-    
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
-
-// Firestore에 구독 정보 저장
-async function savePushSubscription(subscription) {
-    const userName = localStorage.getItem('mslUserName') || '익명';
-    
-    try {
-        await db.collection('push_subscriptions').add({
-            endpoint: subscription.endpoint,
-            keys: {
-                p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
-                auth: arrayBufferToBase64(subscription.getKey('auth'))
-            },
-            userName: userName,
-            subscribedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            userAgent: navigator.userAgent
-        });
-        
-        console.log('✅ 구독 정보 저장 완료');
-    } catch (error) {
-        console.error('❌ 구독 정보 저장 실패:', error);
-    }
-}
-
-// ArrayBuffer를 Base64로 변환
-function arrayBufferToBase64(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-}
-
-
-// ========== 7️⃣ Firebase 긴급 신고 리스너 ==========
-function startEmergencyListener() {
-    console.log('👂 긴급 신고 리스너 시작');
-    
-    db.collection('emergency_reports')
-        .where('notified', '==', false)
-        .onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === 'added') {
-                    const data = change.doc.data();
-                    console.log('🚨 긴급 신고:', data);
-                    showEmergencyAlert(data);
-                    change.doc.ref.update({ notified: true });
-                     // ⭐ 배지 업데이트 추가
-                    setTimeout(refreshBadge, 500);
-
-                }
-            });
-        });
-}
-
-function showEmergencyAlert(data) {
-    const alert = document.createElement('div');
-    alert.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 10001;
-        background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-        padding: 40px;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-        min-width: 300px;
-        max-width: 90%;
-        animation: shake 0.5s;
-    `;
-    
-       alert.innerHTML = `
-        <div style="text-align: center; color: white;">
-            <div style="font-size: 80px; margin-bottom: 20px;">🚨</div>
-            <h2>긴급 신고 발생!</h2>
-            <!-- ... -->
-            <button onclick="
-                localStorage.setItem('lastEmergencyCheck', new Date().toISOString());
-                this.parentElement.parentElement.remove();
-                refreshBadge();
-            " style="...">확인</button>
-        </div>
-    `;
-    
-    const overlay = document.createElement('div');
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000;';
-    overlay.onclick = () => { overlay.remove(); alert.remove(); };
-    
-    document.body.appendChild(overlay);
-    document.body.appendChild(alert);
-    
-    // 진동
-    if ('vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200, 100, 200]);
-    }
-    
-    // 사이렌
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.frequency.value = 800;
-        gainNode.gain.value = 0.3;
-        oscillator.start();
-        setTimeout(() => oscillator.stop(), 1500);
-    } catch (e) {
-        console.log('사이렌 재생 실패:', e);
-    }
-}
-
-function showSuccessToast(message) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0,0,0,0.85);
-        color: white;
-        padding: 16px 24px;
-        border-radius: 30px;
-        font-size: 14px;
-        font-weight: 700;
-        z-index: 10000;
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-// ========== 8️⃣ 긴급 신고 리스너 시작 ==========
-setTimeout(() => {
-    if (typeof db !== 'undefined') {
-        startEmergencyListener();
-    }
-}, 2000);
-
-// ========== 디버깅: 5초 후 상태 확인 ==========
-setTimeout(() => {
-    console.log('📊 PWA 상태 체크:');
-    console.log('  - Service Worker:', swRegistration ? '✅ 등록됨' : '❌ 미등록');
-    console.log('  - deferredPrompt:', deferredPrompt ? '✅ 있음' : '❌ 없음');
-    console.log('  - 알림 권한:', Notification.permission);
-    
-    if (!deferredPrompt) {
-        console.log('⚠️ PWA 설치 배너가 안 뜰 경우:');
-        console.log('  1. Chrome 메뉴(⋮) → "홈 화면에 추가" 선택');
-        console.log('  2. 또는 주소창 끝의 ⊕ 아이콘 클릭');
-    }
-}, 5000);
-
-// ========== 🔔 앱 배지 알림 시스템 ==========
-
-let unreadCount = 0; // 전역 변수
-
-// 배지 업데이트 함수
-async function updateAppBadge(count) {
-    if (!('setAppBadge' in navigator)) {
-        console.log('⚠️ 배지 API 미지원 (데스크탑 또는 구버전)');
-        return;
-    }
-    
-    try {
-        if (count > 0) {
-            await navigator.setAppBadge(count);
-            console.log(`🔔 앱 배지 업데이트: ${count}`);
-        } else {
-            await navigator.clearAppBadge();
-            console.log('✅ 앱 배지 제거');
-        }
-    } catch (error) {
-        console.error('❌ 배지 업데이트 실패:', error);
-    }
-}
-
-// 읽지 않은 문서 개수 계산
-async function calculateUnreadCount() {
-    const userName = localStorage.getItem('mslUserName');
-    if (!userName) {
-        console.log('⚠️ 사용자 이름 없음');
-        return 0;
-    }
-    
-    try {
-        // 1️⃣ 전체 문서와 서명 데이터 로드
-        await loadDocumentsFromFirebase();
-        await loadSignaturesFromFirebase();
-        
-        // 2️⃣ 미서명 문서 개수 계산
-        let unsignedCount = 0;
-        
-        documents.forEach(doc => {
-            const docSigs = signatures.filter(s => s.documentId === doc.id);
-            const mySignature = docSigs.find(s => s.signerName === userName);
-            
-            if (!mySignature) {
-                unsignedCount++;
-            }
-        });
-        
-        // 3️⃣ 읽지 않은 긴급 신고 개수
-        const lastCheckedTime = localStorage.getItem('lastEmergencyCheck') || '2000-01-01T00:00:00Z';
-        
-        const emergencySnapshot = await db.collection('emergency_reports')
-            .where('status', '==', 'pending')
-            .get();
-        
-        let unreadEmergencies = 0;
-        
-        emergencySnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.reportedAt) {
-                const reportedAt = data.reportedAt.toDate();
-                if (reportedAt > new Date(lastCheckedTime)) {
-                    unreadEmergencies++;
-                }
-            }
-        });
-        
-        const totalUnread = unsignedCount + unreadEmergencies;
-        console.log(`📊 미서명: ${unsignedCount}, 미확인 긴급신고: ${unreadEmergencies}, 총: ${totalUnread}`);
-        
-        return totalUnread;
-        
-    } catch (error) {
-        console.error('❌ 읽지 않은 개수 계산 실패:', error);
-        return 0;
-    }
-}
-
-
-// 배지 새로고침
-async function refreshBadge() {
-    unreadCount = await calculateUnreadCount();
-    await updateAppBadge(unreadCount);
-}
-
-// 앱 포커스 시 배지 새로고침
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        console.log('👀 앱 활성화 - 배지 새로고침');
-        refreshBadge();
-    }
-});
-
-// 페이지 로드 시 배지 업데이트
-window.addEventListener('load', () => {
-    setTimeout(refreshBadge, 2000); // 2초 후 실행
-});
-
-</script>
 </body>
 </html>
