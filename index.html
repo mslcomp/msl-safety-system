@@ -2158,6 +2158,53 @@ ${documents.length > 0 ? `
 // 완료 개수 업데이트
 document.getElementById('checkCount').textContent = `${completedCount}/${documents.length}`;
 
+
+// ⭐ 프로그레스 바 업데이트 추가 ⭐
+const percentage = documents.length > 0 ? Math.round((completedCount / documents.length) * 100) : 0;
+const progressBar = document.getElementById('progressBar');
+const progressPercent = document.getElementById('progressPercent');
+
+if (progressBar && progressPercent) {
+    setTimeout(() => {
+        progressBar.style.width = `${percentage}%`;
+        progressPercent.textContent = `${percentage}%`;
+        
+        // 100% 완료 시 효과
+        if (percentage === 100) {
+            progressBar.style.background = 'linear-gradient(135deg, #f39c12, #f1c40f)';
+            progressBar.style.boxShadow = '0 0 20px rgba(243,156,18,0.8)';
+            progressPercent.style.color = '#f39c12';
+        }
+    }, 300);
+}
+
+// ⭐ 온도계 초기화 (container.innerHTML 끝난 후에 실행) ⭐
+    setTimeout(() => {
+        fetchTemperature().then(temp => {
+            const tempContainer = document.getElementById('temperatureMonitor');
+            if (tempContainer) {
+                tempContainer.innerHTML = generateTemperatureHTML(temp);
+            }
+        });
+        
+        // 1분마다 자동 갱신
+        setInterval(() => {
+            fetchTemperature().then(temp => {
+                const tempContainer = document.getElementById('temperatureMonitor');
+                if (tempContainer) {
+                    tempContainer.innerHTML = generateTemperatureHTML(temp);
+                }
+            });
+        }, 60000);
+    }, 500); // DOM이 생성된 후 실행
+}
+
+
+
+
+
+
+
 // ✅ TOP 3 실시간 갱신 설정
 if (!window.top3IntervalSet) {
     console.log('🔄 TOP 3 자동 갱신 시작 (30초마다)');
@@ -2296,7 +2343,7 @@ if (progressBar && progressPercent) {
             });
         }, 60000);
     }, 500); // DOM이 생성된 후 실행
-}
+
 
 
     
@@ -4369,38 +4416,397 @@ function generateTemperatureHTML(data) {
     </div>
     
     <div style="padding: 16px 24px; background: white; display: flex; gap: 12px;">
-        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
-            🗺️ 날씨해설 바로가기
+        <button onclick="showWeeklyForecast()" style="flex: 1; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(102,126,234,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(102,126,234,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'">
+            📊 주간 날씨 예보
         </button>
-        <button style="flex: 1; background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 600; color: #333; cursor: pointer;">
-            📊 강수 제공정보
+        <button onclick="showSafetyCheck()" style="flex: 1; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); border: none; border-radius: 12px; padding: 14px; font-size: 14px; font-weight: 700; color: white; cursor: pointer; box-shadow: 0 4px 12px rgba(255,107,107,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255,107,107,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255,107,107,0.3)'">
+            ⚠️ 작업 안전도 확인
         </button>
     </div>
 </div>
 `;
 }
 
-// ========== 📌 초기화 코드 ==========
-/*
-setTimeout(() => {
-    fetchTemperatureWithFallback().then(data => {
-        const tempContainer = document.getElementById('temperatureMonitor');
-        if (tempContainer) {
-            tempContainer.innerHTML = generateTemperatureHTML(data);
-        }
-    });
+
+
+// 🆕 주간 날씨 예보 함수
+async function showWeeklyForecast() {
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
     
-    // 1분마다 자동 갱신
-    setInterval(() => {
-        fetchTemperatureWithFallback().then(data => {
-            const tempContainer = document.getElementById('temperatureMonitor');
-            if (tempContainer) {
-                tempContainer.innerHTML = generateTemperatureHTML(data);
-            }
+    // 현재 날짜 기준 7일 예보 생성
+    const forecasts = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        
+        // 시뮬레이션: 겨울철 온도 패턴
+        const baseTemp = currentTemperature || -5;
+        const variation = (Math.random() * 6 - 3); // -3°C ~ +3°C 변동
+        const dayTemp = Math.round((baseTemp + variation) * 10) / 10;
+        const minTemp = dayTemp - 5;
+        const maxTemp = dayTemp + 5;
+        
+        // 날씨 상태 랜덤
+        const rainChance = Math.floor(Math.random() * 100);
+        
+        let weatherIcon, weatherText, safetyLevel, safetyColor;
+        
+        if (maxTemp >= 30) {
+            weatherIcon = '☀️';
+            weatherText = '폭염';
+            safetyLevel = '🔴 위험';
+            safetyColor = '#ff6b6b';
+        } else if (maxTemp >= 25) {
+            weatherIcon = '☀️';
+            weatherText = '더움';
+            safetyLevel = '🟠 경고';
+            safetyColor = '#ffa500';
+        } else if (minTemp <= 5) {
+            weatherIcon = '❄️';
+            weatherText = '한파';
+            safetyLevel = '🔵 저온주의';
+            safetyColor = '#4facfe';
+        } else if (rainChance > 70) {
+            weatherIcon = '🌧️';
+            weatherText = '비';
+            safetyLevel = '🟡 주의';
+            safetyColor = '#ffd93d';
+        } else if (rainChance > 40) {
+            weatherIcon = '⛅';
+            weatherText = '구름많음';
+            safetyLevel = '🟢 보통';
+            safetyColor = '#00b894';
+        } else {
+            weatherIcon = '☀️';
+            weatherText = '맑음';
+            safetyLevel = '🟢 좋음';
+            safetyColor = '#00b894';
+        }
+        
+        forecasts.push({
+            date: date,
+            dayOfWeek: date.toLocaleDateString('ko-KR', { weekday: 'short' }),
+            dateStr: date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+            weatherIcon: weatherIcon,
+            weatherText: weatherText,
+            minTemp: minTemp.toFixed(1),
+            maxTemp: maxTemp.toFixed(1),
+            rainChance: rainChance,
+            safetyLevel: safetyLevel,
+            safetyColor: safetyColor
         });
-    }, 60000);
-}, 500);
-*/
+    }
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 2px solid #f0f0f0; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 20px 20px 0 0;">
+                <div>
+                    <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800;">📊 주간 날씨 예보</h3>
+                    <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">포천시 설운동 기준 (향후 7일)</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: white; color: #667eea; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">&times;</button>
+            </div>
+            
+            <div style="padding: 24px;">
+                <div style="display: grid; gap: 16px;">
+                    ${forecasts.map((f, idx) => `
+                        <div style="background: ${idx === 0 ? 'linear-gradient(135deg, #fff5f5, #ffe8e8)' : 'white'}; padding: 20px; border-radius: 16px; border: 2px solid ${idx === 0 ? '#ffdddd' : '#f0f0f0'}; transition: all 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='${f.safetyColor}'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='${idx === 0 ? '#ffdddd' : '#f0f0f0'}'; this.style.transform='translateX(0)'">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="font-size: 40px;">${f.weatherIcon}</div>
+                                    <div>
+                                        <div style="font-size: 16px; font-weight: 800; color: #2d3436; margin-bottom: 4px;">
+                                            ${idx === 0 ? '오늘' : f.dayOfWeek} <span style="font-size: 13px; font-weight: 600; color: #666;">${f.dateStr}</span>
+                                        </div>
+                                        <div style="font-size: 13px; color: #666; font-weight: 600;">${f.weatherText}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 24px; font-weight: 800; color: #ff6b6b; margin-bottom: 4px;">
+                                        ${f.maxTemp}°
+                                    </div>
+                                    <div style="font-size: 16px; font-weight: 600; color: #4facfe;">
+                                        ${f.minTemp}°
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f0f0f0;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 14px;">💧</span>
+                                    <span style="font-size: 13px; color: #666; font-weight: 600;">강수확률 ${f.rainChance}%</span>
+                                </div>
+                                <div style="background: ${f.safetyColor}; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                    ${f.safetyLevel}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 16px; border-left: 4px solid #00b894;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                        <span style="font-size: 20px;">💡</span>
+                        <h4 style="margin: 0; color: #00b894; font-size: 16px; font-weight: 700;">작업 계획 팁</h4>
+                    </div>
+                    <ul style="margin: 0; padding-left: 20px; color: #2d3436; font-size: 14px; line-height: 1.8;">
+                        <li>🟢 <strong>좋음</strong>: 모든 작업 가능</li>
+                        <li>🟡 <strong>주의</strong>: 장시간 야외 작업 시 휴식 필수</li>
+                        <li>🟠 <strong>경고</strong>: 고온 작업 제한, 수분 섭취</li>
+                        <li>🔴 <strong>위험</strong>: 야외 작업 최소화</li>
+                        <li>🔵 <strong>저온주의</strong>: 방한 조치 필수</li>
+                    </ul>
+                </div>
+                
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 12px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 12px rgba(102,126,234,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    닫기
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// 🆕 작업 안전도 확인 함수
+function showSafetyCheck() {
+    const temp = currentTemperature || -5;
+    const humidity = currentHumidity || 50;
+    const windSpeed = currentWindSpeed || 1.0;
+    
+    // 작업 안전도 계산
+    let overallSafety, safetyColor, safetyEmoji, safetyDescription;
+    let tempRisk, humidityRisk, windRisk;
+    
+    // 온도 위험도
+    if (temp >= 33) {
+        tempRisk = { level: '매우 위험', color: '#d63031', emoji: '🔴' };
+    } else if (temp >= 28) {
+        tempRisk = { level: '위험', color: '#ff6b6b', emoji: '🟠' };
+    } else if (temp >= 25) {
+        tempRisk = { level: '경고', color: '#ffa500', emoji: '🟡' };
+    } else if (temp <= -10) {
+        tempRisk = { level: '한파 위험', color: '#4facfe', emoji: '❄️' };
+    } else if (temp <= 5) {
+        tempRisk = { level: '저온 주의', color: '#74b9ff', emoji: '🔵' };
+    } else {
+        tempRisk = { level: '안전', color: '#00b894', emoji: '🟢' };
+    }
+    
+    // 습도 위험도
+    if (humidity >= 80) {
+        humidityRisk = { level: '불쾌지수 높음', color: '#ffa500', emoji: '💧' };
+    } else if (humidity <= 30) {
+        humidityRisk = { level: '건조', color: '#ffd93d', emoji: '🌵' };
+    } else {
+        humidityRisk = { level: '적정', color: '#00b894', emoji: '✓' };
+    }
+    
+    // 풍속 위험도
+    if (windSpeed >= 10) {
+        windRisk = { level: '강풍 주의', color: '#ff6b6b', emoji: '💨' };
+    } else if (windSpeed >= 5) {
+        windRisk = { level: '바람 있음', color: '#ffd93d', emoji: '🍃' };
+    } else {
+        windRisk = { level: '약함', color: '#00b894', emoji: '✓' };
+    }
+    
+    // 종합 안전도
+    if (temp >= 28 || temp <= -10 || windSpeed >= 10) {
+        overallSafety = '🔴 작업 제한';
+        safetyColor = '#d63031';
+        safetyEmoji = '⚠️';
+        safetyDescription = '야외 작업을 최소화하고, 필수 작업만 진행하세요.';
+    } else if (temp >= 25 || temp <= 5 || windSpeed >= 5) {
+        overallSafety = '🟡 주의 필요';
+        safetyColor = '#ffa500';
+        safetyEmoji = '⚠️';
+        safetyDescription = '작업 시 안전 수칙을 철저히 준수하세요.';
+    } else {
+        overallSafety = '🟢 작업 가능';
+        safetyColor = '#00b894';
+        safetyEmoji = '✅';
+        safetyDescription = '안전하게 작업을 진행할 수 있습니다.';
+    }
+    
+    // 작업 제한 사항
+    let workRestrictions = [];
+    if (temp >= 33) {
+        workRestrictions.push('☀️ 오전 11시~오후 3시 야외 작업 금지');
+        workRestrictions.push('🚰 30분마다 10분 이상 그늘 휴식 + 수분 섭취');
+    } else if (temp >= 28) {
+        workRestrictions.push('☀️ 오후 12시~2시 야외 작업 자제');
+        workRestrictions.push('🚰 1시간마다 5분 이상 휴식');
+    }
+    
+    if (temp <= -10) {
+        workRestrictions.push('❄️ 야외 작업 시간 제한 (1시간 이내)');
+        workRestrictions.push('🧥 방한복, 장갑, 안전모 귀덮개 착용 필수');
+    } else if (temp <= 5) {
+        workRestrictions.push('🧥 방한복 및 보온 조치 필수');
+    }
+    
+    if (windSpeed >= 10) {
+        workRestrictions.push('💨 고소 작업 및 크레인 작업 금지');
+    } else if (windSpeed >= 5) {
+        workRestrictions.push('💨 고소 작업 시 안전 확보 조치 강화');
+    }
+    
+    if (workRestrictions.length === 0) {
+        workRestrictions.push('✅ 특별한 제한 사항 없음');
+    }
+    
+    // 응급 조치 가이드
+    let emergencyGuide = [];
+    if (temp >= 28) {
+        emergencyGuide = [
+            {
+                title: '☀️ 온열질환 증상 발견 시',
+                steps: [
+                    '1. 즉시 그늘로 이동하여 안정',
+                    '2. 옷을 느슨하게 풀고 체온 낮추기',
+                    '3. 의식이 있으면 물을 천천히 마시게 함',
+                    '4. 의식이 없거나 증상 악화 시 즉시 119 신고'
+                ]
+            }
+        ];
+    } else if (temp <= 5) {
+        emergencyGuide = [
+            {
+                title: '❄️ 저체온증 증상 발견 시',
+                steps: [
+                    '1. 즉시 따뜻한 실내로 이동',
+                    '2. 젖은 옷은 벗기고 담요로 보온',
+                    '3. 따뜻한 음료(알코올 제외) 제공',
+                    '4. 의식이 없거나 증상 악화 시 즉시 119 신고'
+                ]
+            }
+        ];
+    } else {
+        emergencyGuide = [
+            {
+                title: '🚨 일반 안전 수칙',
+                steps: [
+                    '1. 작업 중 이상 증상 발견 시 즉시 작업 중지',
+                    '2. 관리감독자에게 즉시 보고',
+                    '3. 필요 시 의료진 상담',
+                    '4. 증상이 심각하면 119 신고'
+                ]
+            }
+        ];
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 2px solid #f0f0f0; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); border-radius: 20px 20px 0 0;">
+                <div>
+                    <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800;">⚠️ 작업 안전도 확인</h3>
+                    <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">현재 날씨 기반 작업 위험도 분석</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: white; color: #ff6b6b; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">&times;</button>
+            </div>
+            
+            <div style="padding: 24px;">
+                <!-- 종합 안전도 -->
+                <div style="background: linear-gradient(135deg, ${safetyColor}15, ${safetyColor}25); padding: 24px; border-radius: 16px; margin-bottom: 24px; border-left: 5px solid ${safetyColor}; text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">${safetyEmoji}</div>
+                    <div style="font-size: 24px; font-weight: 800; color: ${safetyColor}; margin-bottom: 12px;">${overallSafety}</div>
+                    <div style="font-size: 14px; color: #666; line-height: 1.6;">${safetyDescription}</div>
+                </div>
+                
+                <!-- 위험 요소 분석 -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 16px; margin-bottom: 24px;">
+                    <h4 style="margin: 0 0 16px 0; color: #2d3436; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <span>📊</span> 위험 요소 분석
+                    </h4>
+                    
+                    <div style="display: grid; gap: 12px;">
+                        <div style="background: white; padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${tempRisk.color};">
+                            <div>
+                                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">🌡️ 온도</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #2d3436;">${temp.toFixed(1)}°C</div>
+                            </div>
+                            <div style="background: ${tempRisk.color}; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                ${tempRisk.emoji} ${tempRisk.level}
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${humidityRisk.color};">
+                            <div>
+                                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">💧 습도</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #2d3436;">${humidity}%</div>
+                            </div>
+                            <div style="background: ${humidityRisk.color}; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                ${humidityRisk.emoji} ${humidityRisk.level}
+                            </div>
+                        </div>
+                        
+                        <div style="background: white; padding: 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${windRisk.color};">
+                            <div>
+                                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">💨 풍속</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #2d3436;">${windSpeed.toFixed(1)}m/s</div>
+                            </div>
+                            <div style="background: ${windRisk.color}; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                ${windRisk.emoji} ${windRisk.level}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 작업 제한 사항 -->
+                <div style="background: linear-gradient(135deg, #fff5f5, #ffe8e8); padding: 20px; border-radius: 16px; margin-bottom: 24px; border-left: 5px solid #ff6b6b;">
+                    <h4 style="margin: 0 0 16px 0; color: #d63031; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <span>🚫</span> 작업 제한 사항
+                    </h4>
+                    <div style="display: grid; gap: 10px;">
+                        ${workRestrictions.map(restriction => `
+                            <div style="background: white; padding: 12px 16px; border-radius: 10px; font-size: 14px; color: #2d3436; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                ${restriction}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- 응급 조치 가이드 -->
+                <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 20px; border-radius: 16px; margin-bottom: 20px; border-left: 5px solid #00b894;">
+                    ${emergencyGuide.map(guide => `
+                        <h4 style="margin: 0 0 16px 0; color: #00b894; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                            <span>🚨</span> ${guide.title}
+                        </h4>
+                        <div style="display: grid; gap: 10px;">
+                            ${guide.steps.map(step => `
+                                <div style="background: white; padding: 12px 16px; border-radius: 10px; font-size: 14px; color: #2d3436; line-height: 1.6; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                    ${step}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #ff6b6b, #ee5a6f); border: none; border-radius: 12px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(255,107,107,0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                    닫기
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
 
     </script>
 </body>
