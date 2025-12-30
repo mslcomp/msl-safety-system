@@ -2549,12 +2549,15 @@ if (progressBar && progressPercent) {
     
     // ⭐ 여기부터 추가 시작 ⭐
     // 뉴스 배너 자동 로드
-    setTimeout(() => {
+    setTimeout(async() => {
         const banner = document.getElementById('newsBanner');
         if (banner) {
             console.log('✅ 배너 div 찾음, 뉴스 로드 시작');
             loadNewsBanner();
-        } else {
+        } 
+        
+        
+        else {
             console.log('❌ 배너 div 없음 - 생성 중...');
             
             // 안전보건 배너 이미지 찾기
@@ -2571,6 +2574,12 @@ if (progressBar && progressPercent) {
                 setTimeout(() => loadNewsBanner(), 100);
             }
         }
+    await loadRiskAssessment();
+    await loadNearmissSuggestions();
+    updateDashboard();
+
+        
+
     }, 500);
     // ⭐ 여기까지 추가 끝 ⭐
 
@@ -3028,7 +3037,64 @@ function closeNameInputModal() {
 
 
 
-
+<!-- ⭐⭐⭐ 날씨 위젯 제거하고 2026년 안전보건 목표 대시보드 추가 ⭐⭐⭐ -->
+        <div style="margin: -20px -20px 24px -20px; background: white; border-radius: 0; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+            <!-- 헤더 -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px 24px; text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 12px;">🎯</div>
+                <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800; letter-spacing: -0.5px;">2026년 안전보건 목표</h3>
+                <p style="margin: 8px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">실시간 진행 현황</p>
+            </div>
+            
+            <!-- 위험성평가 개선 이행률 -->
+            <div style="padding: 24px; border-bottom: 8px solid #f8f9fa;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="background: linear-gradient(135deg, #667eea, #764ba2); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+                        <span style="font-size: 24px;">📊</span>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #2d3436;">위험성평가 개선 이행률</h4>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">목표: 100% 달성</p>
+                    </div>
+                </div>
+                
+                <div style="background: #f8f9fa; height: 12px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                    <div id="riskAssessmentBar" style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(102,126,234,0.6);"></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span id="riskAssessmentRate" style="font-size: 20px; font-weight: 800; color: #667eea;">0%</span>
+                    <span id="riskAssessmentCount" style="font-size: 14px; color: #666; font-weight: 600;">0/100</span>
+                </div>
+            </div>
+            
+            <!-- 아차사고 제안 활동 -->
+            <div style="padding: 24px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="background: linear-gradient(135deg, #ffa500, #ff8c00); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(255,165,0,0.3);">
+                        <span style="font-size: 24px;">💡</span>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #2d3436;">아차사고 제안 활동</h4>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; color: #666;">목표: 인당 연 2회 이상 (이번 달 목표 1회)</p>
+                    </div>
+                </div>
+                
+                <div style="background: #f8f9fa; height: 12px; border-radius: 10px; overflow: hidden; margin-bottom: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+                    <div id="nearmissBar" style="background: linear-gradient(90deg, #ffa500, #ff8c00); height: 100%; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(255,165,0,0.6);"></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <span id="nearmissRate" style="font-size: 20px; font-weight: 800; color: #ffa500;">0%</span>
+                    <span id="nearmissCount" style="font-size: 14px; color: #666; font-weight: 600;">0/19명</span>
+                </div>
+                
+                <button onclick="showNearmissSuggestionModal()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #ffa500, #ff8c00); border: none; border-radius: 12px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(255,165,0,0.3); transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255,165,0,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255,165,0,0.3)'">
+                    <span style="font-size: 20px;">💡</span>
+                    <span>아차사고 제안하기</span>
+                </button>
+            </div>
+        </div>
 
         
 
