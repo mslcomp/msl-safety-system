@@ -977,6 +977,201 @@ const employees = [
     '김용진', '이명헌', '이승현', '한경아', '조점숙', 
     '최현경', '윤다은', '박화영', '함재원'
 ];
+
+
+// ========== 🎯 2026년 안전보건 목표 시스템 ==========
+
+// 아차사고 제안 불러오기
+let nearmissSuggestions = [];
+
+async function loadNearmissSuggestions() {
+    try {
+        const snapshot = await db.collection('nearmiss_suggestions')
+            .orderBy('createdAt', 'desc')
+            .get();
+        
+        nearmissSuggestions = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        console.log('✅ 아차사고 제안 로드:', nearmissSuggestions.length + '건');
+        return nearmissSuggestions;
+    } catch (error) {
+        console.error('❌ 아차사고 제안 로드 실패:', error);
+        return [];
+    }
+}
+
+// 위험성평가 데이터 불러오기
+let riskAssessmentData = null;
+
+async function loadRiskAssessment() {
+    try {
+        const year = new Date().getFullYear();
+        const doc = await db.collection('risk_assessment').doc(String(year)).get();
+        
+        if (doc.exists) {
+            riskAssessmentData = doc.data();
+        } else {
+            // 기본값 설정
+            riskAssessmentData = {
+                totalItems: 100,
+                completedItems: 0,
+                completionRate: 0
+            };
+            await db.collection('risk_assessment').doc(String(year)).set(riskAssessmentData);
+        }
+        
+        console.log('✅ 위험성평가 데이터 로드:', riskAssessmentData);
+        return riskAssessmentData;
+    } catch (error) {
+        console.error('❌ 위험성평가 데이터 로드 실패:', error);
+        return { totalItems: 100, completedItems: 0, completionRate: 0 };
+    }
+}
+
+// 아차사고 제안하기 모달
+function showNearmissSuggestionModal() {
+    const userName = localStorage.getItem('mslUserName');
+    
+    if (!userName) {
+        alert('⚠️ 먼저 이름을 입력해주세요.');
+        showNameInputModal();
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+    
+    modal.innerHTML = `
+        <div style="background: white; padding: 0; border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 2px solid #f0f0f0; background: linear-gradient(135deg, #ffa500, #ff8c00); border-radius: 20px 20px 0 0;">
+                <div>
+                    <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 800;">💡 아차사고 제안하기</h3>
+                    <p style="margin: 6px 0 0 0; color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600;">작업 중 발견한 위험요소를 제안해주세요</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: white; color: #ffa500; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">&times;</button>
+            </div>
+            
+            <div style="padding: 24px;">
+                <form id="nearmissForm">
+                    <div style="background: linear-gradient(135deg, #fff5e6, #ffe8cc); padding: 16px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #ffa500;">
+                        <div style="font-size: 13px; color: #666; line-height: 1.6;">
+                            <strong style="color: #ff8c00;">📌 아차사고란?</strong><br>
+                            큰 사고로 이어질 뻔했던 위험한 상황이나<br>
+                            개선이 필요한 안전 문제를 말합니다.
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">👤 제안자</label>
+                        <input type="text" id="nearmissSuggestorName" class="form-input" value="${userName}" readonly style="background: #f8f9fa;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">🏢 부서</label>
+                        <select id="nearmissSuggestorDept" class="form-select" required>
+                            <option value="">선택하세요</option>
+                            <option value="제조팀">제조팀</option>
+                            <option value="건설팀">건설팀</option>
+                            <option value="물류팀">물류팀</option>
+                            <option value="설비팀">설비팀</option>
+                            <option value="관리팀">관리팀</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">💬 위험 상황 또는 개선 제안</label>
+                        <textarea id="nearmissContent" class="form-textarea" rows="6" placeholder="예시:&#10;• 지게차 후진 시 사각지대에서 보행자 충돌 위험&#10;• 작업장 바닥 미끄러움 - 논슬립 처리 필요&#10;• 전선 노출 - 정리 및 보호커버 설치 요망" required style="line-height: 1.8;"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">📷 사진 첨부 (선택사항)</label>
+                        <input type="file" id="nearmissImage" class="form-input" accept="image/*" style="padding: 12px;">
+                        <div style="font-size: 12px; color: #999; margin-top: 6px;">※ 현장 사진이 있으면 더 정확한 개선이 가능합니다</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-top: 24px;">
+                        <button type="button" onclick="this.parentElement.parentElement.parentElement.parentElement.parentElement.remove()" class="btn" style="background: #f1f3f5; color: #495057;">
+                            취소
+                        </button>
+                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #ffa500, #ff8c00); color: white; box-shadow: 0 4px 12px rgba(255,165,0,0.3);">
+                            💡 제안 제출
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    document.getElementById('nearmissForm').addEventListener('submit', handleNearmissSubmit);
+}
+
+// 아차사고 제안 제출
+async function handleNearmissSubmit(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('nearmissSuggestorName').value.trim();
+    const dept = document.getElementById('nearmissSuggestorDept').value;
+    const content = document.getElementById('nearmissContent').value.trim();
+    const imageFile = document.getElementById('nearmissImage').files[0];
+    
+    if (!dept || !content) {
+        alert('⚠️ 부서와 내용을 모두 입력해주세요.');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#nearmissForm button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '제출 중...';
+    submitBtn.disabled = true;
+    
+    try {
+        let imageUrl = '';
+        
+        // 이미지 업로드
+        if (imageFile) {
+            const storageRef = storage.ref();
+            const imageRef = storageRef.child(`nearmiss_images/${Date.now()}_${imageFile.name}`);
+            const uploadTask = await imageRef.put(imageFile);
+            imageUrl = await uploadTask.ref.getDownloadURL();
+            console.log('✅ 이미지 업로드 완료:', imageUrl);
+        }
+        
+        // Firestore에 저장
+        const year = new Date().getFullYear();
+        await db.collection('nearmiss_suggestions').add({
+            suggestorName: name,
+            suggestorDept: dept,
+            content: content,
+            imageUrl: imageUrl,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            year: year
+        });
+        
+        alert('✅ 아차사고 제안이 등록되었습니다!\n\n소중한 제안 감사합니다. 🙏');
+        
+        // 모달 닫기
+        document.querySelector('.modal')?.remove();
+        
+        // 목록 새로고침
+        await loadNearmissSuggestions();
+        await loadPendingDocuments();
+        
+    } catch (error) {
+        console.error('❌ 제안 제출 실패:', error);
+        alert('❌ 제출에 실패했습니다: ' + error.message);
+    } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
+}
+
+
         let canvas = null;
         let ctx = null;
         let isDrawing = false;
