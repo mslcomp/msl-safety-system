@@ -2,13 +2,19 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-// Service Worker - MSL 안전 시스템
-const CACHE_NAME = 'msl-safety-v2';
+// ✅ 배포할 때마다 버전만 바꿔주세요 (이게 캐시 강제 갱신 트리거)
+const CACHE_VERSION = '2026-01-08-1';
+const CACHE_NAME = `msl-safety-${CACHE_VERSION}`;
+
+// ✅ GitHub Pages 프로젝트 경로(/msl-safety-system/) 자동 계산
+const SCOPE_PATH = new URL(self.registration.scope).pathname; // "/msl-safety-system/"
+const toScopeUrl = (p) => new URL(p, self.registration.scope).toString();
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/icon-192.png' // 아이콘도 캐시 목록에 추가 추천
+  toScopeUrl('./'),
+  toScopeUrl('./index.html'),
+  toScopeUrl('./styles.css'),
+  toScopeUrl('./icon-192.png')
 ];
 
 // Firebase 설정 (본인의 설정값 유지)
@@ -21,84 +27,86 @@ const firebaseConfig = {
   appId: "1:663726913730:web:bc3e5f69f2c7f5e0e1c7e6"
 };
 
-// Firebase 초기화
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// ■■■ 1. 백그라운드 메시지 수신 및 배지 설정 ■■■
+// 1) 백그라운드 메시지
 messaging.onBackgroundMessage((payload) => {
-  console.log('[SW] 백그라운드 메시지 수신:', payload);
-
   const notificationTitle = payload.notification?.title || '긴급 알림';
   const notificationOptions = {
     body: payload.notification?.body || '새로운 알림이 있습니다.',
-    icon: '/icon-192.png', // 알림창 우측 큰 이미지
-    badge: '/icon-192.png', // 안드로이드 상단바 작은 아이콘 (투명 배경 권장)
+    icon: toScopeUrl('./icon-192.png'),
+    badge: toScopeUrl('./icon-192.png'),
     tag: 'msl-notification',
     data: payload.data
   };
 
-  // (1) 알림 표시
   self.registration.showNotification(notificationTitle, notificationOptions);
-
-  // (2) ★ 앱 아이콘 배지 설정 (숫자 1 표시) ★
-  if (navigator.setAppBadge) {
-    console.log('[SW] 앱 배지 설정 시도');
-    // 숫자를 1로 설정하거나, 클라이언트에서 받은 데이터를 활용할 수 있습니다.
-    navigator.setAppBadge(1).catch(error => {
-      console.error('[SW] 배지 설정 실패:', error);
-    });
-  }
 });
 
-// ■■■ 2. 알림 클릭 시 배지 초기화 ■■■
+// 2) 알림 클릭
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-
-  // ★ 알림을 클릭하면 배지(숫자) 지우기 ★
-  if (navigator.clearAppBadge) {
-    navigator.clearAppBadge();
-  }
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then(clientList => {
-        for (let client of clientList) {
-          if (client.url.includes('msl-safety-system') && 'focus' in client) {
+        for (const client of clientList) {
+          if (client.url.includes('/msl-safety-system/') && 'focus' in client) {
             return client.focus();
           }
         }
-        if (self.clients.openWindow) {
-          return self.clients.openWindow('https://mslcomp.github.io/msl-safety-system/');
-        }
+        return self.clients.openWindow('https://mslcomp.github.io/msl-safety-system/');
       })
   );
 });
 
-// 설치 이벤트
-self.addEventListener('install', event => {
-  self.skipWaiting(); // 대기 없이 즉시 활성화
+// 설치
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
 });
 
-// 활성화 이벤트
-self.addEventListener('activate', event => {
+// 활성화 (✅ 오래된 캐시 전부 정리 + claim)
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames.map(name => {
-        if (name !== CACHE_NAME) return caches.delete(name);
-      })
-    ))
+    Promise.all([
+      caches.keys().then((cacheNames) =>
+        Promise.all(cacheNames.map((name) => {
+          if (name !== CACHE_NAME) return caches.delete(name);
+        }))
+      ),
+      self.clients.claim()
+    ])
   );
-  return self.clients.claim();
 });
 
-// Fetch 이벤트
-self.addEventListener('fetch', event => {
-  if (event.request.url.includes('firebase') || event.request.url.includes('chrome-extension')) return;
+// Fetch
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // firebase/확장프로그램 제외
+  if (url.href.includes('firebase') || url.href.includes('chrome-extension')) return;
+
+  // ✅ (핵심) HTML 네비게이션은 Network-first
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req).then((c) => c || caches.match(toScopeUrl('./index.html'))))
+    );
+    return;
+  }
+
+  // ✅ CSS/이미지 등은 Cache-first
   event.respondWith(
-    caches.match(event.request).then(res => res || fetch(event.request))
+    caches.match(req).then((cached) => cached || fetch(req))
   );
 });
