@@ -17,11 +17,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js?v=2026-01-08-1');
-  }
-</script>
+
 
 
   <!-- Confetti -->
@@ -1509,6 +1505,27 @@ console.log("BOOT token=", token);
 #userNamePill:active {
   transform: scale(0.98);
 }
+/* 상단 로고 박스(기존 MSL 네모 자리) */
+.app-logo{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;   /* 네모 라운드 */
+  overflow: hidden;
+  background: #ffffff;   /* 로고 주변 여백이 흰색이면 깔끔 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* 로고 이미지 맞춤 */
+.app-logo img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* 로고 잘리지 않게 */
+  padding: 6px;          /* 로고가 꽉 차면 답답해서 살짝 여백 */
+}
+
 
 
   </style>
@@ -1519,9 +1536,12 @@ console.log("BOOT token=", token);
     <header class="top">
       <div class="top-row">
         <div class="brand">
-          <div class="logo">MSL</div>
+          <div class="app-logo">
+  <img src="./msl_logo_og.jpg" alt="MSL Compressor 로고">
+</div>
+
           <div class="brand-title">
-            <b>MSL 안전보건관리 플랫폼</b>
+            <b>MSL 안전보건관리 플랫폼 v2.0</b>
             <span>MSL Digital Safety Platform v2.0</span>
           </div>
         </div>
