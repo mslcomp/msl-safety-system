@@ -1526,6 +1526,34 @@ console.log("BOOT token=", token);
   padding: 6px;          /* 로고가 꽉 차면 답답해서 살짝 여백 */
 }
 
+/* 토스트 컨테이너(항상 화면 위에 고정) */
+#toastRoot{
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 18px) + 18px);
+  transform: translateX(-50%);
+  z-index: 999999;            /* ✅ 모달보다 무조건 크게 */
+  pointer-events: none;
+  width: calc(100% - 24px);
+  max-width: 520px;
+}
+
+/* 토스트 박스 */
+.toast{
+  pointer-events: none;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(20, 20, 20, 0.92);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  backdrop-filter: blur(8px);
+}
+
+
 
 
   </style>
@@ -1565,7 +1593,7 @@ console.log("BOOT token=", token);
         <div class="hero-head">
           <div>
             <h1>㈜엠에스엘콤프레서</h1>
-            <p>안전보건관리책임자: 성시민 대표 / 현장관리감독자: 임정호 Pro</p>
+            <p>안전보건관리 최고책임자: 성시민 대표 / 현장관리감독자: 임정호 Pro / 사무실관리감독자: 이명헌 선임</p>
           </div>
           <div class="chip" id="dateChip">오늘</div>
         </div>
@@ -1845,42 +1873,33 @@ console.log("BOOT token=", token);
     // Toast
     // =========================
     let toastTimer = null;
-    function toast(message){
-      clearTimeout(toastTimer);
-      let el = document.getElementById("toast");
-      if(!el){
-        el = document.createElement("div");
-        el.id = "toast";
-        el.style.cssText = `
-          position: fixed;
-          left: 50%;
-          transform: translateX(-50%);
-          bottom: 92px;
-          width: min(420px, calc(100% - 24px));
-          padding: 12px 14px;
-          border-radius: 16px;
-          border: 1px solid var(--stroke);
-          background: var(--surface);
-          backdrop-filter: blur(12px);
-          box-shadow: var(--shadow);
-          color: var(--text);
-          font-weight: 900;
-          font-size: 13px;
-          z-index: 999;
-          opacity: 0;
-          transition: opacity .15s ease, transform .15s ease;
-          text-align: center;
-        `;
-        document.body.appendChild(el);
-      }
-      el.textContent = message;
-      el.style.opacity = "1";
-      el.style.transform = "translateX(-50%) translateY(0)";
-      toastTimer = setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transform = "translateX(-50%) translateY(6px)";
-      }, 1400);
-    }
+function toast(msg, ms = 1800){
+  let root = document.getElementById('toastRoot');
+  if(!root){
+    root = document.createElement('div');
+    root.id = 'toastRoot';
+    document.body.appendChild(root);
+  }
+
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+
+  root.appendChild(t);
+
+  // 애니메이션(선택)
+  t.animate(
+    [{ transform:'translateY(10px)', opacity:0 }, { transform:'translateY(0)', opacity:1 }],
+    { duration: 180, easing: 'ease-out' }
+  );
+
+  setTimeout(() => {
+    t.animate(
+      [{ transform:'translateY(0)', opacity:1 }, { transform:'translateY(10px)', opacity:0 }],
+      { duration: 180, easing: 'ease-in' }
+    ).onfinish = () => t.remove();
+  }, ms);
+}
 
     // =========================
     // Tabs
@@ -4343,7 +4362,7 @@ async function openMyInfoModalAndLoad(){
     const resetBtn= document.getElementById('miReset');
 
     if(saveBtn){
-      saveBtn.addEventListener('click', () => {
+      saveBtn.addEventListener('click', async () => {
         const n = document.getElementById('miName')?.value.trim() || '';
         const d = document.getElementById('miDept')?.value.trim() || '';
 
@@ -4355,7 +4374,7 @@ async function openMyInfoModalAndLoad(){
         localStorage.setItem('mslUserName', n);
         localStorage.setItem('mslUserDept', d);
 
-        toast('✅ 내정보 저장 완료');
+        toast('✅ 내정보가 정상 등록되었습니다');
 
         // 제안하기 부서 자동 반영(있으면)
         const sDept = document.getElementById('sDept');
@@ -4368,7 +4387,7 @@ async function openMyInfoModalAndLoad(){
         updateBadges();
 
         // 화면 다시 렌더
-        miBody.innerHTML = renderMyInfoHTML(n, d);
+        miBody.innerHTML = await renderMyInfoHTML(n, d);
       });
     }
 
