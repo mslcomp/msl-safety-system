@@ -2,20 +2,13 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
-// ✅ 배포할 때마다 버전만 바꿔주세요 (이게 캐시 강제 갱신 트리거)
-const CACHE_VERSION = '2026-04-29-2';
+// ✅ 배포할 때마다 버전만 바꿔주세요 (index.html 의 MSL_DEPLOY_VERSION 과 같게)
+const CACHE_VERSION = '2026-04-29-3';
 const CACHE_NAME = `msl-safety-${CACHE_VERSION}`;
 
 // ✅ GitHub Pages 프로젝트 경로(/msl-safety-system/) 자동 계산
 const SCOPE_PATH = new URL(self.registration.scope).pathname; // "/msl-safety-system/"
 const toScopeUrl = (p) => new URL(p, self.registration.scope).toString();
-
-const urlsToCache = [
-  toScopeUrl('./'),
-  toScopeUrl('./index.html'),
-  toScopeUrl('./styles.css'),
-  toScopeUrl('./icon-192.png')
-];
 
 // Firebase 설정 (본인의 설정값 유지)
 const firebaseConfig = {
@@ -61,11 +54,17 @@ self.addEventListener('notificationclick', event => {
   );
 });
 
-// 설치
+// 설치 — index.html 은 precache 하지 않음(옛 화면이 SW 캐시에 고정되는 것 방지)
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(async (cache) => {
+      try {
+        await cache.add(toScopeUrl('./icon-192.png'));
+      } catch (e) {
+        /* 아이콘 없으면 생략 */
+      }
+    })
   );
 });
 
@@ -91,18 +90,15 @@ self.addEventListener('fetch', (event) => {
   // firebase/확장프로그램 제외
   if (url.href.includes('firebase') || url.href.includes('chrome-extension')) return;
 
-  // ✅ (핵심) HTML 네비게이션: 캐시 우회(카톡·인앱 WebView의 옛 HTML 방지)
+  // ✅ HTML: 네트워크만 사용·응답을 SW에 저장하지 않음(카톡 캐시 누적 방지)
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req, { cache: 'no-store', credentials: 'same-origin' })
-        .then((res) => {
-          if (res && res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-          }
-          return res;
+      fetch(req, { cache: 'no-store', credentials: 'same-origin' }).catch(() =>
+        fetch(req.url + (req.url.includes('?') ? '&' : '?') + '_sw_retry=' + Date.now(), {
+          cache: 'no-store',
+          credentials: 'same-origin'
         })
-        .catch(() => caches.match(req).then((c) => c || caches.match(toScopeUrl('./index.html'))))
+      )
     );
     return;
   }
