@@ -1348,12 +1348,6 @@ console.log("BOOT token=", token);
   color: var(--danger);
 }
 
-/* ✅ 차량 카드에서는 버튼 폭을 조금 더 컴팩트하게 */
-.vehicle-actions .actionBtn{
-  min-width: 96px;
-}
-
-
 /* =========================
    Segmented (3분할) Buttons
 ========================= */
@@ -1672,7 +1666,6 @@ console.log("BOOT token=", token);
 
         <div class="tabs" id="tabs">
           <button class="tab active" data-tab="sign">안전보건자료&TBM <span class="badge" id="badgeSign">0</span></button>
-          <button class="tab" data-tab="vehicle">차량관리 <span class="badge" id="badgeVehicle">0</span></button>
           <button class="tab" data-tab="admin">관리 <span class="badge" id="badgeAdmin">0</span></button>
         </div>
       </div>
@@ -1686,16 +1679,6 @@ console.log("BOOT token=", token);
         </div>
         <div class="grid" id="signGrid">
           <div class="loading">문서 불러오는 중...</div>
-        </div>
-      </section>
-
-      <section class="tab-panel hide" id="panel-vehicle">
-        <div class="section-title">
-          <h2>사내차량 정비내역</h2>
-          <span>차량별 최근 정비 현황</span>
-        </div>
-        <div class="grid" id="vehicleGrid">
-          <div class="loading">차량 정보 불러오는 중...</div>
         </div>
       </section>
 
@@ -1912,7 +1895,6 @@ console.log("BOOT token=", token);
     let PENDING_DOCS_ALL = [];
     let documents = [];
     let signatures = [];
-    let vehicles = [];
 
     let currentDocumentId = null;
     let isAdmin = false;
@@ -1925,9 +1907,6 @@ console.log("BOOT token=", token);
     let currentQuizAnswer = 'O';
     let currentQuizHint = '';
 
-    let editingVehicleId = null;
-    let editingVehicleSnapshot = null;
-
     const ADMIN_PASSWORD = 'msl2024';
     const employees = [
       '함재원', '조점숙', '이명헌', '양희만', '이문우',
@@ -1938,9 +1917,45 @@ console.log("BOOT token=", token);
     ];
 
     // 고정 TBM 체크리스트 항목
+    const TBM_ITEM_RISK_REPORT = '위험요소 발견 시 관리감독자에게 즉시 보고';
+    const TBM_RISK_LEGACY_KEYS = [
+      '위험요소 발견시 관리감독자에게 즉시 보고',
+      '위험요소 발견 시 관리감독자에게 즉시보고',
+      '위험요소 발견 시 작업중지 및 보고',
+      '위험요소 발견시 작업중지 및 보고',
+      '위험 요소 발견 시 작업중지 및 보고',
+      '위험 요소 발견시 작업중지 및 보고',
+      '위험요소 발견 시 작업중지및 보고',
+      '위험요소 발견시 작업중지및 보고'
+    ];
+    function canonicalTbmItemKey(item) {
+      if (!item) return item;
+      const raw = String(item);
+      if (raw === TBM_ITEM_RISK_REPORT) return TBM_ITEM_RISK_REPORT;
+      if (TBM_RISK_LEGACY_KEYS.includes(raw)) return TBM_ITEM_RISK_REPORT;
+      const norm = raw.replace(/\s+/g, ' ').trim().replace(/위험\s+요소/g, '위험요소');
+      if (norm === TBM_ITEM_RISK_REPORT) return TBM_ITEM_RISK_REPORT;
+      for (const k of TBM_RISK_LEGACY_KEYS) {
+        if (norm === k.replace(/\s+/g, ' ').replace(/위험\s+요소/g, '위험요소')) {
+          return TBM_ITEM_RISK_REPORT;
+        }
+      }
+      if (norm.includes('위험요소') && norm.includes('작업중지') && /보고/.test(norm)) {
+        return TBM_ITEM_RISK_REPORT;
+      }
+      return item;
+    }
+    function tbmRiskItemChecked(results) {
+      if (!results) return false;
+      if (results[TBM_ITEM_RISK_REPORT]) return true;
+      for (const k of Object.keys(results)) {
+        if (results[k] && canonicalTbmItemKey(k) === TBM_ITEM_RISK_REPORT) return true;
+      }
+      return false;
+    }
     const FIXED_TBM_ITEMS = [
       '개인 보호구 착용',
-      '위험요소 발견시 관리감독자에게 즉시 보고',
+      TBM_ITEM_RISK_REPORT,
       '교육 및 안전관리 규정 준수'
     ];
 
@@ -2029,7 +2044,6 @@ function toast(msg, ms = 1800){
     const tabs = document.querySelectorAll(".tab");
     const panels = {
       sign: document.getElementById("panel-sign"),
-      vehicle: document.getElementById("panel-vehicle"),
       admin: document.getElementById("panel-admin")
     };
 
@@ -2046,7 +2060,6 @@ function toast(msg, ms = 1800){
         panels[key].classList.add("fade-in");
 
         if(key === 'sign') loadPendingDocuments();
-        if(key === 'vehicle') loadVehicles();
         if(key === 'admin') loadManageData();
       });
     });
@@ -2298,25 +2311,6 @@ function toast(msg, ms = 1800){
       }
     }
 
-    async function loadVehiclesFromFirebase() {
-      try{
-        // Firestore orderBy는 필드가 없는 문서를 누락시킬 수 있어 전체 조회 후 클라이언트 정렬
-        const snapshot = await db.collection('vehicles').get();
-        vehicles = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .sort((a, b) => {
-            const aTs = a.updatedAt?.toMillis?.() ?? a.createdAt?.toMillis?.() ?? 0;
-            const bTs = b.updatedAt?.toMillis?.() ?? b.createdAt?.toMillis?.() ?? 0;
-            return bTs - aTs;
-          });
-        return vehicles;
-      }catch(err){
-        console.error('차량 로드 오류:', err);
-        vehicles = [];
-        return [];
-      }
-    }
-
     // =========================
     // Pending Docs (서명 탭)
     // =========================
@@ -2463,11 +2457,6 @@ const documentDates = documents
 const latestOnly = PENDING_DOCS_ALL.slice(0, 1);
 
 container.innerHTML = latestOnly.map(doc => {
-  const docSigs = signatures.filter(s => s.documentId === doc.id);
-  const signedCount = docSigs.length;
-  const unsignedCount = employees.length - signedCount;
-  const completionRate = employees.length ? Math.round((signedCount / employees.length) * 100) : 0;
-
   return `
     <article class="card">
       <div class="card-head">
@@ -2475,46 +2464,12 @@ container.innerHTML = latestOnly.map(doc => {
           <div class="emoji">✍️</div>
           <div class="title">
             <b>${escapeHTML(doc.title)}</b>
-            <span>미확인인원  ${unsignedCount}명</span>
           </div>
         </div>
         <div class="status-chip red">긴급</div>
       </div>
 
       <div class="card-body">
-        <div style="margin-bottom: 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
-            <div style="font-size: 13px; font-weight: 800; color: var(--text);">확인 진행률</div>
-            <div style="font-size: 18px; font-weight: 900; color: var(--primary);">${completionRate}%</div>
-          </div>
-
-          <div style="position: relative; height: 10px; background: rgba(43,107,255,.12); border-radius: 999px; overflow: hidden; border: 1px solid rgba(43,107,255,.20);">
-            <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${completionRate}%; background: linear-gradient(90deg, #12B76A, #10D97F); border-radius: 999px; transition: width .3s ease;"></div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
-            <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(18,183,106,.08); border: 1px solid rgba(18,183,106,.15);">
-              <div style="width: 8px; height: 8px; border-radius: 999px; background: #12B76A;"></div>
-              <div style="flex: 1;">
-                <div style="font-size: 11px; color: var(--muted); font-weight: 700;">완료</div>
-                <div style="font-size: 16px; font-weight: 900; color: #12B76A; margin-top: 2px;">
-                  ${signedCount}<span style="font-size: 11px; font-weight: 700; color: var(--muted);"> / ${employees.length}명</span>
-                </div>
-              </div>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(255,59,92,.08); border: 1px solid rgba(255,59,92,.15);">
-              <div style="width: 8px; height: 8px; border-radius: 999px; background: #FF3B5C;"></div>
-              <div style="flex: 1;">
-                <div style="font-size: 11px; color: var(--muted); font-weight: 700;">미완료</div>
-                <div style="font-size: 16px; font-weight: 900; color: #FF3B5C; margin-top: 2px;">
-                  ${unsignedCount}<span style="font-size: 11px; font-weight: 700; color: var(--muted);">명</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="cta">
           <button class="btn primary" data-open-doc="${doc.id}" style="width: 100%;">✅ 확인하기</button>
         </div>
@@ -2703,7 +2658,6 @@ container.innerHTML = latestOnly.map(doc => {
     const docSigs = signatures.filter(s => s.documentId === doc.id);
     const mySignature = docSigs.find(s => s.signerName === userName);
     const isCompleted = !!mySignature;
-    const completionRate = employees.length ? Math.round((docSigs.length / employees.length) * 100) : 0;
 
     if (isCompleted) {
       return `
@@ -2728,8 +2682,7 @@ container.innerHTML = latestOnly.map(doc => {
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
           <div style="width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #FF3B5C, #FF6B88); display: grid; place-items: center; font-size: 22px; flex-shrink: 0;">✍️</div>
           <div style="flex: 1; min-width: 0;">
-            <div style="font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px;">${escapeHTML(doc.title)}</div>
-            <div style="font-size: 11px; color: var(--muted); font-weight: 600;">확인률 ${completionRate}% · ${docSigs.length}/${employees.length}명 완료</div>
+              <div style="font-size: 14px; font-weight: 800; color: var(--text);">${escapeHTML(doc.title)}</div>
           </div>
         </div>
         <button class="btn primary" data-open-doc="${doc.id}" style="width: 100%;">
@@ -2977,7 +2930,8 @@ container.innerHTML = latestOnly.map(doc => {
         contentHtml += `</div>`;
       }
 
-      const tbmItems = (doc.tbmItems && doc.tbmItems.length > 0) ? doc.tbmItems : FIXED_TBM_ITEMS;
+      const tbmItemsRaw = (doc.tbmItems && doc.tbmItems.length > 0) ? doc.tbmItems : FIXED_TBM_ITEMS;
+      const tbmItems = tbmItemsRaw.map(canonicalTbmItemKey);
       contentHtml += `
         <div class="tbm-section">
           <div class="tbm-title">✓ 주간 TBM 체크리스트</div>
@@ -3162,7 +3116,6 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
       document.getElementById('badgeSign').textContent = signCount;
       document.getElementById('badgeAdmin').textContent = isAdmin ? '1' : '0';
-      document.getElementById('badgeVehicle').textContent = String(vehicles?.length || 0);
     }
 
     // =========================
@@ -3383,7 +3336,7 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         }) : '';
 
         const check1 = sig.checklistResults && sig.checklistResults['개인 보호구 착용'] ? 'O' : '';
-        const check2 = sig.checklistResults && sig.checklistResults['위험요소 발견시 관리감독자에게 즉시 보고'] ? 'O' : '';
+        const check2 = tbmRiskItemChecked(sig.checklistResults) ? 'O' : '';
         const check3 = sig.checklistResults && sig.checklistResults['교육 및 안전관리 규정 준수'] ? 'O' : '';
 
         csv += `${index + 1},"${(sig.signerName||'').replaceAll('"','""')}","${(sig.signerDept||'').replaceAll('"','""')}","${signedAt}",${check1},${check2},${check3},"${String(sig.signatureImageData || '').replaceAll('"','""')}"\n`;
@@ -3399,7 +3352,7 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       csv += '\n' + '='.repeat(100) + '\n\n';
       csv += '[체크리스트 항목 상세]\n';
       csv += '체크1,개인 보호구 착용\n';
-      csv += '체크2,위험요소 발견시 관리감독자에게 즉시 보고\n';
+      csv += `체크2,${TBM_ITEM_RISK_REPORT}\n`;
       csv += '체크3,교육 및 안전관리 규정 준수\n';
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -3564,305 +3517,6 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
     }
 
     // =========================
-    // 차량관리
-    // =========================
-    function getVehicleStatus(vehicle){
-      const nextTs = vehicle?.nextMaintenanceDate;
-      if(!nextTs) return { class:'blue', text:'정상' };
-
-      const next = asDate(nextTs);
-      if(!next) return { class:'blue', text:'정상' };
-      const today = new Date(); today.setHours(0,0,0,0);
-      const next0 = new Date(next); next0.setHours(0,0,0,0);
-
-      const diffDays = Math.round((next0 - today) / (1000*60*60*24));
-
-      if(diffDays < 0) return { class:'red', text:'지연' };
-      if(diffDays <= 7) return { class:'orange', text:'임박' };
-      return { class:'green', text:'정상' };
-    }
-
-    async function loadVehicles(){
-      const container = document.getElementById('vehicleGrid');
-      container.innerHTML = '<div class="loading">차량 정보 불러오는 중...</div>';
-
-      await loadVehiclesFromFirebase();
-
-      if (vehicles.length === 0) {
-        container.innerHTML = `
-          <div class="empty">
-            <div class="mail">🚗</div>
-            <div>
-              <b>등록된 차량이 없습니다</b>
-              <span>관리 탭에서 차량을 등록해주세요.</span>
-            </div>
-          </div>
-        `;
-        updateBadges();
-        return;
-      }
-
-      container.innerHTML = vehicles.map(vehicle => {
-        const status = getVehicleStatus(vehicle);
-        const maintDate = formatDateKR(vehicle.maintenanceDate);
-        const nextDate = formatDateKR(vehicle.nextMaintenanceDate);
-
-        return `
-          <div class="doc-wrap" style="position: relative; margin-bottom: 14px;">
-            <article class="card">
-              <div class="card-head">
-                <div class="left">
-                  <div class="emoji">🚗</div>
-                  <div class="title">
-                    <b>${escapeHTML(vehicle.vehicleNumber || '')}</b>
-                    <span>${escapeHTML(vehicle.vehicleName || '차량명 없음')}</span>
-                  </div>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <div class="status-chip ${status.class}">${status.text}</div>
-                  <button class="icon-btn" onclick="toggleVehicleMenu('${vehicle.id}')" style="box-shadow:none; width:36px; height:36px;">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-                      <circle cx="12" cy="5" r="2"/>
-                      <circle cx="12" cy="12" r="2"/>
-                      <circle cx="12" cy="19" r="2"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div class="card-body">
-                <div style="margin-bottom: 12px;">
-                  <div style="font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 6px;">📋 최근 정비내역</div>
-                  <div style="padding: 12px; border-radius: 12px; border: 1px solid var(--stroke); background: var(--surface-2);">
-                    <div style="font-size: 13px; color: var(--text); line-height: 1.6; white-space: pre-wrap;">${escapeHTML(vehicle.lastMaintenance || '정비내역 없음')}</div>
-                    ${maintDate ? `
-                      <div style="font-size: 11px; color: var(--muted); margin-top: 8px; font-weight: 600;">
-                        📅 정비일: ${maintDate}
-                      </div>
-                    ` : ''}
-                  </div>
-                </div>
-
-                ${nextDate ? `
-                  <div style="padding: 10px 12px; border-radius: 10px; background: rgba(255,184,0,.08); border: 1px solid rgba(255,184,0,.2);">
-                    <div style="font-size: 11px; font-weight: 700; color: var(--accent);">
-                      ⏰ 다음 정비 예정: ${nextDate}
-                    </div>
-                  </div>
-                ` : ''}
-
-<!-- ✅ (B) 여기! 카드 안 버튼 3개 삽입 -->
-              <div class="segmented">
-  <button type="button" class="seg-btn" onclick="copyVehicleInfo('${vehicle.id}')">📋 복사</button>
-  <button type="button" class="seg-btn primary" onclick="editVehicle('${vehicle.id}')">✏️ 수정</button>
-  <button type="button" class="seg-btn danger" onclick="deleteVehicle('${vehicle.id}', '${escapeHTML(vehicle.vehicleNumber || '')}')">🗑️ 삭제</button>
-</div>
-
-
-
-              </div>
-            </article>
-
-         
-          </div>
-        `;
-      }).join('');
-
-      updateBadges();
-    }
-
-    function toggleVehicleMenu(vehicleId){
-      const menu = document.getElementById(`vehicle-menu-${vehicleId}`);
-      if(!menu) return;
-
-      // 다른 메뉴 닫기
-      document.querySelectorAll('[id^="vehicle-menu-"]').forEach(m => m.style.display='none');
-
-      const open = (menu.style.display === 'flex');
-      if(!open) menu.style.display = 'flex';
-      else menu.style.display = 'none';
-    }
-
-    function copyVehicleInfo(vehicleId){
-      const v = vehicles.find(x => x.id === vehicleId);
-      if(!v){ toast('차량을 찾을 수 없습니다'); return; }
-
-      const maintDate = formatDateKR(v.maintenanceDate);
-      const nextDate = formatDateKR(v.nextMaintenanceDate);
-
-      const text =
-`[MSL 차량 정비정보]
-차량번호: ${v.vehicleNumber || ''}
-차량명: ${v.vehicleName || ''}
-최근정비: ${v.lastMaintenance || ''}
-정비일: ${maintDate}
-다음정비: ${nextDate}
-`;
-
-      if(navigator.clipboard){
-        navigator.clipboard.writeText(text).then(()=>toast('📋 차량 정보 복사 완료'));
-      }else{
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        toast('📋 차량 정보 복사 완료');
-      }
-      toggleVehicleMenu(vehicleId);
-    }
-
-    async function editVehicle(vehicleId){
-      const v = vehicles.find(x => x.id === vehicleId);
-      if(!v){ toast('차량을 찾을 수 없습니다'); return; }
-
-      if(!isAdmin){
-        toast('⚠️ 관리자 모드에서만 수정할 수 있습니다');
-        return;
-      }
-
-      // 관리탭으로 이동해서 폼 채우기
-      editingVehicleId = vehicleId;
-      editingVehicleSnapshot = {
-        vehicleNumber: v.vehicleNumber || '',
-        vehicleName: v.vehicleName || '',
-        lastMaintenance: v.lastMaintenance || '',
-        maintenanceDate: toDateInputValue(asDate(v.maintenanceDate)),
-        nextMaintenanceDate: toDateInputValue(asDate(v.nextMaintenanceDate))
-      };
-
-      // 탭 전환(이미 관리탭이면 전환 생략)
-      const currentTab = document.querySelector('.tab.active')?.dataset.tab;
-      if(currentTab !== 'admin'){
-        document.querySelector('.tab[data-tab="admin"]').click();
-      }
-
-      // 관리 폼이 실제로 렌더된 뒤 값을 채우도록 보장
-      await loadManageData();
-      prefillVehicleFormForEdit();
-
-      toggleVehicleMenu(vehicleId);
-    }
-
-    function prefillVehicleFormForEdit(retry = 0){
-      if(!editingVehicleSnapshot) return;
-
-      const num = document.getElementById('vehicleNumber');
-      const name = document.getElementById('vehicleName');
-      const maint = document.getElementById('vehicleMaintenance');
-      const mDate = document.getElementById('maintenanceDate');
-      const nDate = document.getElementById('nextMaintenanceDate');
-
-      if(!num || !name || !maint || !mDate || !nDate){
-        if(retry < 20){
-          setTimeout(() => prefillVehicleFormForEdit(retry + 1), 100);
-        }else{
-          toast('⚠️ 수정 폼을 여는 중 문제가 발생했습니다. 다시 시도해주세요');
-        }
-        return;
-      }
-
-      num.value = editingVehicleSnapshot.vehicleNumber;
-      name.value = editingVehicleSnapshot.vehicleName;
-      maint.value = editingVehicleSnapshot.lastMaintenance;
-      mDate.value = editingVehicleSnapshot.maintenanceDate;
-      nDate.value = editingVehicleSnapshot.nextMaintenanceDate;
-
-      toast('✏️ 차량 수정 모드');
-    }
-
-    async function deleteVehicle(vehicleId, vehicleNumber){
-      if(!confirm(`"${vehicleNumber}" 차량 정보를 삭제하시겠습니까?`)){
-        toggleVehicleMenu(vehicleId);
-        return;
-      }
-
-      try{
-        await db.collection('vehicles').doc(vehicleId).delete();
-        toast('🗑️ 차량 삭제 완료');
-        await loadVehiclesFromFirebase();
-        loadVehicles();
-
-        if(isAdmin){
-          // 관리탭의 배지도 갱신
-          loadManageData();
-        }
-      }catch(err){
-        console.error('차량 삭제 오류:', err);
-        toast('❌ 차량 삭제 실패');
-      }
-    }
-
-    function clearVehicleForm(){
-      editingVehicleId = null;
-      editingVehicleSnapshot = null;
-      document.getElementById('vehicleNumber').value = '';
-      document.getElementById('vehicleName').value = '';
-      document.getElementById('vehicleMaintenance').value = '';
-      document.getElementById('maintenanceDate').value = '';
-      document.getElementById('nextMaintenanceDate').value = '';
-      toast('🚗 차량 폼 초기화');
-    }
-
-    async function submitVehicle(btn){
-      const vehicleNumber = document.getElementById('vehicleNumber').value.trim();
-      const vehicleName = document.getElementById('vehicleName').value.trim();
-      const lastMaintenance = document.getElementById('vehicleMaintenance').value.trim();
-      const maintenanceDate = document.getElementById('maintenanceDate').value;
-      const nextMaintenanceDate = document.getElementById('nextMaintenanceDate').value;
-
-      if(!vehicleNumber){
-        toast('⚠️ 차량번호를 입력하세요');
-        return;
-      }
-
-      const payload = {
-        vehicleNumber,
-        vehicleName: vehicleName || '',
-        lastMaintenance: lastMaintenance || '',
-        maintenanceDate: maintenanceDate ? tsFromDateInput(maintenanceDate) : null,
-        nextMaintenanceDate: nextMaintenanceDate ? tsFromDateInput(nextMaintenanceDate) : null,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      const original = btn?.textContent || '';
-      if(btn){
-        btn.textContent = '저장 중...';
-        btn.disabled = true;
-      }
-
-      try{
-        if(editingVehicleId){
-          await db.collection('vehicles').doc(editingVehicleId).update(payload);
-          toast('✅ 차량 정보 수정 완료');
-        }else{
-          payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-          await db.collection('vehicles').add(payload);
-          toast('✅ 차량 등록 완료');
-        }
-
-        clearVehicleForm();
-        await loadVehiclesFromFirebase();
-        updateBadges();
-
-        // 차량탭 반영
-        const currentTab = document.querySelector('.tab.active')?.dataset.tab;
-        if(currentTab === 'vehicle') loadVehicles();
-        if(currentTab === 'admin') loadManageData();
-
-      }catch(err){
-        console.error('차량 저장 오류:', err);
-        toast('❌ 차량 저장 실패');
-      }finally{
-        if(btn){
-          btn.textContent = original || '🚗 등록/수정';
-          btn.disabled = false;
-        }
-      }
-    }
-
-    // =========================
     // 아차사고 상태 정보
     // =========================
     function getNearmissStatusInfo(status) {
@@ -4012,7 +3666,6 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
       await loadDocumentsFromFirebase();
       await loadSignaturesFromFirebase();
-      await loadVehiclesFromFirebase();
 
       let nearmissSuggestions = [];
       try {
@@ -4023,47 +3676,6 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       }
 
       container.innerHTML = `
-        <!-- 차량 등록/관리 카드 -->
-        <article class="card">
-          <div class="card-head">
-            <div class="left">
-              <div class="emoji">🚗</div>
-              <div class="title">
-                <b>사내차량 정비내역 등록</b>
-                <span>차량 추가 및 정비내역 기록</span>
-              </div>
-            </div>
-            <div class="status-chip green">차량</div>
-          </div>
-          <div class="card-body">
-            <div class="field">
-              <div class="label">차량번호</div>
-              <input type="text" id="vehicleNumber" class="input" placeholder="예) 12가 3456">
-            </div>
-            <div class="field">
-              <div class="label">차량명 (선택)</div>
-              <input type="text" id="vehicleName" class="input" placeholder="예) 소나타, 포터 등">
-            </div>
-            <div class="field">
-              <div class="label">정비내역</div>
-              <textarea id="vehicleMaintenance" class="textarea" placeholder="정비 내용을 입력하세요"></textarea>
-            </div>
-            <div class="field">
-              <div class="label">정비일자</div>
-              <input type="date" id="maintenanceDate" class="input">
-            </div>
-            <div class="field">
-              <div class="label">다음 정비 예정일 (선택)</div>
-              <input type="date" id="nextMaintenanceDate" class="input">
-            </div>
-
-            <div class="cta">
-              <button class="btn ghost" onclick="clearVehicleForm()">초기화</button>
-              <button class="btn primary" onclick="submitVehicle(this)">🚗 등록/수정</button>
-            </div>
-          </div>
-        </article>
-
         <!-- 문서 등록 카드 -->
         <article class="card">
           <div class="card-head">
@@ -4246,10 +3858,6 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
               <div class="stat orange">
                 <b>제안</b>
                 <div class="value"><strong>${nearmissSuggestions.length}</strong><span>건</span></div>
-              </div>
-              <div class="stat">
-                <b>차량</b>
-                <div class="value"><strong>${vehicles.length}</strong><span>대</span></div>
               </div>
             </div>
 
@@ -4588,7 +4196,6 @@ html += `
     // 데이터 먼저 로드 → 배지/목록 안정화
     await loadDocumentsFromFirebase();
     await loadSignaturesFromFirebase();
-    await loadVehiclesFromFirebase();
 
     updateBadges();
     loadPendingDocuments();  // 기본 화면: 서명확인 탭
@@ -4713,20 +4320,13 @@ async function computeMyStats(userName){
     myNearmissCount = 0;
   }
 
-  // 차량 알림(지연/임박)
-  const vehicleAlerts = (vehicles || []).map(v => {
-    const st = getVehicleStatus(v);
-    return { v, st };
-  }).filter(x => x.st.class === 'red' || x.st.class === 'orange');
-
   return {
     mySigs,
     pendingDocs,
     eduPending,
     lastSignedAt,
     todaySigned,
-    myNearmissCount,  // ✅ 추가!
-    vehicleAlerts
+    myNearmissCount  // ✅ 추가!
   };
 }
 
@@ -4739,8 +4339,6 @@ async function renderMyInfoHTML(userName, userDept){
     
 
   const recentSigned = stats.mySigs.slice(0, 5);
-
-  const vehicleTop = stats.vehicleAlerts.slice(0, 3);
 
   // 상태 배지
   const badgeHTML = (text, cls) => `
@@ -4758,11 +4356,6 @@ const nearmissBadge =
   stats.myNearmissCount === 0 ? badgeHTML('아차사고 제안 0건', 'neutral')
   : stats.myNearmissCount >= 5 ? badgeHTML(`아차사고 제안 ${stats.myNearmissCount}건 · 우수`, 'ok')
   : badgeHTML(`아차사고 제안 ${stats.myNearmissCount}건`, 'ok');
-
-// ✅ 3. 차량 알림 배지
-const vehicleBadge =
-  vehicleTop.length === 0 ? badgeHTML('차량 알림 없음', 'ok')
-  : badgeHTML(`차량 알림 ${vehicleTop.length}`, 'warn');
 
 return `
   <div class="mi-card">
@@ -4782,11 +4375,10 @@ return `
           </div>
         </div>
 
-        <!-- ✅ 배지 3개만 표시 -->
+        <!-- ✅ 배지 표시 -->
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           ${pendingBadge}
           ${nearmissBadge}
-          ${vehicleBadge}
         </div>
 
                 <div style="margin-top:12px; padding-top:12px; border-top:1px solid var(--stroke);">
@@ -4878,34 +4470,6 @@ return `
           </div>`
       }
     </div>
-
-    <div class="mi-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <div style="font-weight:900;">차량 정비 알림 (임박/지연)</div>
-        <div style="font-size:12px; color:var(--muted); font-weight:800;">${vehicleTop.length}건</div>
-      </div>
-
-      ${
-        vehicleTop.length === 0
-        ? `<div class="mi-empty">임박/지연 차량이 없습니다.</div>`
-        : `<div class="mi-list">
-            ${vehicleTop.map(x => {
-              const v = x.v;
-              const st = x.st;
-              const next = v.nextMaintenanceDate ? formatTS(v.nextMaintenanceDate) : '-';
-              return `
-                <div class="mi-item">
-                  <div style="min-width:0;">
-                    <div class="mi-item-title">${escapeHTML(v.vehicleNumber || '')} · ${escapeHTML(v.vehicleName || '')}</div>
-                    <div class="mi-item-meta">다음 정비: ${escapeHTML(next)}</div>
-                  </div>
-                  <div class="status-chip ${st.class}" style="margin:0;">${st.text}</div>
-                </div>
-              `;
-            }).join('')}
-          </div>`
-      }
-    </div>
   `;
 }
 
@@ -4926,7 +4490,6 @@ async function openMyInfoModalAndLoad(){
   try{
     await loadDocumentsFromFirebase();
     await loadSignaturesFromFirebase();
-    await loadVehiclesFromFirebase();
   }catch(e){}
 
   const userDept = localStorage.getItem('mslUserDept') || '';
