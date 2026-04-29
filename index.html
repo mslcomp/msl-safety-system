@@ -6,6 +6,20 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <!-- 카카오톡·라인 등 인앱 브라우저: 강한 캐시 무력화(최초 1회만 URL 갱신) -->
+  <script>
+  (function () {
+    try {
+      var ua = navigator.userAgent || '';
+      var inApp = /KAKAOTALK|Line\/|Instagram|FBAN|FBAV|NAVER/i.test(ua);
+      if (!inApp) return;
+      var u = new URL(window.location.href);
+      if (u.searchParams.has('_mslnc')) return;
+      u.searchParams.set('_mslnc', String(Date.now()));
+      window.location.replace(u.toString());
+    } catch (e) {}
+  })();
+  </script>
   <title>MSL 안전보건관리 플랫폼 v2.0</title>
 
   <!-- Font -->
@@ -4730,6 +4744,14 @@ function saveNameChange(btn) {
   </div>
 </div>
 
+<script>
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (reg) {
+    reg.update();
+  }).catch(function () {});
+})();
+</script>
 
 </body>
 </html>
