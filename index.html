@@ -7,11 +7,36 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <!-- 배포할 때마다 아래 값을 sw.js 의 CACHE_VERSION 과 같게 올리세요 -->
-  <script>window.MSL_DEPLOY_VERSION = '2026-04-29-3';</script>
+  <script>window.MSL_DEPLOY_VERSION = '2026-04-30-1';</script>
+  <!-- 카카오 인앱: 이 사이트 SW·캐시만 즉시 해제(인앱에서 구버전 고정되는 것 방지) -->
+  <script>
+  (function () {
+    try {
+      var ua = navigator.userAgent || '';
+      if (!/KAKAOTALK|KakaoTalk|Kakao\//i.test(ua)) return;
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (rs) {
+          rs.forEach(function (r) {
+            var script = (r.active && r.active.scriptURL) || (r.waiting && r.waiting.scriptURL) || '';
+            var scope = r.scope || '';
+            if (/sw\.js|msl-safety/i.test(script + scope)) r.unregister();
+          });
+        });
+      }
+      if (window.caches && caches.keys) {
+        caches.keys().then(function (keys) {
+          keys.forEach(function (k) {
+            if (/^msl-safety/i.test(k)) caches.delete(k);
+          });
+        });
+      }
+    } catch (e) {}
+  })();
+  </script>
   <!-- 배포 버전이 바뀌면 SW·Cache Storage 전부 비우고 1회 새로고침 -->
   <script>
   (function () {
-    var DEPLOY = window.MSL_DEPLOY_VERSION || '2026-04-29-3';
+    var DEPLOY = window.MSL_DEPLOY_VERSION || '2026-04-30-1';
     function finish() {
       try { localStorage.setItem('msl_deploy_id', DEPLOY); } catch (e) {}
       try { location.reload(); } catch (e) {}
@@ -4778,12 +4803,29 @@ function saveNameChange(btn) {
 <script>
 (function () {
   if (!('serviceWorker' in navigator)) return;
+  var ua = navigator.userAgent || '';
+  /* 카카오·카카오톡 인앱은 SW 미사용 → 웹뷰 캐시와 겹치며 구 화면이 자주 남음 */
+  if (/KAKAOTALK|KakaoTalk|Kakao\//i.test(ua)) return;
   var v = window.MSL_DEPLOY_VERSION || '1';
   navigator.serviceWorker
     .register('sw.js?v=' + encodeURIComponent(v), { scope: './', updateViaCache: 'none' })
     .then(function (reg) { reg.update(); })
     .catch(function () {});
 })();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  try {
+    if (!/KAKAOTALK|KakaoTalk|Kakao\//i.test(navigator.userAgent || '')) return;
+    if (document.getElementById('msl-kakao-hint')) return;
+    var bar = document.createElement('div');
+    bar.id = 'msl-kakao-hint';
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:2147483646;background:rgba(15,23,42,.95);color:#f8fafc;padding:12px 14px;font-size:13px;line-height:1.45;text-align:center;font-weight:700;box-shadow:0 -4px 20px rgba(0,0,0,.2);';
+    bar.innerHTML = '카카오 인앱에서는 화면이 오래된 것처럼 보일 수 있습니다. 우측 상단 <b>⋮</b> 메뉴 → <b>다른 브라우저로 열기</b>(Chrome/Safari)를 이용해 주세요.';
+    document.body.appendChild(bar);
+  } catch (e) {}
+});
 </script>
 
 </body>
