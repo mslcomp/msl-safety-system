@@ -3,7 +3,7 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
 // ✅ 배포할 때마다 버전만 바꿔주세요 (index.html 의 MSL_DEPLOY_VERSION 과 같게)
-const CACHE_VERSION = '2026-04-29-3';
+const CACHE_VERSION = '2026-04-30-1';
 const CACHE_NAME = `msl-safety-${CACHE_VERSION}`;
 
 // ✅ GitHub Pages 프로젝트 경로(/msl-safety-system/) 자동 계산
