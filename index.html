@@ -6,12 +6,43 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <!-- 배포할 때마다 아래 값을 sw.js 의 CACHE_VERSION 과 같게 올리세요 -->
+  <script>window.MSL_DEPLOY_VERSION = '2026-04-29-3';</script>
+  <!-- 배포 버전이 바뀌면 SW·Cache Storage 전부 비우고 1회 새로고침 -->
+  <script>
+  (function () {
+    var DEPLOY = window.MSL_DEPLOY_VERSION || '2026-04-29-3';
+    function finish() {
+      try { localStorage.setItem('msl_deploy_id', DEPLOY); } catch (e) {}
+      try { location.reload(); } catch (e) {}
+    }
+    try {
+      var cur = localStorage.getItem('msl_deploy_id');
+      if (cur === DEPLOY) return;
+      if (cur == null || cur === '') {
+        try { localStorage.setItem('msl_deploy_id', DEPLOY); } catch (e) {}
+        return;
+      }
+      var p1 = ('serviceWorker' in navigator)
+        ? navigator.serviceWorker.getRegistrations().then(function (rs) {
+            rs.forEach(function (r) { r.unregister(); });
+          })
+        : Promise.resolve();
+      var p2 = (window.caches && caches.keys)
+        ? caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          })
+        : Promise.resolve();
+      Promise.all([p1, p2]).then(finish).catch(finish);
+    } catch (e) { finish(); }
+  })();
+  </script>
   <!-- 카카오톡·라인 등 인앱 브라우저: 강한 캐시 무력화(최초 1회만 URL 갱신) -->
   <script>
   (function () {
     try {
       var ua = navigator.userAgent || '';
-      var inApp = /KAKAOTALK|Line\/|Instagram|FBAN|FBAV|NAVER/i.test(ua);
+      var inApp = /KAKAOTALK|KakaoTalk|Kakao\/|Line\/|Instagram|FBAN|FBAV|NAVER/i.test(ua);
       if (!inApp) return;
       var u = new URL(window.location.href);
       if (u.searchParams.has('_mslnc')) return;
@@ -4747,9 +4778,11 @@ function saveNameChange(btn) {
 <script>
 (function () {
   if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (reg) {
-    reg.update();
-  }).catch(function () {});
+  var v = window.MSL_DEPLOY_VERSION || '1';
+  navigator.serviceWorker
+    .register('sw.js?v=' + encodeURIComponent(v), { scope: './', updateViaCache: 'none' })
+    .then(function (reg) { reg.update(); })
+    .catch(function () {});
 })();
 </script>
 
