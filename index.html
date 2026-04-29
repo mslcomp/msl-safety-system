@@ -488,6 +488,18 @@ console.log("BOOT token=", token);
     .card-body{
       padding: 14px;
     }
+    .admin-doc-list-scroll{
+      max-height: 620px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .admin-doc-list-scroll::-webkit-scrollbar{
+      width: 8px;
+    }
+    .admin-doc-list-scroll::-webkit-scrollbar-thumb{
+      background: rgba(148,163,184,.45);
+      border-radius: 999px;
+    }
 
     .stats{
       display:grid;
@@ -944,6 +956,28 @@ console.log("BOOT token=", token);
       line-height: 1.4;
     }
 
+    .signature-box{
+      border: 1px dashed var(--stroke-strong);
+      border-radius: 12px;
+      background: #fff;
+      padding: 8px;
+      margin-top: 8px;
+    }
+    .signature-canvas{
+      width: 100%;
+      height: 140px;
+      border-radius: 10px;
+      background: #fff;
+      touch-action: none;
+      cursor: crosshair;
+      display: block;
+    }
+    .signature-actions{
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
     .nearmiss-list{
       display: flex;
       flex-direction: column;
@@ -1224,6 +1258,35 @@ console.log("BOOT token=", token);
     .sig-item .check{
       color: var(--success);
       font-size: 18px;
+    }
+    .sig-signature{
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sig-signature-thumb{
+      width: 120px;
+      height: 44px;
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+      object-fit: contain;
+      background: #fff;
+      display: block;
+    }
+    .sig-signature-empty{
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .signature-preview-image{
+      width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      background: #fff;
+      display: block;
     }
 
     .doc-content{
@@ -1758,15 +1821,46 @@ console.log("BOOT token=", token);
       <div class="modal-body">
         <div id="documentToSign"></div>
         <div class="field">
-          <div class="label">이름</div>
-          <input type="text" id="signerName" class="input" placeholder="이름" required>
+          <div class="label">확인 퀴즈 (1문항)</div>
+          <div style="padding:12px; border:1px solid var(--stroke); border-radius:12px; background:var(--surface);">
+            <div id="signatureQuizQuestionText" style="font-size:12px; font-weight:800; line-height:1.5; margin-bottom:10px;">
+              오늘 공유된 자료에서 강조한 핵심 보호구는 안전화이다. (O/X)
+            </div>
+            <div id="signatureQuizHintText" style="display:none; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:10px;"></div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700;">
+                <input type="radio" name="signatureQuizOx" value="O"> O
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700;">
+                <input type="radio" name="signatureQuizOx" value="X"> X
+              </label>
+            </div>
+            <button type="button" id="quizCheckBtn" class="btn primary" onclick="checkSignatureQuiz()" style="width:100%;">
+              정답 확인 후 서명 진행
+            </button>
+          </div>
         </div>
-        <div class="field">
-          <div class="label">부서</div>
-          <input type="text" id="signerDept" class="input" placeholder="부서" required>
-        </div>
-        <div class="cta">
-          <button class="btn primary" onclick="saveSignature()" style="width: 100%;">TBM 및 안전보건자료 확인완료</button>
+        <div id="signatureFormArea" style="display:none;">
+          <div class="field">
+            <div class="label">이름</div>
+            <input type="text" id="signerName" class="input" placeholder="이름" required>
+          </div>
+          <div class="field">
+            <div class="label">부서</div>
+            <input type="text" id="signerDept" class="input" placeholder="부서" required>
+          </div>
+          <div class="field">
+            <div class="label">서명 (필수)</div>
+            <div class="signature-box">
+              <canvas id="signaturePad" class="signature-canvas" aria-label="서명 입력"></canvas>
+              <div class="signature-actions">
+                <button type="button" class="btn ghost" onclick="clearSignaturePad()">지우기</button>
+              </div>
+            </div>
+          </div>
+          <div class="cta">
+            <button class="btn primary" onclick="saveSignature()" style="width: 100%;">TBM 및 안전보건자료 확인완료</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1822,8 +1916,17 @@ console.log("BOOT token=", token);
 
     let currentDocumentId = null;
     let isAdmin = false;
+    let signaturePadCtx = null;
+    let signaturePadDrawing = false;
+    let signaturePadHasStroke = false;
+    let signaturePadLastPoint = null;
+    let signatureQuizPassed = false;
+    let currentQuizQuestion = '오늘 공유된 자료에서 강조한 핵심 보호구는 안전화이다. (O/X)';
+    let currentQuizAnswer = 'O';
+    let currentQuizHint = '';
 
     let editingVehicleId = null;
+    let editingVehicleSnapshot = null;
 
     const ADMIN_PASSWORD = 'msl2024';
     const employees = [
@@ -1831,13 +1934,13 @@ console.log("BOOT token=", token);
       '임정호', '서갑술', '김용춘', '황명진', '박화용',
       '이완복', '노선자', '이승현', '김용진', '양정모',
       '최현경', '한경아', '박태율', '유효빈', '지대준',
-      '윤다은', '성시민',
+      '윤다은', '성시민',    
     ];
 
     // 고정 TBM 체크리스트 항목
     const FIXED_TBM_ITEMS = [
       '개인 보호구 착용',
-      '위험요소 발견시 작업중지 및 보고',
+      '위험요소 발견시 관리감독자에게 즉시 보고',
       '교육 및 안전관리 규정 준수'
     ];
 
@@ -1867,6 +1970,25 @@ console.log("BOOT token=", token);
       if(!value) return null;
       const d = new Date(value + "T00:00:00");
       return firebase.firestore.Timestamp.fromDate(d);
+    }
+
+    function asDate(value){
+      if(!value) return null;
+      try{
+        if (typeof value.toDate === 'function') {
+          const d = value.toDate();
+          return isNaN(d?.getTime?.()) ? null : d;
+        }
+        const d = value instanceof Date ? value : new Date(value);
+        return isNaN(d.getTime()) ? null : d;
+      }catch(e){
+        return null;
+      }
+    }
+
+    function formatDateKR(value){
+      const d = asDate(value);
+      return d ? d.toLocaleDateString('ko-KR') : '';
     }
 
     // =========================
@@ -2178,9 +2300,15 @@ function toast(msg, ms = 1800){
 
     async function loadVehiclesFromFirebase() {
       try{
-        // updatedAt이 없을 수도 있으니 createdAt도 함께 고려
-        const snapshot = await db.collection('vehicles').orderBy('updatedAt', 'desc').get();
-        vehicles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Firestore orderBy는 필드가 없는 문서를 누락시킬 수 있어 전체 조회 후 클라이언트 정렬
+        const snapshot = await db.collection('vehicles').get();
+        vehicles = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => {
+            const aTs = a.updatedAt?.toMillis?.() ?? a.createdAt?.toMillis?.() ?? 0;
+            const bTs = b.updatedAt?.toMillis?.() ?? b.createdAt?.toMillis?.() ?? 0;
+            return bTs - aTs;
+          });
         return vehicles;
       }catch(err){
         console.error('차량 로드 오류:', err);
@@ -2192,6 +2320,100 @@ function toast(msg, ms = 1800){
     // =========================
     // Pending Docs (서명 탭)
     // =========================
+    function getPendingDocsForUser(userName){
+      if(!userName) return [];
+      return documents.filter(doc => {
+        const docSigs = signatures.filter(s => s.documentId === doc.id);
+        const mySignature = docSigs.find(s => s.signerName === userName);
+        return !mySignature;
+      });
+    }
+
+    function getLocalDateKey(){
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function showPendingReminderModal(userName, pendingDocs){
+      const modal = document.createElement('div');
+      modal.className = 'modal show';
+      modal.style.display = 'flex';
+
+      const topDocs = pendingDocs.slice(0, 3);
+      const restCount = Math.max(pendingDocs.length - topDocs.length, 0);
+
+      modal.innerHTML = `
+        <div class="modal-content" style="max-width: 460px;">
+          <div class="modal-header">
+            <h3>🔔 미확인 문서 알림</h3>
+            <button class="icon-btn" data-close-reminder style="box-shadow:none; width:36px; height:36px;">
+              <svg class="icon" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div style="padding:12px; border-radius:12px; border:1px solid var(--stroke); background:var(--surface); margin-bottom:12px;">
+              <div style="font-size:13px; font-weight:800; margin-bottom:6px;">${escapeHTML(userName)}님, 오늘 확인이 필요한 문서가 있습니다</div>
+              <div style="font-size:12px; color:var(--muted); font-weight:700;">미확인 문서 ${pendingDocs.length}건</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+              ${topDocs.map(doc => `
+                <button type="button" class="btn ghost" data-reminder-doc="${doc.id}" style="justify-content:flex-start; text-align:left; width:100%;">
+                  📄 ${escapeHTML(doc.title || '제목 없음')}
+                </button>
+              `).join('')}
+              ${restCount > 0 ? `<div style="font-size:11px; color:var(--muted); font-weight:700; padding:2px 4px;">외 ${restCount}건 더 있음</div>` : ''}
+            </div>
+            <div class="cta">
+              <button class="btn ghost" data-close-reminder>오늘은 닫기</button>
+              <button class="btn primary" data-go-first-doc>첫 문서 확인</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.closest('[data-close-reminder]')) {
+          modal.remove();
+          return;
+        }
+
+        const docBtn = e.target.closest('[data-reminder-doc]');
+        if(docBtn){
+          const docId = docBtn.dataset.reminderDoc;
+          modal.remove();
+          if(docId) openSignatureModal(docId);
+          return;
+        }
+
+        if(e.target.closest('[data-go-first-doc]')){
+          modal.remove();
+          const first = pendingDocs[0];
+          if(first?.id) openSignatureModal(first.id);
+        }
+      });
+    }
+
+    function triggerPendingReminderIfNeeded(){
+      const userName = localStorage.getItem('mslUserName');
+      if(!userName) return;
+
+      const pendingDocs = getPendingDocsForUser(userName);
+      if(pendingDocs.length === 0) return;
+
+      const key = `msl_pending_reminder_${userName}_${getLocalDateKey()}`;
+      if(localStorage.getItem(key) === '1') return;
+      localStorage.setItem(key, '1');
+
+      showPendingReminderModal(userName, pendingDocs);
+    }
+
     async function loadPendingDocuments() {
       const container = document.getElementById('signGrid');
       container.innerHTML = '<div class="loading">문서 불러오는 중...</div>';
@@ -2205,11 +2427,7 @@ function toast(msg, ms = 1800){
         return;
       }
 
-      const pendingDocs = documents.filter(doc => {
-        const docSigs = signatures.filter(s => s.documentId === doc.id);
-        const mySignature = docSigs.find(s => s.signerName === userName);
-        return !mySignature;
-      });
+      const pendingDocs = getPendingDocsForUser(userName);
 
       // ✅ (핵심) 미서명 문서 전체를 전역에 저장 (최신순)
 PENDING_DOCS_ALL = pendingDocs
@@ -2582,6 +2800,153 @@ container.innerHTML = latestOnly.map(doc => {
     // =========================
     // Signature Modal
     // =========================
+    function getSignatureCanvasPoint(canvas, event){
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+      };
+    }
+
+    function handleSignaturePointerDown(event){
+      const canvas = event.target;
+      if(!signaturePadCtx || !canvas) return;
+      event.preventDefault();
+      signaturePadDrawing = true;
+      signaturePadHasStroke = true;
+      const point = getSignatureCanvasPoint(canvas, event);
+      signaturePadLastPoint = point;
+      signaturePadCtx.beginPath();
+      signaturePadCtx.arc(point.x, point.y, 1.2, 0, Math.PI * 2);
+      signaturePadCtx.fillStyle = '#111827';
+      signaturePadCtx.fill();
+      if (canvas.setPointerCapture) {
+        canvas.setPointerCapture(event.pointerId);
+      }
+    }
+
+    function handleSignaturePointerMove(event){
+      const canvas = event.target;
+      if(!signaturePadDrawing || !signaturePadCtx || !canvas) return;
+      event.preventDefault();
+      const point = getSignatureCanvasPoint(canvas, event);
+      signaturePadCtx.beginPath();
+      signaturePadCtx.moveTo(signaturePadLastPoint.x, signaturePadLastPoint.y);
+      signaturePadCtx.lineTo(point.x, point.y);
+      signaturePadCtx.stroke();
+      signaturePadLastPoint = point;
+    }
+
+    function handleSignaturePointerUp(event){
+      const canvas = event.target;
+      signaturePadDrawing = false;
+      signaturePadLastPoint = null;
+      if(canvas && canvas.releasePointerCapture){
+        try {
+          canvas.releasePointerCapture(event.pointerId);
+        } catch(e){
+          // ignore pointer capture release errors
+        }
+      }
+    }
+
+    function initSignaturePad(){
+      const canvas = document.getElementById('signaturePad');
+      if(!canvas) return;
+
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const rect = canvas.getBoundingClientRect();
+      const displayWidth = Math.max(Math.round(rect.width), 1);
+      const displayHeight = Math.max(Math.round(rect.height), 1);
+
+      canvas.width = Math.round(displayWidth * ratio);
+      canvas.height = Math.round(displayHeight * ratio);
+
+      const ctx = canvas.getContext('2d');
+      if(!ctx) return;
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, displayWidth, displayHeight);
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      signaturePadCtx = ctx;
+      signaturePadDrawing = false;
+      signaturePadHasStroke = false;
+      signaturePadLastPoint = null;
+
+      if(canvas.dataset.bound !== '1'){
+        canvas.addEventListener('pointerdown', handleSignaturePointerDown);
+        canvas.addEventListener('pointermove', handleSignaturePointerMove);
+        canvas.addEventListener('pointerup', handleSignaturePointerUp);
+        canvas.addEventListener('pointerleave', handleSignaturePointerUp);
+        canvas.addEventListener('pointercancel', handleSignaturePointerUp);
+        canvas.dataset.bound = '1';
+      }
+    }
+
+    function clearSignaturePad(){
+      const canvas = document.getElementById('signaturePad');
+      if(!canvas || !signaturePadCtx) return;
+      const rect = canvas.getBoundingClientRect();
+      signaturePadCtx.clearRect(0, 0, rect.width, rect.height);
+      signaturePadCtx.fillStyle = '#ffffff';
+      signaturePadCtx.fillRect(0, 0, rect.width, rect.height);
+      signaturePadDrawing = false;
+      signaturePadHasStroke = false;
+      signaturePadLastPoint = null;
+    }
+
+    function getDocumentQuizInfo(doc) {
+      const fallbackQuestion = '오늘 공유된 자료에서 강조한 핵심 보호구는 안전화이다. (O/X)';
+      const fallbackAnswer = 'O';
+      const question = String(doc?.quizQuestion || '').trim() || fallbackQuestion;
+      const rawAnswer = String(doc?.quizAnswer || '').trim().toUpperCase();
+      const answer = (rawAnswer === 'O' || rawAnswer === 'X') ? rawAnswer : fallbackAnswer;
+      const hint = String(doc?.quizHint || '').trim();
+      return { question, answer, hint };
+    }
+
+    function resetSignatureQuizUI() {
+      signatureQuizPassed = false;
+      const formArea = document.getElementById('signatureFormArea');
+      if(formArea) formArea.style.display = 'none';
+      const radios = document.querySelectorAll('input[name="signatureQuizOx"]');
+      radios.forEach(r => { r.checked = false; });
+      const quizBtn = document.getElementById('quizCheckBtn');
+      if(quizBtn){
+        quizBtn.disabled = false;
+        quizBtn.textContent = '정답 확인 후 서명 진행';
+      }
+    }
+
+    function checkSignatureQuiz() {
+      const selected = document.querySelector('input[name="signatureQuizOx"]:checked');
+      if(!selected){
+        toast('⚠️ O/X 답안을 선택해주세요');
+        return;
+      }
+      if(selected.value !== currentQuizAnswer){
+        toast('❌ 오답입니다. 다시 확인해주세요');
+        return;
+      }
+
+      signatureQuizPassed = true;
+      const formArea = document.getElementById('signatureFormArea');
+      if(formArea) formArea.style.display = 'block';
+      const quizBtn = document.getElementById('quizCheckBtn');
+      if(quizBtn){
+        quizBtn.disabled = true;
+        quizBtn.textContent = '정답 확인 완료';
+      }
+      toast('✅ 정답입니다. 서명을 진행해주세요');
+      requestAnimationFrame(() => initSignaturePad());
+    }
+
     function openSignatureModal(documentId) {
       currentDocumentId = documentId;
       const doc = documents.find(d => d.id === documentId);
@@ -2589,6 +2954,10 @@ container.innerHTML = latestOnly.map(doc => {
         toast('문서를 찾을 수 없습니다');
         return;
       }
+      const quizInfo = getDocumentQuizInfo(doc);
+      currentQuizQuestion = quizInfo.question;
+      currentQuizAnswer = quizInfo.answer;
+      currentQuizHint = quizInfo.hint;
 
       let contentHtml = '';
 
@@ -2611,7 +2980,7 @@ container.innerHTML = latestOnly.map(doc => {
       const tbmItems = (doc.tbmItems && doc.tbmItems.length > 0) ? doc.tbmItems : FIXED_TBM_ITEMS;
       contentHtml += `
         <div class="tbm-section">
-          <div class="tbm-title">✓ 일일 TBM 체크리스트</div>
+          <div class="tbm-title">✓ 주간 TBM 체크리스트</div>
           <div style="font-size:10px; color:var(--muted); margin-bottom:8px; font-weight:600;">확인 후 체크해주세요</div>
           ${tbmItems.map((item, idx) => `
             <div class="tbm-item">
@@ -2634,6 +3003,19 @@ const savedDept = localStorage.getItem('mslUserDept') || '';
 if(savedDept) document.getElementById('signerDept').value = savedDept;
 
       document.getElementById('signatureModal').classList.add('show');
+      const quizTextEl = document.getElementById('signatureQuizQuestionText');
+      if(quizTextEl) quizTextEl.textContent = currentQuizQuestion;
+      const quizHintEl = document.getElementById('signatureQuizHintText');
+      if(quizHintEl){
+        if(currentQuizHint){
+          quizHintEl.style.display = 'block';
+          quizHintEl.textContent = `💡 힌트: ${currentQuizHint}`;
+        }else{
+          quizHintEl.style.display = 'none';
+          quizHintEl.textContent = '';
+        }
+      }
+      resetSignatureQuizUI();
     }
 
     function closeSignatureModal() {
@@ -2642,9 +3024,19 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       document.getElementById('documentToSign').innerHTML = '';
       document.getElementById('signerName').value = '';
       document.getElementById('signerDept').value = '';
+      signaturePadCtx = null;
+      signaturePadDrawing = false;
+      signaturePadHasStroke = false;
+      signaturePadLastPoint = null;
+      signatureQuizPassed = false;
     }
 
     async function saveSignature() {
+      if (!signatureQuizPassed) {
+        toast('⚠️ 퀴즈 정답 확인 후 서명을 진행해주세요');
+        return;
+      }
+
       const signerName = document.getElementById('signerName').value.trim();
       const signerDept = document.getElementById('signerDept').value.trim();
 
@@ -2665,6 +3057,10 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         toast('⚠️ 모든 TBM 체크리스트를 확인해주세요');
         return;
       }
+      if (!signaturePadHasStroke) {
+        toast('⚠️ 서명을 입력해주세요');
+        return;
+      }
 
       try {
         // 중복 서명 방지(같은 사람 같은 문서)
@@ -2681,6 +3077,7 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
           signerName: signerName,
           signerDept: signerDept,
           checklistResults: checklistResults,
+          signatureImageData: document.getElementById('signaturePad')?.toDataURL('image/png') || '',
           signedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -2854,13 +3251,23 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
             <div style="font-size: 12px; font-weight: 800; margin-bottom: 8px; color: var(--text);">✅ 확인 완료 (${docSigs.length}명)</div>
             <div class="sig-list">
-              ${docSigs.map(sig => `
+              ${docSigs.map((sig, index) => `
                 <div class="sig-item">
                   <div class="left">
                     <div class="avatar">${escapeHTML(sig.signerName || '').charAt(0)}</div>
                     <div class="info">
                       <b>${escapeHTML(sig.signerName || '')}</b>
                       <span>${escapeHTML(sig.signerDept || '')} · ${sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '방금'}</span>
+                      <div class="sig-signature">
+                        ${sig.signatureImageData
+                          ? `<img src="${escapeHTML(sig.signatureImageData)}" alt="서명 미리보기" class="sig-signature-thumb">`
+                          : `<span class="sig-signature-empty">서명 이미지 없음</span>`
+                        }
+                        ${sig.signatureImageData
+                          ? `<button type="button" class="btn ghost view-signature-btn" data-signature-index="${index}">확대 보기</button>`
+                          : ''
+                        }
+                      </div>
                     </div>
                   </div>
                   <div class="check">✓</div>
@@ -2889,7 +3296,45 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       `;
 
       document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => {
+        const btn = e.target.closest('.view-signature-btn');
+        if(!btn) return;
+        const idx = Number(btn.dataset.signatureIndex);
+        const sig = docSigs[idx];
+        if(!sig?.signatureImageData){
+          toast('서명 이미지가 없습니다');
+          return;
+        }
+        openSignaturePreviewModal(sig.signatureImageData, sig.signerName || '');
+      });
       toggleDocMenu(docId);
+    }
+
+    function openSignaturePreviewModal(signatureImageData, signerName) {
+      const previewModal = document.createElement('div');
+      previewModal.className = 'modal show';
+      previewModal.style.display = 'flex';
+      previewModal.innerHTML = `
+        <div class="modal-content" style="max-width: 720px;">
+          <div class="modal-header">
+            <h3>✍️ 서명 원본 ${signerName ? `- ${escapeHTML(signerName)}` : ''}</h3>
+            <button class="icon-btn" data-close-preview style="box-shadow:none; width:36px; height:36px;">
+              <svg class="icon" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <img src="${escapeHTML(signatureImageData)}" alt="서명 원본 이미지" class="signature-preview-image">
+          </div>
+        </div>
+      `;
+      document.body.appendChild(previewModal);
+      previewModal.addEventListener('click', (e) => {
+        if (e.target === previewModal || e.target.closest('[data-close-preview]')) {
+          previewModal.remove();
+        }
+      });
     }
 
     function downloadExcelReport(docId) {
@@ -2929,7 +3374,7 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
       csv += '='.repeat(100) + '\n\n';
       csv += '[체크 현황]\n';
-      csv += 'No,이름,부서,서명일시,체크1,체크2,체크3\n';
+      csv += 'No,이름,부서,서명일시,체크1,체크2,체크3,서명이미지(데이터URL)\n';
 
       docSigs.forEach((sig, index) => {
         const signedAt = sig.signedAt ? new Date(sig.signedAt.toDate()).toLocaleString('ko-KR', {
@@ -2938,23 +3383,23 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         }) : '';
 
         const check1 = sig.checklistResults && sig.checklistResults['개인 보호구 착용'] ? 'O' : '';
-        const check2 = sig.checklistResults && sig.checklistResults['위험요소 발견시 작업중지 및 보고'] ? 'O' : '';
+        const check2 = sig.checklistResults && sig.checklistResults['위험요소 발견시 관리감독자에게 즉시 보고'] ? 'O' : '';
         const check3 = sig.checklistResults && sig.checklistResults['교육 및 안전관리 규정 준수'] ? 'O' : '';
 
-        csv += `${index + 1},"${(sig.signerName||'').replaceAll('"','""')}","${(sig.signerDept||'').replaceAll('"','""')}","${signedAt}",${check1},${check2},${check3}\n`;
+        csv += `${index + 1},"${(sig.signerName||'').replaceAll('"','""')}","${(sig.signerDept||'').replaceAll('"','""')}","${signedAt}",${check1},${check2},${check3},"${String(sig.signatureImageData || '').replaceAll('"','""')}"\n`;
       });
 
       const signedNames = docSigs.map(s => s.signerName);
       const unsignedEmployees = employees.filter(emp => !signedNames.includes(emp));
       unsignedEmployees.forEach((emp, index) => {
         const no = docSigs.length + index + 1;
-        csv += `${no},"${emp}","","미확인",,,\n`;
+        csv += `${no},"${emp}","","미확인",,,,\n`;
       });
 
       csv += '\n' + '='.repeat(100) + '\n\n';
       csv += '[체크리스트 항목 상세]\n';
       csv += '체크1,개인 보호구 착용\n';
-      csv += '체크2,위험요소 발견시 작업중지 및 보고\n';
+      csv += '체크2,위험요소 발견시 관리감독자에게 즉시 보고\n';
       csv += '체크3,교육 및 안전관리 규정 준수\n';
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -3003,6 +3448,25 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
               <div class="label">첨부파일 (구글 드라이브 링크)</div>
               <input type="text" id="editAttachment" class="input" value="${escapeHTML(doc.attachmentUrl || '')}">
             </div>
+            <div class="field">
+              <div class="label">확인 퀴즈 문항 (O/X)</div>
+              <input type="text" id="editQuizQuestion" class="input" value="${escapeHTML(doc.quizQuestion || '오늘 공유된 자료에서 강조한 핵심 보호구는 안전화이다. (O/X)')}">
+            </div>
+            <div class="field">
+              <div class="label">정답</div>
+              <div style="display:flex; gap:10px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700;">
+                  <input type="radio" name="editQuizAnswer" value="O" ${(String(doc.quizAnswer || 'O').toUpperCase() === 'O') ? 'checked' : ''}> O
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700;">
+                  <input type="radio" name="editQuizAnswer" value="X" ${(String(doc.quizAnswer || 'O').toUpperCase() === 'X') ? 'checked' : ''}> X
+                </label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="label">힌트 (선택)</div>
+              <input type="text" id="editQuizHint" class="input" value="${escapeHTML(doc.quizHint || '')}" placeholder="예) 보호구 지급 게시판 공지 참고">
+            </div>
             <div class="cta">
               <button class="btn ghost" onclick="this.closest('.modal').remove()">취소</button>
               <button class="btn primary" onclick="saveDocumentEdit('${docId}', this)">저장</button>
@@ -3019,12 +3483,22 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       const title = document.getElementById('editTitle').value.trim();
       const content = document.getElementById('editContent').value.trim();
       const attachmentUrl = document.getElementById('editAttachment').value.trim();
+      const quizQuestion = document.getElementById('editQuizQuestion').value.trim();
+      const quizAnswer = document.querySelector('input[name="editQuizAnswer"]:checked')?.value;
+      const quizHint = document.getElementById('editQuizHint').value.trim();
 
       if (!title) {
         toast('⚠️ 제목을 입력하세요');
         return;
       }
-
+      if (!quizQuestion) {
+        toast('⚠️ 퀴즈 문항을 입력하세요');
+        return;
+      }
+      if (!quizAnswer) {
+        toast('⚠️ 퀴즈 정답(O/X)을 선택하세요');
+        return;
+      }
       btn.textContent = '저장 중...';
       btn.disabled = true;
 
@@ -3033,6 +3507,9 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
           title: title,
           content: content,
           attachmentUrl: attachmentUrl,
+          quizQuestion: quizQuestion,
+          quizAnswer: quizAnswer,
+          quizHint: quizHint,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -3093,7 +3570,8 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       const nextTs = vehicle?.nextMaintenanceDate;
       if(!nextTs) return { class:'blue', text:'정상' };
 
-      const next = nextTs.toDate ? nextTs.toDate() : new Date(nextTs);
+      const next = asDate(nextTs);
+      if(!next) return { class:'blue', text:'정상' };
       const today = new Date(); today.setHours(0,0,0,0);
       const next0 = new Date(next); next0.setHours(0,0,0,0);
 
@@ -3126,8 +3604,8 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
       container.innerHTML = vehicles.map(vehicle => {
         const status = getVehicleStatus(vehicle);
-        const maintDate = vehicle.maintenanceDate ? new Date(vehicle.maintenanceDate.toDate()).toLocaleDateString('ko-KR') : '';
-        const nextDate = vehicle.nextMaintenanceDate ? new Date(vehicle.nextMaintenanceDate.toDate()).toLocaleDateString('ko-KR') : '';
+        const maintDate = formatDateKR(vehicle.maintenanceDate);
+        const nextDate = formatDateKR(vehicle.nextMaintenanceDate);
 
         return `
           <div class="doc-wrap" style="position: relative; margin-bottom: 14px;">
@@ -3209,8 +3687,8 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       const v = vehicles.find(x => x.id === vehicleId);
       if(!v){ toast('차량을 찾을 수 없습니다'); return; }
 
-      const maintDate = v.maintenanceDate ? new Date(v.maintenanceDate.toDate()).toLocaleDateString('ko-KR') : '';
-      const nextDate = v.nextMaintenanceDate ? new Date(v.nextMaintenanceDate.toDate()).toLocaleDateString('ko-KR') : '';
+      const maintDate = formatDateKR(v.maintenanceDate);
+      const nextDate = formatDateKR(v.nextMaintenanceDate);
 
       const text =
 `[MSL 차량 정비정보]
@@ -3235,33 +3713,63 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       toggleVehicleMenu(vehicleId);
     }
 
-    function editVehicle(vehicleId){
+    async function editVehicle(vehicleId){
       const v = vehicles.find(x => x.id === vehicleId);
       if(!v){ toast('차량을 찾을 수 없습니다'); return; }
 
+      if(!isAdmin){
+        toast('⚠️ 관리자 모드에서만 수정할 수 있습니다');
+        return;
+      }
+
       // 관리탭으로 이동해서 폼 채우기
       editingVehicleId = vehicleId;
+      editingVehicleSnapshot = {
+        vehicleNumber: v.vehicleNumber || '',
+        vehicleName: v.vehicleName || '',
+        lastMaintenance: v.lastMaintenance || '',
+        maintenanceDate: toDateInputValue(asDate(v.maintenanceDate)),
+        nextMaintenanceDate: toDateInputValue(asDate(v.nextMaintenanceDate))
+      };
 
-      // 탭 전환
-      document.querySelector('.tab[data-tab="admin"]').click();
+      // 탭 전환(이미 관리탭이면 전환 생략)
+      const currentTab = document.querySelector('.tab.active')?.dataset.tab;
+      if(currentTab !== 'admin'){
+        document.querySelector('.tab[data-tab="admin"]').click();
+      }
 
-      setTimeout(() => {
-        const num = document.getElementById('vehicleNumber');
-        const name = document.getElementById('vehicleName');
-        const maint = document.getElementById('vehicleMaintenance');
-        const mDate = document.getElementById('maintenanceDate');
-        const nDate = document.getElementById('nextMaintenanceDate');
-
-        if(num) num.value = v.vehicleNumber || '';
-        if(name) name.value = v.vehicleName || '';
-        if(maint) maint.value = v.lastMaintenance || '';
-        if(mDate) mDate.value = v.maintenanceDate ? toDateInputValue(v.maintenanceDate.toDate()) : '';
-        if(nDate) nDate.value = v.nextMaintenanceDate ? toDateInputValue(v.nextMaintenanceDate.toDate()) : '';
-
-        toast('✏️ 차량 수정 모드');
-      }, 250);
+      // 관리 폼이 실제로 렌더된 뒤 값을 채우도록 보장
+      await loadManageData();
+      prefillVehicleFormForEdit();
 
       toggleVehicleMenu(vehicleId);
+    }
+
+    function prefillVehicleFormForEdit(retry = 0){
+      if(!editingVehicleSnapshot) return;
+
+      const num = document.getElementById('vehicleNumber');
+      const name = document.getElementById('vehicleName');
+      const maint = document.getElementById('vehicleMaintenance');
+      const mDate = document.getElementById('maintenanceDate');
+      const nDate = document.getElementById('nextMaintenanceDate');
+
+      if(!num || !name || !maint || !mDate || !nDate){
+        if(retry < 20){
+          setTimeout(() => prefillVehicleFormForEdit(retry + 1), 100);
+        }else{
+          toast('⚠️ 수정 폼을 여는 중 문제가 발생했습니다. 다시 시도해주세요');
+        }
+        return;
+      }
+
+      num.value = editingVehicleSnapshot.vehicleNumber;
+      name.value = editingVehicleSnapshot.vehicleName;
+      maint.value = editingVehicleSnapshot.lastMaintenance;
+      mDate.value = editingVehicleSnapshot.maintenanceDate;
+      nDate.value = editingVehicleSnapshot.nextMaintenanceDate;
+
+      toast('✏️ 차량 수정 모드');
     }
 
     async function deleteVehicle(vehicleId, vehicleNumber){
@@ -3288,6 +3796,7 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
     function clearVehicleForm(){
       editingVehicleId = null;
+      editingVehicleSnapshot = null;
       document.getElementById('vehicleNumber').value = '';
       document.getElementById('vehicleName').value = '';
       document.getElementById('vehicleMaintenance').value = '';
@@ -3583,6 +4092,25 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
                 💡 구글 드라이브에서 파일 업로드 → 공유 → 링크 복사 → 붙여넣기
               </div>
             </div>
+            <div class="field">
+              <div class="label">확인 퀴즈 문항 (O/X)</div>
+              <input type="text" id="docQuizQuestion" class="input" placeholder="예) 오늘 공유된 자료에서 강조한 핵심 보호구는 안전화이다. (O/X)">
+            </div>
+            <div class="field">
+              <div class="label">정답</div>
+              <div style="display:flex; gap:10px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700;">
+                  <input type="radio" name="docQuizAnswer" value="O" checked> O
+                </label>
+                <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700;">
+                  <input type="radio" name="docQuizAnswer" value="X"> X
+                </label>
+              </div>
+            </div>
+            <div class="field">
+              <div class="label">힌트 (선택)</div>
+              <input type="text" id="docQuizHint" class="input" placeholder="예) 보호구 지급 게시판 공지 참고">
+            </div>
 
             <div class="cta">
               <button class="btn ghost" onclick="clearDocForm()">초기화</button>
@@ -3686,7 +4214,10 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
               <button class="btn primary" onclick="applyDocumentFilter()" style="width: 100%;">적용</button>
             </div>
 
-            <div id="filteredDocsList"></div>
+            <div class="admin-doc-list-scroll">
+              <div id="filteredDocsList"></div>
+            </div>
+            <div id="filteredDocsControls" style="margin-top: 10px;"></div>
           </div>
         </article>
 
@@ -3730,7 +4261,11 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         </article>
       `;
 
-      setTimeout(() => displayFilteredDocuments(documents), 0);
+      setTimeout(() => {
+        adminFilteredDocsCache = documents.slice();
+        resetAdminDocPaging();
+        displayFilteredDocuments(adminFilteredDocsCache);
+      }, 0);
       updateBadges();
     }
 
@@ -3739,6 +4274,10 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       document.getElementById('docTitle').value = '';
       document.getElementById('docContent').value = '';
       document.getElementById('docAttachment').value = '';
+      document.getElementById('docQuizQuestion').value = '';
+      document.getElementById('docQuizHint').value = '';
+      const defaultAnswer = document.querySelector('input[name="docQuizAnswer"][value="O"]');
+      if(defaultAnswer) defaultAnswer.checked = true;
       toast('📝 폼 초기화 완료');
     }
 
@@ -3746,6 +4285,9 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
       const title = document.getElementById('docTitle').value.trim();
       const content = document.getElementById('docContent').value.trim();
       const attachmentUrl = document.getElementById('docAttachment').value.trim();
+      const quizQuestion = document.getElementById('docQuizQuestion').value.trim();
+      const quizAnswer = document.querySelector('input[name="docQuizAnswer"]:checked')?.value;
+      const quizHint = document.getElementById('docQuizHint').value.trim();
 
       if (!title) {
         toast('⚠️ 제목을 입력하세요');
@@ -3755,7 +4297,14 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         toast('⚠️ 내용 또는 첨부파일 중 하나는 필수입니다');
         return;
       }
-
+      if (!quizQuestion) {
+        toast('⚠️ 확인 퀴즈 문항을 입력하세요');
+        return;
+      }
+      if (!quizAnswer) {
+        toast('⚠️ 퀴즈 정답(O/X)을 선택하세요');
+        return;
+      }
       if (attachmentUrl && !attachmentUrl.includes('drive.google.com')) {
         if (!confirm('구글 드라이브 링크가 아닌 것 같습니다. 그래도 등록하시겠습니까?')) {
           return;
@@ -3773,6 +4322,9 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
           title: title,
           content: content,
           attachmentUrl: attachmentUrl || '',
+          quizQuestion: quizQuestion,
+          quizAnswer: quizAnswer,
+          quizHint: quizHint,
           tbmItems: FIXED_TBM_ITEMS,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
           createdBy: 'admin'
@@ -3792,7 +4344,9 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
 
         await loadDocumentsFromFirebase();
         updateBadges();
-        displayFilteredDocuments(documents);
+        adminFilteredDocsCache = documents.slice();
+        resetAdminDocPaging();
+        displayFilteredDocuments(adminFilteredDocsCache);
 
       } catch (error) {
         console.error('문서 등록 오류:', error);
@@ -3806,6 +4360,14 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
     }
 
     // 날짜 필터
+    const ADMIN_DOC_PAGE_SIZE = 20;
+    let adminDocVisibleCount = ADMIN_DOC_PAGE_SIZE;
+    let adminFilteredDocsCache = [];
+
+    function resetAdminDocPaging() {
+      adminDocVisibleCount = ADMIN_DOC_PAGE_SIZE;
+    }
+
     function setFilterDate(period) {
       const today = new Date();
       const startInput = document.getElementById('filterStartDate');
@@ -3863,13 +4425,17 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         });
       }
 
+      adminFilteredDocsCache = filteredDocs.slice();
+      resetAdminDocPaging();
       displayFilteredDocuments(filteredDocs);
       toast(`📋 ${filteredDocs.length}건의 문서를 찾았습니다`);
     }
 
     function displayFilteredDocuments(docs) {
       const container = document.getElementById('filteredDocsList');
+      const controls = document.getElementById('filteredDocsControls');
       if (!container) return;
+      if (controls) controls.innerHTML = '';
 
       if (docs.length === 0) {
         container.innerHTML = `
@@ -3881,8 +4447,9 @@ if(savedDept) document.getElementById('signerDept').value = savedDept;
         return;
       }
 
+      const visibleDocs = docs.slice(0, adminDocVisibleCount);
       const grouped = {};
-      docs.forEach(doc => {
+      visibleDocs.forEach(doc => {
         if (!doc.createdAt) return;
         const date = doc.createdAt.toDate();
         const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -3950,6 +4517,26 @@ html += `
       });
 
       container.innerHTML = html;
+
+      if (controls) {
+        const hasMore = docs.length > visibleDocs.length;
+        controls.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 2px;">
+            <div style="font-size:11px; color:var(--muted); font-weight:700;">
+              총 ${docs.length}건 중 ${visibleDocs.length}건 표시
+            </div>
+            ${hasMore ? `<button class="btn ghost" id="btnMoreDocs">더보기 +${Math.min(ADMIN_DOC_PAGE_SIZE, docs.length - visibleDocs.length)}건</button>` : ''}
+          </div>
+        `;
+
+        const btnMore = document.getElementById('btnMoreDocs');
+        if (btnMore) {
+          btnMore.addEventListener('click', () => {
+            adminDocVisibleCount += ADMIN_DOC_PAGE_SIZE;
+            displayFilteredDocuments(adminFilteredDocsCache.length ? adminFilteredDocsCache : docs);
+          });
+        }
+      }
     }
 
     // =========================
@@ -4005,6 +4592,7 @@ html += `
 
     updateBadges();
     loadPendingDocuments();  // 기본 화면: 서명확인 탭
+    triggerPendingReminderIfNeeded(); // 미확인 문서가 있으면 하루 1회 리마인드
 
     handleDocParam();        // ?doc=xxx 로 들어오면 바로 열기
   });
