@@ -3,7 +3,7 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
 // ✅ 배포할 때마다 버전만 바꿔주세요 (이게 캐시 강제 갱신 트리거)
-const CACHE_VERSION = '2026-01-08-1';
+const CACHE_VERSION = '2026-04-29-2';
 const CACHE_NAME = `msl-safety-${CACHE_VERSION}`;
 
 // ✅ GitHub Pages 프로젝트 경로(/msl-safety-system/) 자동 계산
@@ -91,13 +91,15 @@ self.addEventListener('fetch', (event) => {
   // firebase/확장프로그램 제외
   if (url.href.includes('firebase') || url.href.includes('chrome-extension')) return;
 
-  // ✅ (핵심) HTML 네비게이션은 Network-first
+  // ✅ (핵심) HTML 네비게이션: 캐시 우회(카톡·인앱 WebView의 옛 HTML 방지)
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store', credentials: 'same-origin' })
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          }
           return res;
         })
         .catch(() => caches.match(req).then((c) => c || caches.match(toScopeUrl('./index.html'))))
